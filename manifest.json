@@ -1,0 +1,14 @@
+{
+  "version": "4.1.0",
+  "published_at": "2026-08-18T10:55:00+01:00",
+  "notes": "V4.1 adds secure over-the-air updates, update checks at launch, verified downloads, backups and automatic restart.",
+  "mandatory": false,
+  "mac": {
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.1.0/YMS_Prospect_Finder_MAC.zip",
+    "sha256": "dd5ac4a2a0d2fb0438cb99ed4850633aaa2b34c97dd3c443b060a047dceb6460"
+  },
+  "windows": {
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.1.0/YMS_Prospect_Finder_WINDOWS.zip",
+    "sha256": "ee3067d38123242bec2106ba57bdff5e357b58838819da5f09123ec563edba84"
+  }
+}

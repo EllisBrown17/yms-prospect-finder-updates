@@ -23,6 +23,20 @@ jobs:
           VERSION='2.0.2'
           WORK="$(mktemp -d)"
           mkdir -p "$WORK/unpacked" northbrown/releases
+
+          # The originally uploaded ota.part04 lost one base64 character at byte 3245.
+          # Repair that one staging defect before reconstructing the already-verified 2.0 payload.
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('northbrown/staging/2.0.0/ota.part04')
+          s = p.read_text()
+          if len(s) == 8999:
+              s = s[:3245] + 'h' + s[3245:]
+              p.write_text(s)
+          if len(p.read_text()) != 9000:
+              raise SystemExit('Unexpected ota.part04 length after repair')
+          PY
+
           cat northbrown/staging/2.0.0/ota.part* | base64 -d > "$WORK/base.zip"
           echo '88f45969ed801323252b83529929dd66848560347105816cb15db727e3e69f0e  '"$WORK/base.zip" | sha256sum -c -
           unzip -t "$WORK/base.zip" >/dev/null

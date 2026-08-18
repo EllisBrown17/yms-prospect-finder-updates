@@ -1,1 +1,1 @@
-Publish NORTHBROWN 2.0.2 full OTA
+Publish NORTHBROWN 2.0.2 full OTA retry 2

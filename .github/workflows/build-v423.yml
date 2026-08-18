@@ -46,3 +46,4 @@ jobs:
             git commit -m 'Publish validated V4.2.3 robust stability hotfix'
             git push
           fi
+# trigger rebuild after workflow existed on main

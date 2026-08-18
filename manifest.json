@@ -1,14 +1,18 @@
 {
-  "version": "4.1.2",
-  "published_at": "2026-08-18T12:14:00+01:00",
-  "notes": "OTA verification bridge. This fixes the updater so future Prospect Finder releases can be verified against the exact immutable GitHub file as well as SHA-256. Install this small bridge first; V4.2 Smart Finder will follow immediately afterwards.",
+  "version": "4.2.0",
+  "published_at": "2026-08-18T20:39:00+01:00",
+  "notes": "Smart Finder: continuous all-sector UK discovery and AI qualification; stronger Tesco/consumer filtering; website relevance gate before OpenAI; duplicate/completed-work skipping; safe stop/resume; live Finder metrics; automatic priority and personalised outreach drafts.",
   "mandatory": false,
   "mac": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.1.2/YMS_Prospect_Finder_V4_1_2_OTA_VERIFICATION_BRIDGE.zip",
-    "sha256": "1ed9533864110ba7b318e6520c019dcba502c5d61f0d9ab830fa0d32903e2048"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.0/YMS_Prospect_Finder_V4_2_0_PATCH_FIXED.zip",
+    "sha256": "1694042b9424bf69896a4f810f2ea66937210e2f9ca3d376d1e5c72e0868dc05",
+    "git_blob_sha": "bce900a23005b872bcf0f588ecc87876784cfbe7",
+    "blob_sha": "bce900a23005b872bcf0f588ecc87876784cfbe7"
   },
   "windows": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.1.2/YMS_Prospect_Finder_V4_1_2_OTA_VERIFICATION_BRIDGE.zip",
-    "sha256": "1ed9533864110ba7b318e6520c019dcba502c5d61f0d9ab830fa0d32903e2048"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.0/YMS_Prospect_Finder_V4_2_0_PATCH_FIXED.zip",
+    "sha256": "1694042b9424bf69896a4f810f2ea66937210e2f9ca3d376d1e5c72e0868dc05",
+    "git_blob_sha": "bce900a23005b872bcf0f588ecc87876784cfbe7",
+    "blob_sha": "bce900a23005b872bcf0f588ecc87876784cfbe7"
   }
 }

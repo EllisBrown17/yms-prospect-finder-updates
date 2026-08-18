@@ -1,0 +1,1 @@
+V4.2.0 Smart Finder release payloads. Do not edit ZIP files in the GitHub UI; the OTA updater verifies exact SHA-256 bytes.

@@ -1,0 +1,18 @@
+source-bytes: 14386
+source-file: Zip archive data, at least v2.0 to extract, compression method=deflate
+zip-FF-output:
+Fix archive (-FF) - salvage what can
+	zip warning: Missing end (EOCDR) signature - either this archive
+                     is not readable or the end is damaged
+Is this a single-disk archive?  (y/n):   Assuming single-disk archive
+Scanning for entries...
+ copying: server.py  (13998 bytes)
+zip-FF-exit: 0
+recovered-bytes: 14114
+recovered-file: Zip archive data, at least v2.0 to extract, compression method=deflate
+sha256: 6818a490f5ea75575659ea6111cf5451fe3814679e7a5c2313e1f648229e46d3
+unzip-test:
+Archive:  releases/4.2.0/YMS_Prospect_Finder_V4_2_0_RECOVERED2.zip
+    testing: server.py                bad CRC b7714f8c  (should be 0e378821)
+At least one error was detected in releases/4.2.0/YMS_Prospect_Finder_V4_2_0_RECOVERED2.zip.
+unzip-exit: 2

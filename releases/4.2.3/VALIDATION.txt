@@ -1,0 +1,9 @@
+Archive:  releases/4.2.3/YMS_Prospect_Finder_V4_2_3_STABILITY_HOTFIX.zip
+    testing: server.py                OK
+    testing: index.html               OK
+No errors detected in compressed data of releases/4.2.3/YMS_Prospect_Finder_V4_2_3_STABILITY_HOTFIX.zip.
+file: Zip archive data, at least v2.0 to extract, compression method=deflate
+bytes: 7299
+patcher compile: OK
+architecture: additive overrides before Handler; no function-body slicing
+installer compiles the fully patched server before replacing the working app

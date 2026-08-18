@@ -1,0 +1,3 @@
+NORTHBROWN 1.5.0 — Scan Intelligence + Quick Demo
+
+Adds live scan explanations, learned ETA, pause/resume/safe stop, recovery, smart skip, scan modes, live counters, activity/history, notifications, post-scan summary, undo, keyboard shortcuts and one-click prospect demo pages with preview/download/share/email.

@@ -1,8 +1,8 @@
 {
-  "version": "2.0.0",
-  "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/northbrown/releases/NORTHBROWN-update-2.0.0-bootstrap.zip",
-  "sha256": "38b32675d746f885dc5e239c35a3ca988b1b251410f3494b1ef3818188594e96",
-  "notes": "NORTHBROWN 2.0 Website Builder: build and edit complete websites inside NORTHBROWN, pull verified business contact details, branding, logos and usable content, generate real prospect demo pages with a permanent NORTHBROWN concept banner and Ellis Brown creator credit, edit responsive pages/styles/content, use grounded AI copy, export sites, and refresh the Mac app icon to the NORTHBROWN NB logo.",
-  "published_at": "2026-08-18T21:42:00+01:00",
+  "version": "2.0.1",
+  "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/northbrown/releases/NORTHBROWN-update-2.0.1.zip",
+  "sha256": "946c1c08c46a0e3fcf2ca0709a334af610e370e9a02e542f3a8a8cb8c89f47e9",
+  "notes": "NORTHBROWN 2.0.1 repair: fixes the missing required OTA files. The update validates app.py, requirements.txt and VERSION.txt, preserves the working NORTHBROWN core, verifies and installs the Website Builder runtime, real demo-site generator, permanent NORTHBROWN demo branding and creator credit.",
+  "published_at": "2026-08-18T22:56:00+01:00",
   "mandatory": false
 }

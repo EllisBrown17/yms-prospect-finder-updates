@@ -1,0 +1,44 @@
+name: Build YMS Prospect Finder V4.2.1 OTA
+
+on:
+  push:
+    paths:
+      - 'releases/4.2.1/package.b64'
+      - '.github/workflows/build-v421.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decode and validate V4.2.1 update
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC='releases/4.2.1/package.b64'
+          OUT='releases/4.2.1/YMS_Prospect_Finder_V4_2_1_INDIVIDUAL_WORKFLOW_FIX.zip'
+          REPORT='releases/4.2.1/VALIDATION.txt'
+          HASH='releases/4.2.1/SHA256.txt'
+          base64 --decode "$SRC" > "$OUT"
+          unzip -t "$OUT" | tee "$REPORT"
+          rm -rf /tmp/yms421 && mkdir -p /tmp/yms421
+          unzip -q "$OUT" -d /tmp/yms421
+          python3 -m py_compile /tmp/yms421/server.py
+          grep -q 'TARGET_VERSION = "4.2.1"' /tmp/yms421/server.py
+          grep -q 'web_one' /tmp/yms421/server.py
+          grep -q 'ai_one' /tmp/yms421/server.py
+          sha256sum "$OUT" | awk '{print $1}' > "$HASH"
+          echo "file: $(file -b "$OUT")" >> "$REPORT"
+          echo "bytes: $(wc -c < "$OUT")" >> "$REPORT"
+          echo 'python compile: OK' >> "$REPORT"
+          echo 'individual actions: web_one + ai_one present' >> "$REPORT"
+          git config user.name 'YMS Prospect Finder Updater'
+          git config user.email 'actions@users.noreply.github.com'
+          git add "$OUT" "$REPORT" "$HASH"
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish validated V4.2.1 individual workflow fix'
+            git push
+          fi

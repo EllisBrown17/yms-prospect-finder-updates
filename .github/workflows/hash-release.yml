@@ -1,4 +1,4 @@
-name: Hash release package
+name: Build and validate V4.2 release package
 
 on:
   push:
@@ -10,19 +10,26 @@ permissions:
   contents: write
 
 jobs:
-  hash:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-      - name: Calculate exact V4.2 SHA-256
+      - name: Decode deterministic source and publish real binary ZIP
+        shell: bash
         run: |
+          set -e
           mkdir -p hashes
-          shasum -a 256 releases/4.2.0/YMS_Prospect_Finder_V4_2_0_PATCH_FIXED.zip | awk '{print $1}' > hashes/v4.2.0-sha256.txt
+          SRC='releases/4.2.0/YMS_Prospect_Finder_V4_2_0_DETERMINISTIC.zip.b64'
+          OUT='releases/4.2.0/YMS_Prospect_Finder_V4_2_0_BINARY.zip'
+          base64 --decode "$SRC" > "$OUT"
+          unzip -t "$OUT" | tee hashes/v4.2.0-binary-validation.txt
+          sha256sum "$OUT" | awk '{print $1}' > hashes/v4.2.0-binary-sha256.txt
+          file "$OUT" >> hashes/v4.2.0-binary-validation.txt
           git config user.name 'YMS Prospect Finder Updater'
           git config user.email 'actions@users.noreply.github.com'
-          git add hashes/v4.2.0-sha256.txt
+          git add "$OUT" hashes/v4.2.0-binary-validation.txt hashes/v4.2.0-binary-sha256.txt
           if ! git diff --cached --quiet; then
-            git commit -m 'Record exact V4.2.0 package SHA-256'
+            git commit -m 'Publish validated binary V4.2.0 OTA ZIP'
             git push
           fi

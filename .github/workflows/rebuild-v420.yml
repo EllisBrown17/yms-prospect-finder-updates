@@ -1,0 +1,100 @@
+name: Rebuild V4.2 OTA archive
+
+on:
+  push:
+    paths:
+      - '.github/workflows/rebuild-v420.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Recover payloads and build a clean ZIP
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64, binascii, io, struct, zlib, zipfile, hashlib
+
+          src = Path('releases/4.2.0/YMS_Prospect_Finder_V4_2_0_PATCH_FIXED.zip')
+          out = Path('releases/4.2.0/YMS_Prospect_Finder_V4_2_0_RECOVERED.zip')
+          report = Path('hashes/v4.2.0-rebuild-report.txt')
+          report.parent.mkdir(parents=True, exist_ok=True)
+          data = src.read_bytes()
+
+          # Handle an accidentally base64-text-wrapped archive as well as binary ZIP bytes.
+          if data[:4] == b'UEsD':
+              try:
+                  data = base64.b64decode(data, validate=False)
+              except Exception:
+                  pass
+
+          entries = []
+          pos = 0
+          while True:
+              p = data.find(b'PK\x03\x04', pos)
+              if p < 0:
+                  break
+              if p + 30 > len(data):
+                  break
+              sig, ver, flag, method, mtime, mdate, crc, csize, usize, nlen, xlen = struct.unpack_from('<IHHHHHIIIHH', data, p)
+              name_start = p + 30
+              name_end = name_start + nlen
+              extra_end = name_end + xlen
+              name = data[name_start:name_end].decode('utf-8', 'replace')
+              if flag & 0x08:
+                  raise RuntimeError(f'Unsupported data-descriptor entry: {name}')
+              comp = data[extra_end:extra_end+csize]
+              if len(comp) != csize:
+                  raise RuntimeError(f'Truncated compressed data for {name}')
+              if method == 0:
+                  raw = comp
+              elif method == 8:
+                  raw = zlib.decompress(comp, -15)
+              else:
+                  raise RuntimeError(f'Unsupported compression method {method} for {name}')
+              if len(raw) != usize:
+                  raise RuntimeError(f'Uncompressed size mismatch for {name}')
+              if (binascii.crc32(raw) & 0xffffffff) != crc:
+                  raise RuntimeError(f'CRC mismatch for {name}')
+              entries.append((name, raw))
+              pos = extra_end + csize
+
+          if not entries:
+              raise RuntimeError('No recoverable ZIP entries found')
+
+          with zipfile.ZipFile(out, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as z:
+              for name, raw in entries:
+                  info = zipfile.ZipInfo(name)
+                  info.date_time = (2026, 8, 18, 12, 0, 0)
+                  info.compress_type = zipfile.ZIP_DEFLATED
+                  info.external_attr = 0o644 << 16
+                  z.writestr(info, raw)
+
+          with zipfile.ZipFile(out, 'r') as z:
+              bad = z.testzip()
+              if bad:
+                  raise RuntimeError(f'ZIP validation failed at {bad}')
+              names = z.namelist()
+
+          digest = hashlib.sha256(out.read_bytes()).hexdigest()
+          report.write_text(
+              'VALID ZIP\n' +
+              f'sha256: {digest}\n' +
+              f'bytes: {out.stat().st_size}\n' +
+              'entries:\n' + ''.join(f'- {n}\n' for n in names),
+              encoding='utf-8'
+          )
+          Path('hashes/v4.2.0-recovered-sha256.txt').write_text(digest + '\n', encoding='utf-8')
+          print(report.read_text())
+          PY
+          unzip -t releases/4.2.0/YMS_Prospect_Finder_V4_2_0_RECOVERED.zip
+          git config user.name 'YMS Prospect Finder Updater'
+          git config user.email 'actions@users.noreply.github.com'
+          git add releases/4.2.0/YMS_Prospect_Finder_V4_2_0_RECOVERED.zip hashes/v4.2.0-rebuild-report.txt hashes/v4.2.0-recovered-sha256.txt
+          git commit -m 'Rebuild and validate V4.2.0 OTA archive'
+          git push

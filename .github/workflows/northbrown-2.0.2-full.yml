@@ -1,0 +1,97 @@
+name: Publish NORTHBROWN 2.0.2 full OTA
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'northbrown/staging/2.0.2/trigger.txt'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reconstruct full Website Builder payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION='2.0.2'
+          WORK="$(mktemp -d)"
+          mkdir -p "$WORK/unpacked" northbrown/releases
+          cat northbrown/staging/2.0.0/ota.part* | base64 -d > "$WORK/base.zip"
+          echo '88f45969ed801323252b83529929dd66848560347105816cb15db727e3e69f0e  '"$WORK/base.zip" | sha256sum -c -
+          unzip -t "$WORK/base.zip" >/dev/null
+          unzip -q "$WORK/base.zip" -d "$WORK/unpacked"
+          P="$WORK/unpacked/payload"
+
+          test -f "$P/app.py"
+          test -f "$P/feature_routes.py"
+          test -f "$P/builder_routes.py"
+          test -f "$P/requirements.txt"
+          test -f "$P/VERSION.txt"
+          test -f "$P/START_NORTHBROWN_INTERNAL.sh"
+          test -f "$P/static/app.js"
+          test -f "$P/static/app.css"
+          test -f "$P/templates/index.html"
+          test -f "$P/NORTHBROWN_ICON.png"
+
+          python - "$P" <<'PY'
+          from pathlib import Path
+          import sys
+          p = Path(sys.argv[1])
+          (p/'VERSION.txt').write_text('2.0.2\n')
+          f = p/'app.py'
+          s = f.read_text()
+          s = s.replace("APP_VERSION = '2.0.0'", "APP_VERSION = '2.0.2'", 1)
+          s = s.replace("threading.Timer(0.9, lambda: os._exit(0)).start()", "threading.Timer(3.0, lambda: os._exit(0)).start()", 1)
+          f.write_text(s)
+          f = p/'START_NORTHBROWN_INTERNAL.sh'
+          s = f.read_text().replace('.icon_ready_2_0_0', '.icon_ready_2_0_2')
+          f.write_text(s)
+          PY
+
+          python -m py_compile "$P/app.py" "$P/feature_routes.py" "$P/builder_routes.py"
+          grep -q "APP_VERSION = '2.0.2'" "$P/app.py"
+          grep -q 'NORTHBROWN_HEALTHCHECK_OK' "$P/app.py"
+          grep -q 'register_builder_routes' "$P/app.py"
+          grep -q 'Created by Ellis Brown / NORTHBROWN' "$P/builder_routes.py"
+          grep -q 'NORTHBROWN WEBSITE BUILDER' "$P/templates/index.html"
+          grep -q 'refresh_app_icon' "$P/START_NORTHBROWN_INTERNAL.sh"
+
+          rm -rf "$P/__pycache__"
+          ZIP="northbrown/releases/NORTHBROWN-update-${VERSION}.zip"
+          (cd "$WORK/unpacked" && zip -qr "$GITHUB_WORKSPACE/$ZIP" payload)
+          unzip -t "$ZIP" >/dev/null
+          unzip -l "$ZIP" | grep -q 'payload/app.py'
+          unzip -l "$ZIP" | grep -q 'payload/feature_routes.py'
+          unzip -l "$ZIP" | grep -q 'payload/builder_routes.py'
+          unzip -l "$ZIP" | grep -q 'payload/requirements.txt'
+          unzip -l "$ZIP" | grep -q 'payload/VERSION.txt'
+          test "$(wc -c < "$ZIP")" -gt 200000
+
+          SHA="$(sha256sum "$ZIP" | awk '{print $1}')"
+          cat > northbrown/update.json <<EOF
+          {
+            "version": "2.0.2",
+            "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/${ZIP}",
+            "sha256": "${SHA}",
+            "notes": "NORTHBROWN 2.0.2 full OTA: replaces the broken bootstrap update with the complete Website Builder package. Includes the working core app, builder routes, full UI assets, real sendable demo-site generator, permanent NORTHBROWN concept banner/creator credit, responsive editor, export tools and NORTHBROWN Mac icon. Also gives the updater longer to return a success response before restart.",
+            "published_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "mandatory": false
+          }
+          EOF
+
+      - name: Publish full OTA
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'NORTHBROWN OTA Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add northbrown/releases/NORTHBROWN-update-2.0.2.zip northbrown/update.json
+          git commit -m 'Publish NORTHBROWN OTA 2.0.2 full package'
+          git push

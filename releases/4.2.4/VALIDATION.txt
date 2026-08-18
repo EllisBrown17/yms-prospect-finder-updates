@@ -1,0 +1,9 @@
+Archive:  releases/4.2.4/YMS_Prospect_Finder_V4_2_4_SMART_FINDER_OPTIMISED.zip
+    testing: server.py                OK
+    testing: index.html               OK
+No errors detected in compressed data of releases/4.2.4/YMS_Prospect_Finder_V4_2_4_SMART_FINDER_OPTIMISED.zip.
+patcher compile: OK
+injected Smart Finder engine compile: OK
+engine checks: 4 workers + ranked queue + deferred retries + 80-item backpressure + per-prospect isolation
+file: Zip archive data, at least v2.0 to extract, compression method=deflate
+bytes: 7060

@@ -1,14 +1,14 @@
 {
   "version": "4.2.0",
-  "published_at": "2026-08-18T11:50:00+01:00",
-  "notes": "Smart Finder: all-sector UK discovery and website/AI qualification now run concurrently; stronger Tesco/consumer filtering; website relevance gate before OpenAI; duplicate/completed-work skipping; safe stop/resume; live Finder metrics and outreach results. Republished with corrected SHA-256 verification.",
+  "published_at": "2026-08-18T11:56:00+01:00",
+  "notes": "Smart Finder: all-sector UK discovery and website/AI qualification now run concurrently; stronger Tesco/consumer filtering; website relevance gate before OpenAI; duplicate/completed-work skipping; safe stop/resume; live Finder metrics and outreach results. OTA package republished with corrected SHA-256 verification.",
   "mandatory": false,
   "mac": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.0/YMS_Prospect_Finder_V4_2_0_OTA_FIXED.zip",
-    "sha256": "99f239cbab5ccf849aec6b4d1d04c78e95d40ed763e43e40901eff9f8984132d"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.0/YMS_Prospect_Finder_V4_2_0_PATCH_FIXED.zip",
+    "sha256": "1576a92be121fa9c6240b6110eed6b769e8b29a16dcb2b3b819e8aadfe9bf12e"
   },
   "windows": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.0/YMS_Prospect_Finder_V4_2_0_OTA_FIXED.zip",
-    "sha256": "99f239cbab5ccf849aec6b4d1d04c78e95d40ed763e43e40901eff9f8984132d"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.0/YMS_Prospect_Finder_V4_2_0_PATCH_FIXED.zip",
+    "sha256": "1576a92be121fa9c6240b6110eed6b769e8b29a16dcb2b3b819e8aadfe9bf12e"
   }
 }

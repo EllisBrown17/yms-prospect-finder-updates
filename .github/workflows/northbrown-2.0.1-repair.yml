@@ -1,0 +1,160 @@
+name: Publish NORTHBROWN 2.0.1 OTA repair
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'northbrown/staging/2.0.1/trigger.txt'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Rebuild safe 2.0.1 overlay
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="2.0.1"
+          BASE_STAGE="northbrown/staging/2.0.0"
+          WORK="$(mktemp -d)"
+          mkdir -p northbrown/releases "$WORK/unpacked"
+
+          # Reuse the already-staged 2.0 Builder layer, then add the files the
+          # NORTHBROWN updater requires and a safe wrapper around the known-good core.
+          cat "$BASE_STAGE"/ota.part* | base64 -d > "$WORK/base.zip"
+          unzip -t "$WORK/base.zip" >/dev/null
+          unzip -q "$WORK/base.zip" -d "$WORK/unpacked"
+          PAYLOAD="$WORK/unpacked/payload"
+
+          test -f "$PAYLOAD/bootstrap.py"
+          test -f "$PAYLOAD/builder_routes.py"
+          test -f "$PAYLOAD/START_NORTHBROWN_INTERNAL.sh"
+          test -f "$PAYLOAD/static/app.js"
+          test -f "$PAYLOAD/static/app.css"
+          test -f "$PAYLOAD/templates/index.html"
+
+          cat > "$PAYLOAD/app.py" <<'PY'
+          """NORTHBROWN 2.x overlay core wrapper.
+
+          The Website Builder layers on top of the last known-good NORTHBROWN core.
+          During OTA installation the updater has already backed that core up. This
+          wrapper preserves it once as _northbrown_core.py and loads it for normal
+          runs, while still satisfying the updater's required app.py health check.
+          """
+          from __future__ import annotations
+
+          import glob
+          import importlib.util
+          import os
+          import py_compile
+          import shutil
+          import sys
+
+          NORTHBROWN_OVERLAY_CORE_WRAPPER = True
+          ROOT = os.path.dirname(os.path.abspath(__file__))
+          CORE_PATH = os.path.join(ROOT, '_northbrown_core.py')
+
+          def _ensure_core() -> str:
+              if os.path.isfile(CORE_PATH):
+                  return CORE_PATH
+              backups = sorted(
+                  glob.glob(os.path.join(ROOT, 'data', 'updates', 'backups', '*', 'app.py')),
+                  reverse=True,
+              )
+              for candidate in backups:
+                  try:
+                      with open(candidate, 'r', encoding='utf-8', errors='ignore') as fh:
+                          head = fh.read(12000)
+                      if 'NORTHBROWN_OVERLAY_CORE_WRAPPER' in head:
+                          continue
+                      shutil.copy2(candidate, CORE_PATH)
+                      return CORE_PATH
+                  except OSError:
+                      continue
+              raise RuntimeError(
+                  'Could not locate the previous NORTHBROWN core in the OTA backup. '
+                  'Nothing has been deleted; reinstall the 1.5.1 recovery build and retry.'
+              )
+
+          if os.getenv('NORTHBROWN_HEALTHCHECK') == '1':
+              core = _ensure_core()
+              py_compile.compile(core, doraise=True)
+              print('NORTHBROWN_HEALTHCHECK_OK')
+              raise SystemExit(0)
+
+          _core_file = _ensure_core()
+          _spec = importlib.util.spec_from_file_location('_northbrown_core_runtime', _core_file)
+          if _spec is None or _spec.loader is None:
+              raise RuntimeError('Could not load the preserved NORTHBROWN core.')
+          _LEGACY = importlib.util.module_from_spec(_spec)
+          sys.modules[_spec.name] = _LEGACY
+          _spec.loader.exec_module(_LEGACY)
+
+          for _name, _value in vars(_LEGACY).items():
+              if not _name.startswith('__'):
+                  globals()[_name] = _value
+          PY
+
+          cp northbrown/patches/current/payload/requirements.txt "$PAYLOAD/requirements.txt"
+          printf '%s\n' "$VERSION" > "$PAYLOAD/VERSION.txt"
+
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('${PAYLOAD}/bootstrap.py')
+          s = p.read_text()
+          s = s.replace("core.APP_VERSION = '2.0.0'", "core.APP_VERSION = '2.0.1'\nif hasattr(core, '_LEGACY'):\n    core._LEGACY.APP_VERSION = '2.0.1'", 1)
+          p.write_text(s)
+
+          p = Path('${PAYLOAD}/START_NORTHBROWN_INTERNAL.sh')
+          s = p.read_text().replace('.icon_ready_2_0_0', '.icon_ready_2_0_1')
+          p.write_text(s)
+          PY
+
+          python -m py_compile "$PAYLOAD/app.py" "$PAYLOAD/bootstrap.py" "$PAYLOAD/builder_routes.py"
+          grep -q 'NORTHBROWN_OVERLAY_CORE_WRAPPER' "$PAYLOAD/app.py"
+          grep -q "2.0.1" "$PAYLOAD/bootstrap.py"
+          grep -q 'NORTHBROWN 2.0 Website Builder' "$PAYLOAD/static/app.js"
+          grep -q 'NORTHBROWN WEBSITE BUILDER' "$PAYLOAD/templates/index.html"
+          grep -q 'Created by Ellis Brown / NORTHBROWN' "$PAYLOAD/builder_routes.py"
+          grep -q 'refresh_app_icon' "$PAYLOAD/START_NORTHBROWN_INTERNAL.sh"
+
+          ZIP="northbrown/releases/NORTHBROWN-update-${VERSION}.zip"
+          (cd "$WORK/unpacked" && zip -qr "$GITHUB_WORKSPACE/$ZIP" payload)
+          unzip -t "$ZIP" >/dev/null
+
+          # Match the exact runtime checks in the installed NORTHBROWN updater.
+          unzip -l "$ZIP" | grep -q 'payload/app.py'
+          unzip -l "$ZIP" | grep -q 'payload/requirements.txt'
+          unzip -l "$ZIP" | grep -q 'payload/VERSION.txt'
+          unzip -l "$ZIP" | grep -q 'payload/bootstrap.py'
+          unzip -l "$ZIP" | grep -q 'payload/builder_routes.py'
+
+          SHA="$(sha256sum "$ZIP" | awk '{print $1}')"
+          cat > northbrown/update.json <<EOF
+          {
+            "version": "${VERSION}",
+            "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/${ZIP}",
+            "sha256": "${SHA}",
+            "notes": "NORTHBROWN 2.0.1 repair: fixes the missing required OTA files while keeping the Website Builder, real demo-site generator, permanent NORTHBROWN concept banner/watermark, creator credit, responsive editor, export tools and NORTHBROWN app icon.",
+            "published_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "mandatory": false
+          }
+          EOF
+
+      - name: Publish repaired OTA
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "NORTHBROWN OTA Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add northbrown/releases/NORTHBROWN-update-2.0.1.zip northbrown/update.json
+          git commit -m "Publish NORTHBROWN OTA 2.0.1 repair"
+          git push

@@ -1,18 +1,18 @@
 {
-  "version": "4.2.1",
-  "published_at": "2026-08-18T21:27:00+01:00",
-  "notes": "Individual prospect workflow fix. Website Evidence now retries old skip results, resolves a missing Google Place/company website automatically, crawls useful pages and refreshes the open prospect. AI Qualify now runs a one-company Smart Pipeline: find website, read evidence, apply the V4.2 relevance gate, AI qualify, score, prioritise and draft the personalised email. Failed attempts now show a clear reason in the prospect drawer instead of looking like nothing happened. The updater can also bootstrap the V4.2 prerequisite on an older V4.1 device.",
+  "version": "4.2.2",
+  "published_at": "2026-08-18T21:49:00+01:00",
+  "notes": "Stability pass. Smart Finder can now always resume: Stop safely creates a resumable pause, Finder jobs resume correctly even without a normal company-ID queue, Start automatically resumes a saved Finder, and explicit Resume controls are shown. Individual and automated prospect work now falls back to a likely public Facebook business page when no normal website is found. Temporary HTTP/OpenAI errors including 503 use longer automatic retry/backoff, and paused jobs show a working Resume remaining control instead of a dead end.",
   "mandatory": false,
   "mac": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.1/YMS_Prospect_Finder_V4_2_1_INDIVIDUAL_WORKFLOW_FIX.zip",
-    "sha256": "c42794420b47156bd1e814e391edbdb82367e719a0785774bf0777555464d1a1",
-    "git_blob_sha": "ec813cf9a91020a4d08ab2b65114da18c309bbc1",
-    "blob_sha": "ec813cf9a91020a4d08ab2b65114da18c309bbc1"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.2/YMS_Prospect_Finder_V4_2_2_STABILITY.zip",
+    "sha256": "6669bfcc5e2a2dfe16f9c0cf4434121ecb42b78877c1e6d683e05703aa71f9b3",
+    "git_blob_sha": "173fe78d4bb8594b94132859b050ac41b9c0397d",
+    "blob_sha": "173fe78d4bb8594b94132859b050ac41b9c0397d"
   },
   "windows": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.1/YMS_Prospect_Finder_V4_2_1_INDIVIDUAL_WORKFLOW_FIX.zip",
-    "sha256": "c42794420b47156bd1e814e391edbdb82367e719a0785774bf0777555464d1a1",
-    "git_blob_sha": "ec813cf9a91020a4d08ab2b65114da18c309bbc1",
-    "blob_sha": "ec813cf9a91020a4d08ab2b65114da18c309bbc1"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.2/YMS_Prospect_Finder_V4_2_2_STABILITY.zip",
+    "sha256": "6669bfcc5e2a2dfe16f9c0cf4434121ecb42b78877c1e6d683e05703aa71f9b3",
+    "git_blob_sha": "173fe78d4bb8594b94132859b050ac41b9c0397d",
+    "blob_sha": "173fe78d4bb8594b94132859b050ac41b9c0397d"
   }
 }

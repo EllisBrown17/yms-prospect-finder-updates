@@ -1,0 +1,1 @@
+Trigger exact SHA-256 calculation for the published V4.2.0 OTA package.

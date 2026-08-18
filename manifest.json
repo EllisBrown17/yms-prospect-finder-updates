@@ -1,18 +1,18 @@
 {
-  "version": "4.2.0",
-  "published_at": "2026-08-18T21:06:00+01:00",
-  "notes": "Smart Finder: continuous all-sector UK discovery and AI qualification; stronger Tesco/consumer filtering; website relevance gate before OpenAI; duplicate/completed-work skipping; safe stop/resume; live Finder metrics; automatic priority and personalised outreach drafts. Final OTA archive rebuilt and validated server-side.",
+  "version": "4.2.1",
+  "published_at": "2026-08-18T21:27:00+01:00",
+  "notes": "Individual prospect workflow fix. Website Evidence now retries old skip results, resolves a missing Google Place/company website automatically, crawls useful pages and refreshes the open prospect. AI Qualify now runs a one-company Smart Pipeline: find website, read evidence, apply the V4.2 relevance gate, AI qualify, score, prioritise and draft the personalised email. Failed attempts now show a clear reason in the prospect drawer instead of looking like nothing happened.",
   "mandatory": false,
   "mac": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.0/YMS_Prospect_Finder_V4_2_0_FINAL.zip",
-    "sha256": "b13c9b9bffc226206cb849df5d763b16630325b1f91381eeabd33f1c11186773",
-    "git_blob_sha": "c193bf096231240896ecfaf539035d2778b88bef",
-    "blob_sha": "c193bf096231240896ecfaf539035d2778b88bef"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.1/YMS_Prospect_Finder_V4_2_1_INDIVIDUAL_WORKFLOW_FIX.zip",
+    "sha256": "236995925c15973a8f3fe1c43d79d179fa7b45dbed6e45795c2b1f213933a79a",
+    "git_blob_sha": "263f94d336a0456669b26d32eef073b060d376aa",
+    "blob_sha": "263f94d336a0456669b26d32eef073b060d376aa"
   },
   "windows": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.0/YMS_Prospect_Finder_V4_2_0_FINAL.zip",
-    "sha256": "b13c9b9bffc226206cb849df5d763b16630325b1f91381eeabd33f1c11186773",
-    "git_blob_sha": "c193bf096231240896ecfaf539035d2778b88bef",
-    "blob_sha": "c193bf096231240896ecfaf539035d2778b88bef"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.1/YMS_Prospect_Finder_V4_2_1_INDIVIDUAL_WORKFLOW_FIX.zip",
+    "sha256": "236995925c15973a8f3fe1c43d79d179fa7b45dbed6e45795c2b1f213933a79a",
+    "git_blob_sha": "263f94d336a0456669b26d32eef073b060d376aa",
+    "blob_sha": "263f94d336a0456669b26d32eef073b060d376aa"
   }
 }

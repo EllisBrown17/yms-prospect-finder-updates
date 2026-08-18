@@ -1,0 +1,1 @@
+YMS Prospect Finder V4.2.1 — individual prospect workflow fix. Website Evidence and AI Qualify now automatically retry missing prerequisites, resolve websites, refresh the drawer and show clear failure reasons.

@@ -27,3 +27,4 @@ jobs:
           git add releases/4.2.0/YMS_Prospect_Finder_V4_2_0_BINARY.zip hashes/v4.2.0-binary-validation.txt hashes/v4.2.0-binary-sha256.txt
           git commit -m 'Publish validated binary V4.2.0 OTA ZIP'
           git push
+          # Trigger marker: 2026-08-18T20:52+01:00

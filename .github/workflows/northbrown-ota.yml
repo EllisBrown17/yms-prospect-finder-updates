@@ -16,6 +16,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate complete NORTHBROWN payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          PAYLOAD="northbrown/patches/current/payload"
+          test -f "$PAYLOAD/VERSION.txt"
+          test -f "$PAYLOAD/app.py"
+          test -f "$PAYLOAD/feature_routes.py"
+          test -f "$PAYLOAD/requirements.txt"
+          test -f "$PAYLOAD/static/app.js"
+          test -f "$PAYLOAD/static/app.css"
+          test -f "$PAYLOAD/templates/index.html"
+          test "$(wc -c < "$PAYLOAD/app.py")" -gt 20000
+          test "$(wc -c < "$PAYLOAD/feature_routes.py")" -gt 20000
+          test "$(wc -c < "$PAYLOAD/static/app.js")" -gt 10000
+          test "$(wc -c < "$PAYLOAD/templates/index.html")" -gt 10000
+          python -m py_compile "$PAYLOAD/app.py" "$PAYLOAD/feature_routes.py"
+          grep -q "NORTHBROWN_HEALTHCHECK_OK" "$PAYLOAD/app.py"
+          if ls "$PAYLOAD"/patch*.part* >/dev/null 2>&1; then
+            echo "Refusing to publish a transition/patch payload. NORTHBROWN OTA releases must contain complete runtime files."
+            exit 1
+          fi
+
       - name: Build verified OTA package
         shell: bash
         run: |
@@ -29,6 +52,7 @@ jobs:
           cd ../../..
           ZIP="northbrown/releases/NORTHBROWN-update-${VERSION}.zip"
           SHA="$(sha256sum "$ZIP" | awk '{print $1}')"
+          unzip -t "$ZIP" >/dev/null
           cat > northbrown/update.json <<EOF
           {
             "version": "${VERSION}",

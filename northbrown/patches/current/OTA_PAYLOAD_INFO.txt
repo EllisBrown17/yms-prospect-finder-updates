@@ -1,0 +1,5 @@
+Payload type: transition patch
+Target app: NORTHBROWN Lead Engine
+Version: 1.5.0
+Base: preserved full 1.4.0 backup
+Safety: patch is assembled and applied in a temporary directory, Python source is syntax-checked, then live files are replaced atomically. Existing updater backup/rollback remains in place.

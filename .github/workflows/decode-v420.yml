@@ -1,0 +1,29 @@
+name: Decode V4.2 deterministic OTA archive
+
+on:
+  push:
+    paths:
+      - '.github/workflows/decode-v420.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  decode:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decode, validate and publish binary ZIP
+        shell: bash
+        run: |
+          set -e
+          mkdir -p hashes
+          base64 -d releases/4.2.0/YMS_Prospect_Finder_V4_2_0_DETERMINISTIC.zip.b64 > releases/4.2.0/YMS_Prospect_Finder_V4_2_0_BINARY.zip
+          unzip -t releases/4.2.0/YMS_Prospect_Finder_V4_2_0_BINARY.zip | tee hashes/v4.2.0-binary-validation.txt
+          sha256sum releases/4.2.0/YMS_Prospect_Finder_V4_2_0_BINARY.zip | awk '{print $1}' > hashes/v4.2.0-binary-sha256.txt
+          file releases/4.2.0/YMS_Prospect_Finder_V4_2_0_BINARY.zip >> hashes/v4.2.0-binary-validation.txt
+          git config user.name 'YMS Prospect Finder Updater'
+          git config user.email 'actions@users.noreply.github.com'
+          git add releases/4.2.0/YMS_Prospect_Finder_V4_2_0_BINARY.zip hashes/v4.2.0-binary-validation.txt hashes/v4.2.0-binary-sha256.txt
+          git commit -m 'Publish validated binary V4.2.0 OTA ZIP'
+          git push

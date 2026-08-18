@@ -1,8 +1,8 @@
 {
-  "version": "1.5.0",
-  "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/northbrown/releases/NORTHBROWN-update-1.5.0.zip",
-  "sha256": "493fae22f00188fbb22ed2d76fc1d3c9b37df5c1adeda9e3b461d9c4a79ddb5a",
-  "notes": "GitHub-powered NORTHBROWN OTA update. Install from Settings > Software updates.",
-  "published_at": "2026-08-18T20:21:45Z",
+  "version": "1.4.3",
+  "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/northbrown/releases/NORTHBROWN-update-1.4.3.zip",
+  "sha256": "9cfa287aceb3f453ba88977c7107e08b3e0d086cf803b4248e5763729fed4e6c",
+  "notes": "Temporarily rolled back to the last safe OTA release while NORTHBROWN 1.5.1 is repaired. Do not install 1.5.0.",
+  "published_at": "2026-08-18T20:33:00Z",
   "mandatory": false
 }

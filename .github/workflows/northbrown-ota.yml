@@ -3,6 +3,8 @@ name: Build NORTHBROWN OTA update
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     paths:
       - 'northbrown/patches/current/**'
 
@@ -24,16 +26,22 @@ jobs:
           test -f "$PAYLOAD/VERSION.txt"
           test -f "$PAYLOAD/app.py"
           test -f "$PAYLOAD/feature_routes.py"
+          test -f "$PAYLOAD/builder_routes.py"
           test -f "$PAYLOAD/requirements.txt"
+          test -f "$PAYLOAD/NORTHBROWN_ICON.png"
+          test -f "$PAYLOAD/static/NORTHBROWN_ICON.png"
           test -f "$PAYLOAD/static/app.js"
           test -f "$PAYLOAD/static/app.css"
           test -f "$PAYLOAD/templates/index.html"
           test "$(wc -c < "$PAYLOAD/app.py")" -gt 20000
           test "$(wc -c < "$PAYLOAD/feature_routes.py")" -gt 20000
+          test "$(wc -c < "$PAYLOAD/builder_routes.py")" -gt 20000
           test "$(wc -c < "$PAYLOAD/static/app.js")" -gt 10000
           test "$(wc -c < "$PAYLOAD/templates/index.html")" -gt 10000
-          python -m py_compile "$PAYLOAD/app.py" "$PAYLOAD/feature_routes.py"
+          python -m py_compile "$PAYLOAD/app.py" "$PAYLOAD/feature_routes.py" "$PAYLOAD/builder_routes.py"
           grep -q "NORTHBROWN_HEALTHCHECK_OK" "$PAYLOAD/app.py"
+          grep -q "NORTHBROWN 2.0 Website Builder" "$PAYLOAD/static/app.js"
+          grep -q "NORTHBROWN WEBSITE BUILDER" "$PAYLOAD/templates/index.html"
           if ls "$PAYLOAD"/patch*.part* >/dev/null 2>&1; then
             echo "Refusing to publish a transition/patch payload. NORTHBROWN OTA releases must contain complete runtime files."
             exit 1
@@ -58,7 +66,7 @@ jobs:
             "version": "${VERSION}",
             "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/${ZIP}",
             "sha256": "${SHA}",
-            "notes": "GitHub-powered NORTHBROWN OTA update. Install from Settings > Software updates.",
+            "notes": "NORTHBROWN 2.0 Website Builder: build and edit complete sites, pull business data and assets, generate real watermarked prospect demos, multi-page editing, AI copy, responsive preview/export, plus the NORTHBROWN app icon.",
             "published_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
             "mandatory": false
           }

@@ -1,0 +1,46 @@
+name: Build YMS Prospect Finder V4.2.2 Stability OTA
+
+on:
+  push:
+    paths:
+      - 'releases/4.2.2/package.b64'
+      - '.github/workflows/build-v422.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decode and validate V4.2.2 update
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC='releases/4.2.2/package.b64'
+          OUT='releases/4.2.2/YMS_Prospect_Finder_V4_2_2_STABILITY.zip'
+          REPORT='releases/4.2.2/VALIDATION.txt'
+          HASH='releases/4.2.2/SHA256.txt'
+          base64 --decode "$SRC" > "$OUT"
+          unzip -t "$OUT" | tee "$REPORT"
+          rm -rf /tmp/yms422 && mkdir -p /tmp/yms422
+          unzip -q "$OUT" -d /tmp/yms422
+          python3 -m py_compile /tmp/yms422/server.py
+          grep -q 'TARGET_VERSION = "4.2.2"' /tmp/yms422/server.py
+          grep -q 'find_facebook_fallback' /tmp/yms422/server.py
+          grep -q 'resumeSmartFinder' /tmp/yms422/server.py
+          grep -q 'def resume_progress_job' /tmp/yms422/server.py
+          grep -q 'Temporary OpenAI issue' /tmp/yms422/server.py
+          sha256sum "$OUT" | awk '{print $1}' > "$HASH"
+          echo "file: $(file -b "$OUT")" >> "$REPORT"
+          echo "bytes: $(wc -c < "$OUT")" >> "$REPORT"
+          echo 'python compile: OK' >> "$REPORT"
+          echo 'stability markers: Facebook fallback + 503 backoff + Finder resume present' >> "$REPORT"
+          git config user.name 'YMS Prospect Finder Updater'
+          git config user.email 'actions@users.noreply.github.com'
+          git add "$OUT" "$REPORT" "$HASH"
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish validated V4.2.2 stability update'
+            git push
+          fi

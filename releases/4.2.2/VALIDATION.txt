@@ -1,0 +1,8 @@
+Archive:  releases/4.2.2/YMS_Prospect_Finder_V4_2_2_STABILITY.zip
+    testing: server.py                OK
+    testing: index.html               OK
+No errors detected in compressed data of releases/4.2.2/YMS_Prospect_Finder_V4_2_2_STABILITY.zip.
+file: Zip archive data, at least v2.0 to extract, compression method=deflate
+bytes: 11329
+python compile: OK
+stability markers: Facebook fallback + 503 backoff + Finder resume present

@@ -1,0 +1,50 @@
+server.py               bad CRC b7714f8c  (should be 0e378821)
+unzip-p-exit: 2
+server-bytes: 42498
+server-file: Python script, Unicode text, UTF-8 text executable, with very long lines (1837)
+version-lines:
+4:TARGET_VERSION="4.2.0"
+18:# V4.2 Smart Finder — all-sector discovery + concurrent evidence/AI pipeline
+82:            if x.get("discovery_exclusion_source")=="auto-v4.2":
+87:            x["discovery_exclusion_source"]="auto-v4.2"
+93:def smart_finder_matrix():
+115:def smart_finder_status():
+119:    return {"action":"finder","status":"idle","id":"","percent":0,"detail":"Smart Finder is idle","queries_done":0,"query_limit":0,"cursor":int(st.get("smart_finder:cursor",0) or 0),"matrix_total":len(smart_finder_matrix()),"new_candidates":0,"google_hits":0,"noise_blocked":0,"qualified":0,"filtered":0,"waiting":0,"workers":3}
+136:        raise RuntimeError(f"Smart Finder is already running on {old.get('device_name') or 'your other computer'}. Let that device run it; OneDrive will sync the results here.")
+137:    _write_atomic(p,json.dumps({"device_id":own,"device_name":c.get("sync_device_name","This computer"),"ts":time.time(),"version":APP_VERSION},ensure_ascii=False))
+144:    try:_write_atomic(p,json.dumps({"device_id":c.get("sync_device_id"),"device_name":c.get("sync_device_name","This computer"),"ts":time.time(),"version":APP_VERSION},ensure_ascii=False))
+162:    # Smart Finder intentionally uses Core/Pro discovery. Website/phone is fetched only for candidates that survive filtering.
+164:    raw=[gp_to_lead(p,sector,f"Smart Finder: {term} | {area}") for p in ps]
+174:    log("smart_finder_google",{"sector":sector,"area":area,"term":term,"found":len(ps),"usable":len(accepted),"noise_blocked":len(blocked),"blocked_examples":blocked[:5],**{k:v for k,v in r.items() if not k.endswith('_ids')}})
+179:    """Shared one-company Smart Pipeline used by manual batches and Smart Finder."""
+212:        # V4.2: deterministic evidence filter BEFORE OpenAI spend.
+230:def _run_smart_finder(job_id):
+233:    matrix=smart_finder_matrix();matrix_total=len(matrix)
+238:    cursor=int(st.get("smart_finder:cursor",0) or 0)
+276:        persist("Starting Smart Finder • seeding the AI pipeline")
+306:                        st=load_json(SCAN_FILE,{});st["smart_finder:cursor"]=cursor;save_json(SCAN_FILE,st)
+341:            msg="Smart Finder paused safely"
+342:            if kind=="quota":msg="Smart Finder paused — OpenAI credit/quota exhausted"
+343:            elif kind=="auth":msg="Smart Finder paused — API authentication failed"
+344:            elif kind in ("temporary","rate_limit"):msg="Smart Finder paused — service/network problem after retries"
+351:        _job_set(job_id,status="paused",resumable=True,error=str(ex2),failure_kind=_service_failure_kind("pipeline",ex2),detail="Smart Finder paused safely — all completed prospect work is saved",finished_at=time.time(),pending_ids=list(pending),processed_ids=list(processed),awake_protected=False)
+356:def start_smart_finder(query_limit=100,pages=1):
+358:    if c.get("free_mode",True):raise RuntimeError("Smart Finder needs Full Mode because it automatically AI-qualifies relevant companies. Switch Full Mode on in Settings first.")
+365:        raise RuntimeError("A Smart Finder session is paused with saved work. Resume it from the activity panel instead of starting a new one.")
+368:        JOBS[job_id]={"id":job_id,"action":"finder","ids":[],"status":"queued","percent":0,"detail":"Smart Finder queued","query_limit":limit,"queries_done":0,"pages":pages,"workers":3,"google_hits":0,"noise_blocked":0,"new_candidates":0,"qualified":0,"filtered":0,"skipped":0,"waiting":0,"active_workers":0,"pending_ids":[],"processed_ids":[],"stop_requested":False,"completed":0,"total":limit,"remaining":limit,"created_at":time.time(),"updated_at":time.time(),"error":"","failure_kind":"","resumable":False,"awake_protected":False,"checkpointed":True}
+370:    threading.Thread(target=_run_smart_finder,args=(job_id,),daemon=True).start()
+compile:
+  File "releases/4.2.0/recovered/server.py", line 490
+    new4='let title=j.action==="finder"?"Smart Finder • all YMS sectors":j.action==="pipeline"?`r"?"Sm,uerif
+         ^
+SyntaxError: unterminated string literal (detected at line 490)
+compile-exit: 1
+tail:
+    new2='if(j.action==="finder")parts=[`${j.queries_done||0}/${j.query_limit||0} searches`,`${j.google_hits||0} Google hits`,`${j.noise_blocked||0} obvious noise`,`${j.filtered||0} filtered before AI`,`${j.qualified||0} qualified`,`${j.waiting||0} waiting`];$("progressCount").textContent=parts.join(" • ");'
+    if old2 not in s: raise RuntimeError('progress count missing')
+    s=s.replace(old2,new2,1)
+    # Finder completion message in poller.
+    # Legacy blocking progress helper does not handle Finder; Finder uses the background job panel.
+    # restore title mapping.
+    old4='let title=j.action==="ai"?`AI qualification • ${j.total||0} selected`:j.action==="web"?"Bulk website evidence crawl":"Companies House matching";'
+    new4='let title=j.action==="finder"?"Smart Finder • all YMS sectors":j.action==="pipeline"?`r"?"Sm,uerif

@@ -1,18 +1,18 @@
 {
   "version": "4.2.0",
-  "published_at": "2026-08-18T20:39:00+01:00",
-  "notes": "Smart Finder: continuous all-sector UK discovery and AI qualification; stronger Tesco/consumer filtering; website relevance gate before OpenAI; duplicate/completed-work skipping; safe stop/resume; live Finder metrics; automatic priority and personalised outreach drafts.",
+  "published_at": "2026-08-18T21:06:00+01:00",
+  "notes": "Smart Finder: continuous all-sector UK discovery and AI qualification; stronger Tesco/consumer filtering; website relevance gate before OpenAI; duplicate/completed-work skipping; safe stop/resume; live Finder metrics; automatic priority and personalised outreach drafts. Final OTA archive rebuilt and validated server-side.",
   "mandatory": false,
   "mac": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.0/YMS_Prospect_Finder_V4_2_0_PATCH_FIXED.zip",
-    "sha256": "1694042b9424bf69896a4f810f2ea66937210e2f9ca3d376d1e5c72e0868dc05",
-    "git_blob_sha": "bce900a23005b872bcf0f588ecc87876784cfbe7",
-    "blob_sha": "bce900a23005b872bcf0f588ecc87876784cfbe7"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.0/YMS_Prospect_Finder_V4_2_0_FINAL.zip",
+    "sha256": "b13c9b9bffc226206cb849df5d763b16630325b1f91381eeabd33f1c11186773",
+    "git_blob_sha": "c193bf096231240896ecfaf539035d2778b88bef",
+    "blob_sha": "c193bf096231240896ecfaf539035d2778b88bef"
   },
   "windows": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.0/YMS_Prospect_Finder_V4_2_0_PATCH_FIXED.zip",
-    "sha256": "1694042b9424bf69896a4f810f2ea66937210e2f9ca3d376d1e5c72e0868dc05",
-    "git_blob_sha": "bce900a23005b872bcf0f588ecc87876784cfbe7",
-    "blob_sha": "bce900a23005b872bcf0f588ecc87876784cfbe7"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.0/YMS_Prospect_Finder_V4_2_0_FINAL.zip",
+    "sha256": "b13c9b9bffc226206cb849df5d763b16630325b1f91381eeabd33f1c11186773",
+    "git_blob_sha": "c193bf096231240896ecfaf539035d2778b88bef",
+    "blob_sha": "c193bf096231240896ecfaf539035d2778b88bef"
   }
 }

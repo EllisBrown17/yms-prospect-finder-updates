@@ -1,0 +1,12 @@
+file: cannot open `"releases/4.2.0/YMS_Prospect_Finder_V4_2_0_PATCH_FIXED.zip"' (No such file or directory)
+sha256sum: '"releases/4.2.0/YMS_Prospect_Finder_V4_2_0_PATCH_FIXED.zip"': No such file or directory
+sha256: 
+unzip-test:
+Archive:  releases/4.2.0/YMS_Prospect_Finder_V4_2_0_PATCH_FIXED.zip
+  End-of-central-directory signature not found.  Either this file is not
+  a zipfile, or it constitutes one disk of a multi-part archive.  In the
+  latter case the central directory and zipfile comment will be found on
+  the last disk(s) of this archive.
+unzip:  cannot find zipfile directory in one of releases/4.2.0/YMS_Prospect_Finder_V4_2_0_PATCH_FIXED.zip or
+        releases/4.2.0/YMS_Prospect_Finder_V4_2_0_PATCH_FIXED.zip.zip, and cannot find releases/4.2.0/YMS_Prospect_Finder_V4_2_0_PATCH_FIXED.zip.ZIP, period.
+unzip-exit: 9

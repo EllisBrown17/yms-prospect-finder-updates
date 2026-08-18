@@ -1,8 +1,8 @@
 {
   "version": "2.0.1",
   "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/northbrown/releases/NORTHBROWN-update-2.0.1.zip",
-  "sha256": "946c1c08c46a0e3fcf2ca0709a334af610e370e9a02e542f3a8a8cb8c89f47e9",
-  "notes": "NORTHBROWN 2.0.1 repair: fixes the missing required OTA files. The update validates app.py, requirements.txt and VERSION.txt, preserves the working NORTHBROWN core, verifies and installs the Website Builder runtime, real demo-site generator, permanent NORTHBROWN demo branding and creator credit.",
+  "sha256": "b3f8b7f751d56b4463de4df38352a532dd0ce7070d01466d432da7844e4f52d6",
+  "notes": "NORTHBROWN 2.0.1 repair: fixes the missing required OTA files. The update validates app.py, requirements.txt and VERSION.txt, preserves the working NORTHBROWN core, verifies and installs the Website Builder runtime once, real demo-site generator, permanent NORTHBROWN demo branding and creator credit.",
   "published_at": "2026-08-18T22:56:00+01:00",
   "mandatory": false
 }

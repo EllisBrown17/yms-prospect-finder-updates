@@ -1,38 +1,54 @@
-name: Extract known-good V4.1.2 base
+name: Build final V4.2 Smart Finder OTA package
 
 on:
   push:
     paths:
-      - 'releases/**'
+      - 'releases/4.2.0/final/**'
       - '.github/workflows/hash-release.yml'
 
 permissions:
   contents: write
 
 jobs:
-  base:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-      - name: Extract working V4.1.2 app files
+      - name: Compile patcher and build exact OTA ZIP
         shell: bash
         run: |
-          set -e
-          mkdir -p hashes releases/4.2.0/base
-          ZIP='releases/4.1.2/YMS_Prospect_Finder_V4_1_2_OTA_VERIFICATION_BRIDGE.zip'
-          unzip -t "$ZIP" > hashes/v4.1.2-base-validation.txt
-          unzip -p "$ZIP" server.py > releases/4.2.0/base/server.py
-          unzip -p "$ZIP" index.html > releases/4.2.0/base/index.html
-          echo "server-bytes: $(wc -c < releases/4.2.0/base/server.py)" >> hashes/v4.1.2-base-validation.txt
-          echo "index-bytes: $(wc -c < releases/4.2.0/base/index.html)" >> hashes/v4.1.2-base-validation.txt
-          echo 'version-lines:' >> hashes/v4.1.2-base-validation.txt
-          grep -nE 'APP_VERSION|TARGET_VERSION' releases/4.2.0/base/server.py | head -10 >> hashes/v4.1.2-base-validation.txt || true
-          python3 -m py_compile releases/4.2.0/base/server.py
+          set -euo pipefail
+          FINAL='releases/4.2.0/final'
+          STAGE="$RUNNER_TEMP/yms-v420-final"
+          ZIP='releases/4.2.0/YMS_Prospect_Finder_V4_2_0_FINAL.zip'
+          REPORT='hashes/v4.2.0-final-validation.txt'
+          HASH='hashes/v4.2.0-final-sha256.txt'
+          rm -rf "$STAGE"
+          mkdir -p "$STAGE" hashes
+          python3 -m py_compile "$FINAL/server.py"
+          cp "$FINAL/server.py" "$STAGE/server.py"
+          cp "$FINAL/index.html" "$STAGE/index.html"
+          cp 'releases/4.2.0/recovered/server.py' "$STAGE/smart_patch.txt"
+          rm -f "$ZIP"
+          (cd "$STAGE" && zip -9 -X "$GITHUB_WORKSPACE/$ZIP" server.py index.html smart_patch.txt)
+          {
+            echo 'V4.2 FINAL OTA VALIDATION'
+            echo "bytes: $(wc -c < "$ZIP")"
+            echo "file: $(file -b "$ZIP")"
+            echo 'unzip-test:'
+            unzip -t "$ZIP"
+            echo 'python-patcher-compile: OK'
+            echo 'contents:'
+            unzip -l "$ZIP"
+          } > "$REPORT" 2>&1
+          sha256sum "$ZIP" | awk '{print $1}' > "$HASH"
+          cat "$REPORT"
+          echo "sha256: $(cat "$HASH")"
           git config user.name 'YMS Prospect Finder Updater'
           git config user.email 'actions@users.noreply.github.com'
-          git add releases/4.2.0/base/server.py releases/4.2.0/base/index.html hashes/v4.1.2-base-validation.txt
+          git add "$ZIP" "$REPORT" "$HASH"
           if ! git diff --cached --quiet; then
-            git commit -m 'Extract known-good V4.1.2 base for Smart Finder rebuild'
+            git commit -m 'Publish validated final V4.2.0 Smart Finder OTA ZIP'
             git push
           fi

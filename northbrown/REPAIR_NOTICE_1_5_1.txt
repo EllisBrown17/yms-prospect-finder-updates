@@ -1,0 +1,1 @@
+NORTHBROWN 1.5.1 fixes the failed 1.5.0 transition patch by shipping complete application files rather than attempting to patch an unknown local base. User data, .env, API keys and the SQLite database remain outside the OTA payload.

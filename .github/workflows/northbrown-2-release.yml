@@ -1,0 +1,70 @@
+name: Publish NORTHBROWN 2.0 Website Builder
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'northbrown/staging/2.0.0/**'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Reconstruct and validate release
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="2.0.0"
+          EXPECTED_SHA="88f45969ed801323252b83529929dd66848560347105816cb15db727e3e69f0e"
+          STAGE="northbrown/staging/${VERSION}"
+          mkdir -p northbrown/releases
+          cat "$STAGE"/ota.part* | base64 -d > "northbrown/releases/NORTHBROWN-update-${VERSION}.zip"
+          ZIP="northbrown/releases/NORTHBROWN-update-${VERSION}.zip"
+          ACTUAL_SHA="$(sha256sum "$ZIP" | awk '{print $1}')"
+          test "$ACTUAL_SHA" = "$EXPECTED_SHA"
+          unzip -t "$ZIP" >/dev/null
+          unzip -l "$ZIP" | grep -q 'payload/VERSION.txt'
+          unzip -l "$ZIP" | grep -q 'payload/bootstrap.py'
+          unzip -l "$ZIP" | grep -q 'payload/builder_routes.py'
+          unzip -l "$ZIP" | grep -q 'payload/START_NORTHBROWN_INTERNAL.sh'
+          unzip -l "$ZIP" | grep -q 'payload/static/app.js'
+          unzip -l "$ZIP" | grep -q 'payload/static/app.css'
+          unzip -l "$ZIP" | grep -q 'payload/templates/index.html'
+          TMP="$(mktemp -d)"
+          unzip -q "$ZIP" -d "$TMP"
+          python -m py_compile "$TMP/payload/bootstrap.py" "$TMP/payload/builder_routes.py"
+          grep -q 'NORTHBROWN 2.0 Website Builder' "$TMP/payload/static/app.js"
+          grep -q 'NORTHBROWN WEBSITE BUILDER' "$TMP/payload/templates/index.html"
+          grep -q 'Created by Ellis Brown / NORTHBROWN' "$TMP/payload/builder_routes.py"
+          grep -q 'refresh_app_icon' "$TMP/payload/START_NORTHBROWN_INTERNAL.sh"
+
+      - name: Publish release and update manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="2.0.0"
+          SHA="88f45969ed801323252b83529929dd66848560347105816cb15db727e3e69f0e"
+          ZIP="northbrown/releases/NORTHBROWN-update-${VERSION}.zip"
+          cat > northbrown/update.json <<EOF
+          {
+            "version": "${VERSION}",
+            "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/${ZIP}",
+            "sha256": "${SHA}",
+            "notes": "Huge NORTHBROWN 2.0 update: a built-in website builder that pulls prospect contact details, branding, logo and usable site content; real one-click prospect demo websites with a permanent NORTHBROWN concept banner, watermark and Ellis Brown creator credit; responsive live editing, pages, style controls, AI copy grounded in verified facts, export and demo publishing; plus the NORTHBROWN app icon on Mac.",
+            "published_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "mandatory": false
+          }
+          EOF
+          git config user.name "NORTHBROWN OTA Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add "$ZIP" northbrown/update.json
+          git commit -m "Publish NORTHBROWN OTA ${VERSION}"
+          git push

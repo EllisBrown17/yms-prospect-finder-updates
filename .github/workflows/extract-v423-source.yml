@@ -1,0 +1,33 @@
+name: Extract V4.2.3 source
+
+on:
+  push:
+    paths:
+      - 'releases/4.2.3/package.b64'
+      - '.github/workflows/extract-v423-source.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract patch source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/yms423src && mkdir -p /tmp/yms423src
+          base64 --decode releases/4.2.3/package.b64 > /tmp/v423.zip
+          unzip -q /tmp/v423.zip -d /tmp/yms423src
+          mkdir -p releases/4.2.3/source
+          cp /tmp/yms423src/server.py releases/4.2.3/source/server.py
+          cp /tmp/yms423src/index.html releases/4.2.3/source/index.html
+          git config user.name 'YMS Prospect Finder Updater'
+          git config user.email 'actions@users.noreply.github.com'
+          git add releases/4.2.3/source
+          if ! git diff --cached --quiet; then
+            git commit -m 'Extract V4.2.3 OTA source for optimisation'
+            git push
+          fi

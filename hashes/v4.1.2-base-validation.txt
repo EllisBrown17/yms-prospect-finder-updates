@@ -1,0 +1,11 @@
+Archive:  releases/4.1.2/YMS_Prospect_Finder_V4_1_2_OTA_VERIFICATION_BRIDGE.zip
+    testing: server.py                OK
+    testing: index.html               OK
+No errors detected in compressed data of releases/4.1.2/YMS_Prospect_Finder_V4_1_2_OTA_VERIFICATION_BRIDGE.zip.
+server-bytes: 3995
+index-bytes: 211
+version-lines:
+5:TARGET_VERSION = "4.1.2"
+20:    for p in backups.glob("before-" + TARGET_VERSION + "-*"):
+28:    source,count=re.subn(r'APP_VERSION\s*=\s*["\'][^"\']+["\']', f'APP_VERSION = "{TARGET_VERSION}"', source, count=1)
+44:    (DATA_DIR/"last_ota_update.txt").write_text(f"{TARGET_VERSION}\n{time.strftime('%Y-%m-%d %H:%M:%S')}\nVerified OTA bridge active\n",encoding="utf-8")

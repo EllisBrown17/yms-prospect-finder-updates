@@ -1,0 +1,15 @@
+source-bytes: 10017
+base64: invalid input
+base64-exit: 1
+decoded-bytes: 7500
+file: Zip archive data, at least v2.0 to extract, compression method=deflate
+sha256: cc3d790bd949c965c39fc59d023336cfa143e3348095861f7ca60e33f1f46a32
+unzip-test:
+Archive:  releases/4.2.0/YMS_Prospect_Finder_V4_2_0_BINARY.zip
+  End-of-central-directory signature not found.  Either this file is not
+  a zipfile, or it constitutes one disk of a multi-part archive.  In the
+  latter case the central directory and zipfile comment will be found on
+  the last disk(s) of this archive.
+unzip:  cannot find zipfile directory in one of releases/4.2.0/YMS_Prospect_Finder_V4_2_0_BINARY.zip or
+        releases/4.2.0/YMS_Prospect_Finder_V4_2_0_BINARY.zip.zip, and cannot find releases/4.2.0/YMS_Prospect_Finder_V4_2_0_BINARY.zip.ZIP, period.
+unzip-exit: 9

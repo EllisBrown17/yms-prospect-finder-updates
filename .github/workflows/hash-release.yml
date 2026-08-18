@@ -15,21 +15,28 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-      - name: Decode deterministic source and publish real binary ZIP
+      - name: Diagnose deterministic source and publish report
         shell: bash
         run: |
-          set -e
+          set +e
           mkdir -p hashes
           SRC='releases/4.2.0/YMS_Prospect_Finder_V4_2_0_DETERMINISTIC.zip.b64'
           OUT='releases/4.2.0/YMS_Prospect_Finder_V4_2_0_BINARY.zip'
-          base64 --decode "$SRC" > "$OUT"
-          unzip -t "$OUT" | tee hashes/v4.2.0-binary-validation.txt
-          sha256sum "$OUT" | awk '{print $1}' > hashes/v4.2.0-binary-sha256.txt
-          file "$OUT" >> hashes/v4.2.0-binary-validation.txt
+          REPORT='hashes/v4.2.0-binary-validation.txt'
+          : > "$REPORT"
+          echo "source-bytes: $(wc -c < "$SRC")" >> "$REPORT"
+          base64 --decode "$SRC" > "$OUT" 2>> "$REPORT"
+          echo "base64-exit: $?" >> "$REPORT"
+          echo "decoded-bytes: $(wc -c < "$OUT")" >> "$REPORT"
+          echo "file: $(file -b "$OUT")" >> "$REPORT"
+          sha256sum "$OUT" | awk '{print "sha256: "$1}' >> "$REPORT"
+          echo 'unzip-test:' >> "$REPORT"
+          unzip -t "$OUT" >> "$REPORT" 2>&1
+          echo "unzip-exit: $?" >> "$REPORT"
           git config user.name 'YMS Prospect Finder Updater'
           git config user.email 'actions@users.noreply.github.com'
-          git add "$OUT" hashes/v4.2.0-binary-validation.txt hashes/v4.2.0-binary-sha256.txt
+          git add "$REPORT"
           if ! git diff --cached --quiet; then
-            git commit -m 'Publish validated binary V4.2.0 OTA ZIP'
+            git commit -m 'Record deterministic V4.2 ZIP diagnostics'
             git push
           fi

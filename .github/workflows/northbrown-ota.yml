@@ -1,0 +1,55 @@
+name: Build NORTHBROWN OTA update
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'northbrown/patches/current/**'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build verified OTA package
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(tr -d '[:space:]' < northbrown/patches/current/payload/VERSION.txt)"
+          test -n "$VERSION"
+          mkdir -p northbrown/releases
+          rm -f "northbrown/releases/NORTHBROWN-update-${VERSION}.zip"
+          cd northbrown/patches/current
+          zip -qr "../../releases/NORTHBROWN-update-${VERSION}.zip" payload
+          cd ../../..
+          ZIP="northbrown/releases/NORTHBROWN-update-${VERSION}.zip"
+          SHA="$(sha256sum "$ZIP" | awk '{print $1}')"
+          cat > northbrown/update.json <<EOF
+          {
+            "version": "${VERSION}",
+            "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/${ZIP}",
+            "sha256": "${SHA}",
+            "notes": "GitHub-powered NORTHBROWN OTA update. Install from Settings > Software updates.",
+            "published_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "mandatory": false
+          }
+          EOF
+
+      - name: Publish release payload and manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "NORTHBROWN OTA Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add northbrown/releases northbrown/update.json
+          if git diff --cached --quiet; then
+            echo "Nothing new to publish"
+            exit 0
+          fi
+          git commit -m "Publish NORTHBROWN OTA $(cat northbrown/patches/current/payload/VERSION.txt)"
+          git push

@@ -1,0 +1,28 @@
+name: Hash release package
+
+on:
+  push:
+    paths:
+      - 'releases/**'
+      - '.github/workflows/hash-release.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  hash:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Calculate exact V4.2 SHA-256
+        run: |
+          mkdir -p hashes
+          shasum -a 256 releases/4.2.0/YMS_Prospect_Finder_V4_2_0_PATCH_FIXED.zip | awk '{print $1}' > hashes/v4.2.0-sha256.txt
+          git config user.name 'YMS Prospect Finder Updater'
+          git config user.email 'actions@users.noreply.github.com'
+          git add hashes/v4.2.0-sha256.txt
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record exact V4.2.0 package SHA-256'
+            git push
+          fi

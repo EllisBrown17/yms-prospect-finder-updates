@@ -1,0 +1,17 @@
+name: Verify update checksums
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  checksums:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Print update SHA-256 checksums
+        run: |
+          echo '=== YMS UPDATE CHECKSUMS ==='
+          find releases -type f -name '*.zip' -print0 | sort -z | xargs -0 sha256sum
+          echo '=== END CHECKSUMS ==='

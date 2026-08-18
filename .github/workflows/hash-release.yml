@@ -1,4 +1,4 @@
-name: Repair and validate V4.2 release package
+name: Recover V4.2 Smart Finder backend
 
 on:
   push:
@@ -10,44 +10,35 @@ permissions:
   contents: write
 
 jobs:
-  repair:
+  recover:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-      - name: Repair original binary ZIP and publish diagnostics
+      - name: Extract and compile recovered server.py
         shell: bash
         run: |
           set +e
-          mkdir -p hashes
-          SRC='releases/4.2.0/YMS_Prospect_Finder_V4_2_0_PATCH_FIXED.zip'
-          OUT='releases/4.2.0/YMS_Prospect_Finder_V4_2_0_RECOVERED2.zip'
-          REPORT='hashes/v4.2.0-recovery2-validation.txt'
-          rm -f "$OUT"
+          mkdir -p hashes releases/4.2.0/recovered
+          ZIP='releases/4.2.0/YMS_Prospect_Finder_V4_2_0_RECOVERED2.zip'
+          PY='releases/4.2.0/recovered/server.py'
+          REPORT='hashes/v4.2.0-recovered-server-validation.txt'
           : > "$REPORT"
-          echo "source-bytes: $(wc -c < "$SRC")" >> "$REPORT"
-          echo "source-file: $(file -b "$SRC")" >> "$REPORT"
-          echo 'zip-FF-output:' >> "$REPORT"
-          printf 'y\ny\ny\ny\n' | zip -FF "$SRC" --out "$OUT" >> "$REPORT" 2>&1
-          ZIP_EXIT=$?
-          echo "zip-FF-exit: $ZIP_EXIT" >> "$REPORT"
-          if [ -f "$OUT" ]; then
-            echo "recovered-bytes: $(wc -c < "$OUT")" >> "$REPORT"
-            echo "recovered-file: $(file -b "$OUT")" >> "$REPORT"
-            sha256sum "$OUT" | awk '{print "sha256: "$1}' >> "$REPORT"
-            echo 'unzip-test:' >> "$REPORT"
-            unzip -t "$OUT" >> "$REPORT" 2>&1
-            UNZIP_EXIT=$?
-            echo "unzip-exit: $UNZIP_EXIT" >> "$REPORT"
-          else
-            UNZIP_EXIT=99
-            echo 'No recovered ZIP was produced.' >> "$REPORT"
-          fi
+          unzip -p "$ZIP" server.py > "$PY" 2>> "$REPORT"
+          echo "unzip-p-exit: $?" >> "$REPORT"
+          echo "server-bytes: $(wc -c < "$PY")" >> "$REPORT"
+          echo "server-file: $(file -b "$PY")" >> "$REPORT"
+          echo 'version-lines:' >> "$REPORT"
+          grep -nE 'APP_VERSION|4\.2|Smart Finder|smart_finder|smart finder' "$PY" | head -30 >> "$REPORT" 2>&1
+          echo 'compile:' >> "$REPORT"
+          python3 -m py_compile "$PY" >> "$REPORT" 2>&1
+          echo "compile-exit: $?" >> "$REPORT"
+          echo 'tail:' >> "$REPORT"
+          tail -8 "$PY" >> "$REPORT" 2>&1
           git config user.name 'YMS Prospect Finder Updater'
           git config user.email 'actions@users.noreply.github.com'
-          git add "$REPORT"
-          if [ -f "$OUT" ]; then git add "$OUT"; fi
+          git add "$PY" "$REPORT"
           if ! git diff --cached --quiet; then
-            git commit -m 'Repair and validate V4.2.0 OTA ZIP'
+            git commit -m 'Recover and compile V4.2 Smart Finder backend'
             git push
           fi

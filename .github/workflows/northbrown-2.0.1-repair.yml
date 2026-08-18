@@ -106,14 +106,18 @@ jobs:
           cp northbrown/patches/current/payload/requirements.txt "$PAYLOAD/requirements.txt"
           printf '%s\n' "$VERSION" > "$PAYLOAD/VERSION.txt"
 
+          export PAYLOAD
           python - <<'PY'
+          import os
           from pathlib import Path
-          p = Path('${PAYLOAD}/bootstrap.py')
+
+          payload = Path(os.environ['PAYLOAD'])
+          p = payload / 'bootstrap.py'
           s = p.read_text()
           s = s.replace("core.APP_VERSION = '2.0.0'", "core.APP_VERSION = '2.0.1'\nif hasattr(core, '_LEGACY'):\n    core._LEGACY.APP_VERSION = '2.0.1'", 1)
           p.write_text(s)
 
-          p = Path('${PAYLOAD}/START_NORTHBROWN_INTERNAL.sh')
+          p = payload / 'START_NORTHBROWN_INTERNAL.sh'
           s = p.read_text().replace('.icon_ready_2_0_0', '.icon_ready_2_0_1')
           p.write_text(s)
           PY

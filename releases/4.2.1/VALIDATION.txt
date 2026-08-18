@@ -3,6 +3,6 @@ Archive:  releases/4.2.1/YMS_Prospect_Finder_V4_2_1_INDIVIDUAL_WORKFLOW_FIX.zip
     testing: index.html               OK
 No errors detected in compressed data of releases/4.2.1/YMS_Prospect_Finder_V4_2_1_INDIVIDUAL_WORKFLOW_FIX.zip.
 file: Zip archive data, at least v2.0 to extract, compression method=deflate
-bytes: 5268
+bytes: 6197
 python compile: OK
 individual actions: web_one + ai_one present

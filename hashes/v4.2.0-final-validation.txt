@@ -1,0 +1,19 @@
+V4.2 FINAL OTA VALIDATION
+bytes: 18685
+file: Zip archive data, at least v2.0 to extract, compression method=deflate
+unzip-test:
+Archive:  releases/4.2.0/YMS_Prospect_Finder_V4_2_0_FINAL.zip
+    testing: server.py                OK
+    testing: index.html               OK
+    testing: smart_patch.txt          OK
+No errors detected in compressed data of releases/4.2.0/YMS_Prospect_Finder_V4_2_0_FINAL.zip.
+python-patcher-compile: OK
+contents:
+Archive:  releases/4.2.0/YMS_Prospect_Finder_V4_2_0_FINAL.zip
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+    19093  2026-08-18 20:05   server.py
+      182  2026-08-18 20:05   index.html
+    42498  2026-08-18 20:05   smart_patch.txt
+---------                     -------
+    61773                     3 files

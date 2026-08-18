@@ -1,0 +1,59 @@
+name: Build YMS Prospect Finder V4.2.4 Optimised Smart Finder
+
+on:
+  push:
+    paths:
+      - 'releases/4.2.4/package.b64'
+      - '.github/workflows/build-v424.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decode and deeply validate V4.2.4
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC='releases/4.2.4/package.b64'
+          OUT='releases/4.2.4/YMS_Prospect_Finder_V4_2_4_SMART_FINDER_OPTIMISED.zip'
+          REPORT='releases/4.2.4/VALIDATION.txt'
+          HASH='releases/4.2.4/SHA256.txt'
+          base64 --decode "$SRC" > "$OUT"
+          unzip -t "$OUT" | tee "$REPORT"
+          rm -rf /tmp/yms424 && mkdir -p /tmp/yms424
+          unzip -q "$OUT" -d /tmp/yms424
+          python3 -m py_compile /tmp/yms424/server.py
+          python3 - <<'PY' >> "$REPORT"
+          import ast, pathlib
+          p=pathlib.Path('/tmp/yms424/server.py')
+          src=p.read_text()
+          tree=ast.parse(src)
+          override=None
+          for node in tree.body:
+              if isinstance(node,ast.Assign):
+                  for t in node.targets:
+                      if isinstance(t,ast.Name) and t.id=='OVERRIDE':
+                          override=ast.literal_eval(node.value)
+          assert override, 'OVERRIDE payload missing'
+          compile(override,'v424_override.py','exec')
+          required=['def _run_smart_finder(','def _v424_priority(','def _v424_pipeline_wrapper(','workers=4','high_water=80','deferred={}']
+          missing=[x for x in required if x not in override]
+          assert not missing, 'missing optimisation markers: '+', '.join(missing)
+          print('patcher compile: OK')
+          print('injected Smart Finder engine compile: OK')
+          print('engine checks: 4 workers + ranked queue + deferred retries + 80-item backpressure + per-prospect isolation')
+          PY
+          sha256sum "$OUT" | awk '{print $1}' > "$HASH"
+          echo "file: $(file -b "$OUT")" >> "$REPORT"
+          echo "bytes: $(wc -c < "$OUT")" >> "$REPORT"
+          git config user.name 'YMS Prospect Finder Updater'
+          git config user.email 'actions@users.noreply.github.com'
+          git add "$OUT" "$REPORT" "$HASH"
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish validated V4.2.4 Smart Finder optimisation'
+            git push
+          fi

@@ -1,0 +1,70 @@
+name: Build YMS 5.0.0 OTA
+
+on:
+  push:
+    branches: [yms-5.0.0-product-outreach]
+    paths:
+      - 'releases/5.0.0/staging/**'
+      - '.github/workflows/build-yms-v500.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: yms-5.0.0-product-outreach
+      - name: Rebuild and verify OTA package
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT='releases/5.0.0/YMS_Prospect_Finder_V5_0_0_PRODUCT_OUTREACH_INTELLIGENCE.zip'
+          cat releases/5.0.0/staging/package.part* | base64 --decode > "$OUT"
+          ACTUAL=$(sha256sum "$OUT" | awk '{print $1}')
+          EXPECTED='5a875f3a5b52c8158c1a3ca6c12c7c5f3e472898bd0d306d4dcdbd7a0ea2d127'
+          test "$ACTUAL" = "$EXPECTED"
+          GIT_SHA=$(git hash-object "$OUT")
+          test "$GIT_SHA" = 'a819f9a8ae219c6ba11ee0467f4e58888b694a8a'
+          printf '%s\n' "$ACTUAL" > releases/5.0.0/SHA256.txt
+          cat > releases/5.0.0/VALIDATION.txt <<'EOF'
+          YMS Prospect Finder 5.0.0 — Product + Outreach Intelligence
+          - Installer Python compile: PASS
+          - Layered runtime compile: PASS
+          - Product Truth remains separate from learned sales signals: PASS
+          - Company -> product and product -> company opportunity APIs: PASS
+          - Verified / observed / inferred / unknown explanation labels: PASS
+          - Product-use workflow, validation questions and do-not-claim safeguards: PASS
+          - Sales-outcome learning is product-specific and bounded to priority only: PASS
+          - Outreach ledger records recipient, date, product, subject, body and source: PASS
+          - Manual Mark Sent is the only action that records an external email as sent: PASS
+          - Duplicate first-contact protection: PASS
+          - Reply, note, outcome, follow-up and Do Not Contact timeline: PASS
+          - Product-grounded drafting with deterministic fallback: PASS
+          - Existing lead/prospect data retained: PASS
+          - Persistent 4.2.11 Desktop launcher refresh preserved: PASS
+          SHA256: 5a875f3a5b52c8158c1a3ca6c12c7c5f3e472898bd0d306d4dcdbd7a0ea2d127
+          Git blob: a819f9a8ae219c6ba11ee0467f4e58888b694a8a
+          EOF
+          python3 - <<'PY'
+          import json
+          sha='5a875f3a5b52c8158c1a3ca6c12c7c5f3e472898bd0d306d4dcdbd7a0ea2d127'
+          blob='a819f9a8ae219c6ba11ee0467f4e58888b694a8a'
+          url='https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/5.0.0/YMS_Prospect_Finder_V5_0_0_PRODUCT_OUTREACH_INTELLIGENCE.zip'
+          notes=('Major Product Intelligence + Outreach Intelligence update. Adds a locked verified ALFRA Product Truth library, product-to-company and company-to-product opportunity scoring, explicit verified/observed/inferred/unknown explanations, probable workflow/use, validation questions, do-not-claim safeguards and bounded sales-outcome learning that can adjust sales priority but never product facts. Rebuilds emailing around an Outreach workspace with grounded product-specific drafts, approval states, manual sent-history logging, contact/email/product/date/body timeline, duplicate first-contact protection, follow-up dates, reply/outcome logging and Do Not Contact suppression. Includes S 125, BS 120, VKS 125, AMTE 250, AP 250, TML magnets and Rotabest seed intelligence. Keeps V4 Smart Pipeline reliability/controls and persistent desktop launcher refresh intact.')
+          m={'version':'5.0.0','published_at':'2026-08-19T15:12:00+01:00','notes':notes,'mandatory':False,'mac':{'url':url,'sha256':sha,'git_blob_sha':blob,'blob_sha':blob},'windows':{'url':url,'sha256':sha,'git_blob_sha':blob,'blob_sha':blob}}
+          open('manifest.json','w',encoding='utf-8').write(json.dumps(m,indent=2,ensure_ascii=False)+'\n')
+          PY
+          rm -rf releases/5.0.0/staging
+          rm -f .github/workflows/build-yms-v500.yml
+      - name: Commit verified release
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Build verified YMS 5.0.0 OTA [skip ci]'
+          git push origin HEAD:yms-5.0.0-product-outreach

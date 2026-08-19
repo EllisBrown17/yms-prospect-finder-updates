@@ -1,0 +1,33 @@
+'}={}){
+   const panel=$('#scanProgressPanel');if(!panel)return;panel.classList.add('show');panel.classList.remove('complete','failed');
++  let collapsed=false;try{collapsed=localStorage.getItem('northbrown_scan_collapsed')==='1'}catch{}setScanCollapsed(collapsed);
+   $('#scanProgressTitle').textContent=title;$('#scanProgressCount').textContent=total?`0 / ${total}`:'Preparing…';$('#scanProgressPercent').textContent='0%';$('#scanProgressFill').style.width='0%';$('#scanCurrentBusiness').textContent=current||'Preparing first website…';$('#scanElapsed').textContent='00:00';$('#scanEta').textContent='—';$('#scanModeBadge').textContent=String(mode||'smart').toUpperCase();$('#scanPhaseDetail').textContent='Getting the audit ready…';$('#scanFinding').textContent='NORTHBROWN will surface useful findings here as they are discovered.';$('#scanSummary').hidden=true;
+   ['scanCompleted','scanHot','scanEmails','scanSkipped','scanFailed','scanAiCalls','scanPlaces'].forEach(id=>$('#'+id).textContent='0');$('#scanCost').textContent='~£0.00';
+   scanLocalStarted=Date.now();clearInterval(scanClockHandle);scanClockHandle=setInterval(()=>{$('#scanElapsed').textContent=fmtElapsed((Date.now()-scanLocalStarted)/1000)},500);
+@@ -95,7 +102,7 @@
+ $('#scanPauseBtn').onclick=async()=>{if(!currentScanJob)return;const action=$('#scanPauseBtn').dataset.action||'pause';try{await api(`/api/scan-job/${currentScanJob}/control`,{method:'POST',body:{action}});toast(action==='pause'?'Scan will pause safely.':'Scan resumed.');watchScanJob(currentScanJob)}catch(e){toast(e.message,true)}};
+ $('#scanStopBtn').onclick=async()=>{if(!currentScanJob)return;if(!confirm('Stop after the current prospect finishes? Completed scans will be kept.'))return;try{await api(`/api/scan-job/${currentScanJob}/control`,{method:'POST',body:{action:'stop'}});toast('Stopping safely after the current prospect.')}catch(e){toast(e.message,true)}};
+ $('#scanRetryBtn').onclick=async()=>{if(!currentScanJob)return;try{const r=await api(`/api/scan-job/${currentScanJob}/retry-failed`,{method:'POST'});openScanProgress({title:'Retrying failed prospects…',total:r.queued_for_scan,current:'Preparing retry…',mode:'full'});watchScanJob(r.job_id)}catch(e){toast(e.message,true)}};
+-$('#scanActivityBtn').onclick=()=>{scanActivityOpen=!scanActivityOpen;$('#scanActivityLog').hidden=!scanActivityOpen;$('#scanActivityBtn').textContent=scanActivityOpen?'Hide activity':'Activity'};$('#scanDismissBtn').onclick=()=>{$('#scanProgressPanel').classList.remove('show');scanActivityOpen=false;$('#scanActivityLog').hidden=true};
++$('#scanActivityBtn').onclick=()=>{scanActivityOpen=!scanActivityOpen;$('#scanActivityLog').hidden=!scanActivityOpen;$('#scanActivityBtn').textContent=scanActivityOpen?'Hide activity':'Activity'};$('#scanCollapseBtn').onclick=()=>setScanCollapsed(!$('#scanProgressPanel').classList.contains('collapsed'));$('#scanDismissBtn').onclick=()=>{$('#scanProgressPanel').classList.remove('show');scanActivityOpen=false;$('#scanActivityLog').hidden=true};
+ async function restoreActiveScan(){try{const r=await api('/api/scan-active');if(r&&r.job_id){openScanProgress({title:'Resuming scan…',total:r.total,current:r.current_business,mode:r.mode});updateScanProgress(r);watchScanJob(r.job_id)}}catch{}}
+ async function loadScanHistory(){const box=$('#scanHistoryList');if(!box)return;try{const rows=await api('/api/scan-history');box.innerHTML=rows.length?rows.map(r=>`<div class="scan-history-row" data-job="${esc(r.job_id)}"><div><b>${esc((r.mode||'smart').toUpperCase())} · ${new Date(r.started_at).toLocaleString()}</b><small>${esc(r.summary||`${r.completed||0} scored · ${r.failed||0} failed · ${r.skipped||0} skipped`)}</small></div><span class="stage">${esc(r.status)}</span></div>`).join(''):'<div class="empty-state">No scan history yet.</div>';$$('#scanHistoryList [data-job]').forEach(el=>el.onclick=async()=>{try{const r=await api(`/api/scan-status/${el.dataset.job}`);currentScanJob=r.job_id;openScanProgress({title:'Scan details',total:r.total,current:r.current_business,mode:r.mode});updateScanProgress(r)}catch(e){toast(e.message,true)}})}catch(e){box.innerHTML='<div class="empty-state">Scan history unavailable.</div>'}}
+ $('#refreshScanHistoryBtn').onclick=loadScanHistory;
+@@ -198,6 +205,36 @@
+   $$('#builderProjectGrid [data-project]').forEach(el=>el.onclick=()=>openBuilderProject(+el.dataset.project));
+ }
+ function builderSetHome(show=true){$('#builderHome').hidden=!show;$('#builderEditor').hidden=show}
++function builderValidHex(v){return /^#[0-9a-f]{6}$/i.test(String(v||'').trim())}
++function builderCategoryPalette(category=''){
++  const c=String(category||'').toLowerCase();
++  if(/barber|hair|salon|beauty|studio/.test(c))return{accent:'#c7a46a',background:'#10100f',surface:'#191816',text:'#f3efe7',label:'Category fit · Studio / grooming'};
++  if(/funeral|care|wellbeing|therapy|physio/.test(c))return{accent:'#91a69c',background:'#111514',surface:'#19201e',text:'#eef2ef',label:'Category fit · Care'};
++  if(/roof|plumb|electric|builder|trade|joiner|garage|mechanic/.test(c))return{accent:'#f0b64b',background:'#101112',surface:'#181a1c',text:'#f2f0ea',label:'Category fit · Trade'};
++  if(/restaurant|cafe|coffee|food|bakery|pub|bar/.test(c))return{accent:'#c57b54',background:'#15110f',surface:'#211a17',text:'#f6eee8',label:'Category fit · Hospitality'};
++  if(/account|solicitor|law|consult|finance|estate|dentist|clinic/.test(c))return{accent:'#6e8fbe',background:'#0f1216',surface:'#171c22',text:'#eef2f5',label:'Category fit · Professional'};
++  if(/retail|shop|store|boutique|florist/.test(c))return{accent:'#9c7de8',background:'#111014',surface:'#1a171f',text:'#f2eef7',label:'Category fit · Retail'};
++  return{accent:'#c6ff00',background:'#0d0d0e',surface:'#151719',text:'#f0efea',label:'Category fit · Modern'};
++}
++function setBuilderPalette(pal,label){
++  if(!builderState.project)return;
++  const pairs={bAccent:pal.accent,bBackground:pal.background,bSurface

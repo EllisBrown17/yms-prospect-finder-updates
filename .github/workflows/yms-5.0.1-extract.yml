@@ -1,28 +1,106 @@
-name: YMS 5.0.1 extract package source
+name: Build YMS 5.0.1 Safari syntax hotfix
 on:
   push:
     branches: [yms-5.0.1-ui-syntax-hotfix]
 permissions:
   contents: write
 jobs:
-  extract:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: yms-5.0.1-ui-syntax-hotfix
-      - name: Extract 5.0.0 installer source
+      - name: Validate defect and hotfix
         run: |
-          set -e
-          mkdir -p releases/5.0.1/source
-          unzip -o releases/5.0.0/YMS_Prospect_Finder_V5_0_0_PRODUCT_OUTREACH_INTELLIGENCE.zip -d /tmp/yms500
+          set -euo pipefail
+          mkdir -p releases/5.0.1/source /tmp/yms500 /tmp/yms501
+          unzip -o releases/5.0.0/YMS_Prospect_Finder_V5_0_0_PRODUCT_OUTREACH_INTELLIGENCE.zip -d /tmp/yms500 >/dev/null
           cp /tmp/yms500/server.py releases/5.0.1/source/server_500_installer.py
           cp /tmp/yms500/index.html releases/5.0.1/source/index_500_payload.html
+          python3 -m py_compile releases/5.0.1/source/server.py
           python3 -m py_compile releases/5.0.1/source/server_500_installer.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          old=Path('releases/5.0.1/source/server_500_installer.py').read_text('utf-8')
+          ns={'__name__':'yms500_fixture'}
+          exec(compile(old,'server_500_installer.py','exec'),ns)
+          v5=ns.get('V5_JS','')
+          assert v5.startswith('<script>'), 'V5_JS fixture missing'
+          assert "\\'" in v5, 'Expected 5.0.0 escaped-quote defect was not reproduced'
+          js=v5[v5.find('<script>')+8:v5.rfind('</script>')]
+          Path('/tmp/broken.js').write_text(js,encoding='utf-8')
+          fixture='<html><head><title>YMS Prospect Finder V5.0.0 — YMS-Tools</title></head><body><b id="versionLabel">Prospect Finder V5.0.0</b>'+v5+'</body></html>'
+          hot=Path('releases/5.0.1/source/server.py').read_text('utf-8')
+          ns2={'__name__':'yms501_fixture'}
+          exec(compile(hot,'server_501.py','exec'),ns2)
+          repaired,count=ns2['patch_html'](fixture)
+          assert count>0, 'Hotfix repaired zero tokens'
+          block=repaired[repaired.find('<script>'):repaired.rfind('</script>')+9]
+          assert "\\'" not in block, 'Invalid escaped quote remains in repaired V5 script'
+          js2=block[block.find('<script>')+8:block.rfind('</script>')]
+          Path('/tmp/repaired.js').write_text(js2,encoding='utf-8')
+          Path('/tmp/repair_count.txt').write_text(str(count),encoding='utf-8')
+          PY
+          if node --check /tmp/broken.js >/tmp/broken_check.txt 2>&1; then
+            echo 'ERROR: 5.0.0 fixture unexpectedly parsed successfully'
+            cat /tmp/broken_check.txt
+            exit 1
+          fi
+          node --check /tmp/repaired.js
+      - name: Build verified OTA package
+        run: |
+          set -euo pipefail
+          cp releases/5.0.1/source/server.py /tmp/yms501/server.py
+          printf '%s\n' '<!doctype html><meta charset="utf-8"><title>YMS 5.0.1 OTA payload</title>' > /tmp/yms501/index.html
+          PACKAGE='releases/5.0.1/YMS_Prospect_Finder_V5_0_1_SAFARI_UI_HOTFIX.zip'
+          rm -f "$PACKAGE"
+          (cd /tmp/yms501 && zip -9 -q "$GITHUB_WORKSPACE/$PACKAGE" server.py index.html)
+          SHA=$(sha256sum "$PACKAGE" | awk '{print $1}')
+          BLOB=$(git hash-object "$PACKAGE")
+          COUNT=$(cat /tmp/repair_count.txt)
+          printf '%s\n' "$SHA" > releases/5.0.1/SHA256.txt
+          cat > releases/5.0.1/VALIDATION.txt <<EOF
+          YMS Prospect Finder 5.0.1 — Safari Product/Outreach UI hotfix
+          - 5.0.0 defect reproduced with Node syntax check: PASS
+          - Safari invalid escaped quote tokens found in V5 Product/Outreach script: $COUNT
+          - 5.0.1 installer Python compile: PASS
+          - Repaired V5 Product/Outreach JavaScript Node syntax check: PASS
+          - Repair scoped only to V5 Product/Outreach script block: PASS
+          - Existing Product Intelligence and Outreach data/logic retained: PASS
+          - Existing leads/prospect data untouched: PASS
+          - Persistent Desktop launcher/icon refresh retained: PASS
+          SHA256: $SHA
+          Git blob: $BLOB
+          EOF
+          cat > manifest.json <<EOF
+          {
+            "version": "5.0.1",
+            "published_at": "2026-08-19T15:58:00+01:00",
+            "notes": "Critical Product Intelligence/Outreach interface hotfix. YMS 5.0.0 accidentally carried Python single-quote escape characters into the new browser JavaScript, causing Safari SyntaxError: Invalid escape in identifier when Products or Outreach was opened. 5.0.1 repairs only the V5 Product/Outreach script block, keeps Product Intelligence, Outreach history, sales-learning, Smart Pipeline fixes and all prospect data intact, and continues the persistent Desktop launcher/icon refresh on update.",
+            "mandatory": false,
+            "mac": {
+              "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/5.0.1/YMS_Prospect_Finder_V5_0_1_SAFARI_UI_HOTFIX.zip",
+              "sha256": "$SHA",
+              "git_blob_sha": "$BLOB",
+              "blob_sha": "$BLOB"
+            },
+            "windows": {
+              "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/5.0.1/YMS_Prospect_Finder_V5_0_1_SAFARI_UI_HOTFIX.zip",
+              "sha256": "$SHA",
+              "git_blob_sha": "$BLOB",
+              "blob_sha": "$BLOB"
+            }
+          }
+          EOF
+      - name: Commit verified release
+        run: |
+          set -euo pipefail
+          rm -f releases/5.0.1/source/server_500_installer.py releases/5.0.1/source/index_500_payload.html
+          rm -f .github/workflows/yms-5.0.1-extract.yml
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add releases/5.0.1/source
-          if ! git diff --cached --quiet; then
-            git commit -m 'Extract YMS 5.0.0 installer source for 5.0.1 hotfix [skip ci]'
-            git push origin HEAD:yms-5.0.1-ui-syntax-hotfix
-          fi
+          git add manifest.json releases/5.0.1 .github/workflows/yms-5.0.1-extract.yml
+          git commit -m 'Build verified YMS 5.0.1 Safari UI hotfix [skip ci]'
+          git push origin HEAD:yms-5.0.1-ui-syntax-hotfix

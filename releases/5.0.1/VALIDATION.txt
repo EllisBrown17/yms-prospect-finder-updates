@@ -1,0 +1,14 @@
+YMS Prospect Finder 5.0.1 — Safari Product/Outreach navigation hotfix
+- Exact 5.0.0 Products inline-handler syntax failure reproduced: PASS
+- Exact 5.0.0 Outreach inline-handler syntax failure reproduced: PASS
+- Main V5 Product/Outreach script syntax check: PASS
+- 5.0.1 installer Python compile: PASS
+- Repaired Products inline-handler syntax check: PASS
+- Repaired Outreach inline-handler syntax check: PASS
+- Repair scoped to the two new V5 navigation handlers: PASS
+- Existing Product Intelligence / Outreach logic retained: PASS
+- Existing leads, outreach history and prospect data untouched: PASS
+- Persistent Desktop launcher/icon refresh retained: PASS
+Repaired handlers: 2
+SHA256: 11fcd8941372ba0764944e4049976544392efce74d6f3189379e0a534ace1c85
+Git blob: c52c77e5396835ebc4f3c78cc73fa9404ea1187a

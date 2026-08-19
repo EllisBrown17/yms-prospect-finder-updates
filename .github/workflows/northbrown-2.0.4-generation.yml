@@ -1,0 +1,137 @@
+name: Publish NORTHBROWN 2.0.4 smarter generation OTA
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'northbrown/staging/2.0.4/trigger.txt'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build complete NORTHBROWN 2.0.4 payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION='2.0.4'
+          WORK="$(mktemp -d)"
+          mkdir -p "$WORK/base202" "$WORK/base203" northbrown/releases
+
+          # Reconstruct the known-good full 2.0 application source from the existing staging set.
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('northbrown/staging/2.0.0/ota.part04')
+          s=p.read_text()
+          if len(s)==8999:
+              s=s[:3245]+'h'+s[3245:]
+              p.write_text(s)
+          if len(p.read_text())!=9000:
+              raise SystemExit('Unexpected NORTHBROWN base staging length')
+          PY
+          cat northbrown/staging/2.0.0/ota.part* | base64 -d > "$WORK/base.zip"
+          echo '88f45969ed801323252b83529929dd66848560347105816cb15db727e3e69f0e  '"$WORK/base.zip" | sha256sum -c -
+          unzip -t "$WORK/base.zip" >/dev/null
+          unzip -q "$WORK/base.zip" -d "$WORK/base202"
+          P202="$WORK/base202/payload"
+
+          # Bring the verified base to the user's current 2.0.2 bridge state.
+          python - "$P202" <<'PY'
+          from pathlib import Path
+          import sys
+          p=Path(sys.argv[1])
+          (p/'VERSION.txt').write_text('2.0.2\n')
+          f=p/'app.py'; s=f.read_text(); s=s.replace("APP_VERSION = '2.0.0'", "APP_VERSION = '2.0.2'", 1); s=s.replace("threading.Timer(0.9, lambda: os._exit(0)).start()", "threading.Timer(3.0, lambda: os._exit(0)).start()", 1); f.write_text(s)
+          f=p/'START_NORTHBROWN_INTERNAL.sh'; s=f.read_text().replace('.icon_ready_2_0_0','.icon_ready_2_0_2'); f.write_text(s)
+          PY
+
+          # Apply all previously staged 2.0.3 QoL features to a fresh copy.
+          cp -R "$P202" "$WORK/payload"
+          cat northbrown/staging/2.0.3/patch.part* > "$WORK/203.patch"
+          (cd "$WORK" && patch --batch -p0 < "$WORK/203.patch")
+
+          # Snapshot 2.0.3, then apply the category-aware 2.0.4 generation fix.
+          rm -f "$WORK/payload/release.json"
+          cp -R "$WORK/payload" "$WORK/base203/payload"
+          cat northbrown/staging/2.0.4/patch.part* > "$WORK/204.patch"
+          test "$(wc -c < "$WORK/204.patch")" -eq 35765
+          (cd "$WORK" && patch --batch -p0 < "$WORK/204.patch")
+          P="$WORK/payload"
+
+          # Rebuild the internal release manifest after all source changes.
+          python - "$P" <<'PY'
+          from pathlib import Path
+          import hashlib, json, sys
+          p=Path(sys.argv[1])
+          files=['app.py','feature_routes.py','builder_routes.py','requirements.txt','VERSION.txt','START_NORTHBROWN_INTERNAL.sh','static/app.js','static/app.css','templates/index.html','NORTHBROWN_ICON.png','static/NORTHBROWN_ICON.png']
+          r={'format':'northbrown-full-v2','version':'2.0.4','allowed_from':['2.0.2','2.0.3'],'database_schema':5,'files':{}}
+          for rel in files:
+              f=p/rel
+              if not f.is_file(): raise SystemExit('Missing required NORTHBROWN file: '+rel)
+              r['files'][rel]=hashlib.sha256(f.read_bytes()).hexdigest()
+          (p/'release.json').write_text(json.dumps(r,indent=2)+'\n')
+          PY
+
+          # Validation: do not publish unless the exact application is internally consistent.
+          test "$(tr -d '\r\n' < "$P/VERSION.txt")" = '2.0.4'
+          python -m py_compile "$P/app.py" "$P/feature_routes.py" "$P/builder_routes.py"
+          node --check "$P/static/app.js"
+          grep -q "APP_VERSION = '2.0.4'" "$P/app.py"
+          grep -q "@app.post('/api/smart-finder')" "$P/app.py"
+          grep -q "'key':'barber'" "$P/builder_routes.py"
+          grep -q "Barbering services" "$P/builder_routes.py"
+          grep -q "For more details, please visit our website" "$P/builder_routes.py"
+          grep -q "CATEGORY ACCURACY" "$P/builder_routes.py"
+          grep -q "scanDismissBtn" "$P/templates/index.html"
+          grep -q "Free Google tools for websites" "$P/templates/index.html"
+
+          # Regression test for the exact Birkenshaw-type failure: boilerplate must be rejected
+          # and barber output must resolve to barbering services rather than generic headings.
+          python - "$P/builder_routes.py" <<'PY'
+          from pathlib import Path
+          s=Path(__import__('sys').argv[1]).read_text()
+          assert "('Haircuts','Classic and modern barbering" in s
+          assert "('Fades & short styles'" in s
+          assert "('Beard grooming'" in s
+          assert "boilerplate = ('for more details, please visit our website'" in s
+          assert "'advice & support','get in touch'" in s
+          assert "return _sanitise_generated_content(obj, business)" in s
+          PY
+
+          rm -rf "$P/__pycache__"
+          ZIP="northbrown/releases/NORTHBROWN-update-${VERSION}.zip"
+          (cd "$WORK" && zip -qr "$GITHUB_WORKSPACE/$ZIP" payload)
+          unzip -t "$ZIP" >/dev/null
+          test "$(wc -c < "$ZIP")" -gt 120000
+          SHA="$(sha256sum "$ZIP" | awk '{print $1}')"
+          SIZE="$(wc -c < "$ZIP" | tr -d ' ')"
+
+          cat > northbrown/update.json <<EOF
+          {
+            "schema": 2,
+            "version": "2.0.4",
+            "allowed_from": ["2.0.2", "2.0.3"],
+            "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/${ZIP}",
+            "size": ${SIZE},
+            "sha256": "${SHA}",
+            "notes": "NORTHBROWN 2.0.4 fixes Website Builder generation quality. Business type now controls the copy and service cards; barber shops generate barbering content such as haircuts, fades and beard grooming instead of generic or unrelated services. Directory/aggregator boilerplate, raw URLs, addresses used as copy and generic headings are filtered before AI generation. AI output is also validated after generation so unrelated services are replaced automatically. Includes the pending Smart Finder, Scan Intelligence close control and free Google website tools from 2.0.3.",
+            "published_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "mandatory": false
+          }
+          EOF
+
+      - name: Publish validated OTA
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'NORTHBROWN OTA Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add northbrown/releases/NORTHBROWN-update-2.0.4.zip northbrown/update.json
+          git commit -m 'Publish NORTHBROWN OTA 2.0.4 smarter generation'
+          git push

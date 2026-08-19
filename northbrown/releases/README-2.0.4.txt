@@ -1,0 +1,1 @@
+NORTHBROWN 2.0.4 final full OTA package is published alongside update.json. Includes smarter business-category generation, NORTHBROWN desktop/browser icon, restored Website Builder Brand Theme presets, Smart Finder, free Google website tools, and collapsible Scan Intelligence.

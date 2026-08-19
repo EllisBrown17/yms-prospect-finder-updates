@@ -1,10 +1,2 @@
-name: NORTHBROWN 2.0.11 publisher (retired)
-
-on:
-  workflow_dispatch:
-
-jobs:
-  retired:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "NORTHBROWN 2.0.11 has already been published; this one-shot workflow is retired."
+# NORTHBROWN release automation placeholder.
+# 2.0.11 was published and verified manually through the Git data API.

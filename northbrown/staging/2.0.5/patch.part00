@@ -1,0 +1,188 @@
+diff -ruN '--exclude=__pycache__' '--exclude=release.json' '--exclude=NORTHBROWN_ICON.png' '--exclude=favicon-*.png' payload/START_NORTHBROWN_INTERNAL.sh payload/START_NORTHBROWN_INTERNAL.sh
+--- payload/START_NORTHBROWN_INTERNAL.sh	2026-08-19 12:30:59.000000000 +0000
++++ payload/START_NORTHBROWN_INTERNAL.sh	2026-08-19 12:55:25.513684992 +0000
+@@ -9,7 +9,7 @@
+ refresh_app_icon() {
+   local APP_BUNDLE="$HOME/Applications/NORTHBROWN Lead Engine.app"
+   local ICON_SRC="$ROOT/NORTHBROWN_ICON.png"
+-  local STAMP="$ROOT/.icon_ready_2_0_4"
++  local STAMP="$ROOT/.icon_ready_2_0_5"
+   [ "$(uname -s 2>/dev/null || true)" = "Darwin" ] || return 0
+   [ -d "$APP_BUNDLE" ] || return 0
+   [ -f "$ICON_SRC" ] || return 0
+@@ -41,7 +41,7 @@
+ 
+ refresh_app_icon || true
+ 
+-printf '\033[38;5;190mNORTHBROWN.\033[0m  Lead Engine 2.0.4 — Smarter Website Generation · OTA READY\n\n'
++printf '\033[38;5;190mNORTHBROWN.\033[0m  Lead Engine 2.0.5 — Smarter Website Generation · OTA READY\n\n'
+ echo "Installed at: $ROOT" | tee -a "$LOG"
+ 
+ if ! command -v python3 >/dev/null 2>&1; then
+diff -ruN '--exclude=__pycache__' '--exclude=release.json' '--exclude=NORTHBROWN_ICON.png' '--exclude=favicon-*.png' payload/VERSION.txt payload/VERSION.txt
+--- payload/VERSION.txt	2026-08-19 12:30:59.000000000 +0000
++++ payload/VERSION.txt	2026-08-19 12:55:25.513404699 +0000
+@@ -1 +1 @@
+-2.0.4
++2.0.5
+diff -ruN '--exclude=__pycache__' '--exclude=release.json' '--exclude=NORTHBROWN_ICON.png' '--exclude=favicon-*.png' payload/app.py payload/app.py
+--- payload/app.py	2026-08-19 12:30:59.000000000 +0000
++++ payload/app.py	2026-08-19 12:58:55.561846100 +0000
+@@ -29,7 +29,7 @@
+ DATA_DIR = os.getenv('NORTHBROWN_DATA_DIR') or os.path.join(APP_DIR, 'data')
+ os.makedirs(DATA_DIR, exist_ok=True)
+ DB_PATH = os.path.join(DATA_DIR, 'northbrown_leads.sqlite3')
+-APP_VERSION = '2.0.4'
++APP_VERSION = '2.0.5'
+ UPDATE_CACHE_DIR = os.path.join(DATA_DIR, 'updates')
+ os.makedirs(UPDATE_CACHE_DIR, exist_ok=True)
+ 
+@@ -90,6 +90,13 @@
+     response.headers['Cache-Control'] = 'no-cache'
+     return response
+ 
++
++@app.get('/northbrown-icon.png')
++def northbrown_icon():
++    response = send_from_directory(APP_DIR, 'NORTHBROWN_ICON.png', mimetype='image/png')
++    response.headers['Cache-Control'] = 'public, max-age=86400'
++    return response
++
+ DB_LOCK = threading.Lock()
+ WORKER_STARTED = False
+ SCAN_JOBS = {}
+@@ -676,30 +683,52 @@
+     return {'summary': summary, 'issues': issues, 'strengths': strengths, 'sales_angle': sales_angle, 'ai_enhanced': False}
+ 
+ 
+-def openai_text(prompt, settings):
++def _response_output_text(data):
++    if isinstance(data.get('output_text'), str):
++        return data['output_text'].strip()
++    chunks = []
++    for item in data.get('output', []) if isinstance(data, dict) else []:
++        if not isinstance(item, dict):
++            continue
++        for c in item.get('content', []) or []:
++            if isinstance(c, dict) and isinstance(c.get('text'), str):
++                chunks.append(c['text'])
++    return '\n'.join(chunks).strip()
++
++
++def openai_text(prompt, settings, json_mode=False, return_error=False):
+     api_key = settings.get('openai_api_key','').strip()
+     model = settings.get('openai_model','').strip()
+     if not api_key or not model:
+-        return None
++        result, error = None, 'OpenAI API key or model is missing in Settings.'
++        return (result, error) if return_error else result
+     try:
++        body = {'model': model, 'input': prompt, 'store': False}
++        if json_mode:
++            body['text'] = {'format': {'type': 'json_object'}}
+         r = requests.post(
+             'https://api.openai.com/v1/responses',
+             headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+-            json={'model': model, 'input': prompt},
+-            timeout=45,
++            json=body,
++            timeout=60,
+         )
+         if r.status_code >= 400:
+-            return None
++            try:
++                msg = (r.json().get('error') or {}).get('message') or r.text[:300]
++            except Exception:
++                msg = r.text[:300]
++            result, error = None, f'OpenAI {r.status_code}: {msg}'
++            return (result, error) if return_error else result
+         data = r.json()
+-        if isinstance(data.get('output_text'), str):
+-            return data['output_text'].strip()
+-        chunks = []
+-        for item in data.get('output', []):
+-            for c in item.get('content', []) if isinstance(item, dict) else []:
+-                if isinstance(c, dict) and isinstance(c.get('text'), str): chunks.append(c['text'])
+-        return '\n'.join(chunks).strip() or None
+-    except Exception:
+-        return None
++        text = _response_output_text(data)
++        if not text:
++            status = data.get('status') if isinstance(data, dict) else None
++            result, error = None, f'OpenAI returned no usable text{f" (status: {status})" if status else ""}.'
++            return (result, error) if return_error else result
++        return (text, None) if return_error else text
++    except Exception as exc:
++        result, error = None, f'{type(exc).__name__}: {exc}'
++        return (result, error) if return_error else result
+ 
+ 
+ def ai_analysis(score, metrics, business_name, category, excerpt, settings):
+diff -ruN '--exclude=__pycache__' '--exclude=release.json' '--exclude=NORTHBROWN_ICON.png' '--exclude=favicon-*.png' payload/builder_routes.py payload/builder_routes.py
+--- payload/builder_routes.py	2026-08-19 12:30:59.000000000 +0000
++++ payload/builder_routes.py	2026-08-19 12:55:08.023088753 +0000
+@@ -474,12 +474,13 @@
+             'section_order': ['hero','services','about','proof','gallery','contact'],
+             'visible': {'hero':True,'services':True,'about':True,'proof':True,'gallery':True,'contact':True},
+             'studio_credit': True,
++            'brand_theme': 'auto',
+         }
+ 
+     def _ai_content(business, lead=None):
+         settings = get_settings()
+         if not openai_text or not settings.get('openai_api_key') or not settings.get('openai_model'):
+-            return None
++            return None, 'OpenAI API key or model is missing in Settings.'
+         playbook = _detect_business_type(business)
+         safe_business = dict(business)
+         safe_business['source_description'] = _clean_source_description(business.get('source_description') or '', business)
+@@ -505,15 +506,15 @@
+ 
+ Return ONLY valid JSON with keys: hero_headline, hero_subheading, hero_cta, hero_secondary, services_title, services (array of up to 6 objects with name and description), about_title, about_body, proof_title, proof_body, contact_title, contact_body.
+ Tone: polished UK small-business website copy, concise, specific, natural and customer-facing. Avoid talking about 'the website', 'this concept', 'digital experience' or NORTHBROWN in the client's main business copy.'''
+-        text = openai_text(prompt, settings)
++        text, error = openai_text(prompt, settings, json_mode=True, return_error=True)
+         if not text:
+-            return None
++            return None, error or 'OpenAI returned no copy.'
+         try:
+             m = re.search(r'\{.*\}', text, re.S)
+             obj = json.loads(m.group(0) if m else text)
+-            return _sanitise_generated_content(obj, business) if isinstance(obj, dict) else None
+-        except Exception:
+-            return None
++            return (_sanitise_generated_content(obj, business), None) if isinstance(obj, dict) else (None, 'OpenAI response was not a JSON object.')
++        except Exception as exc:
++            return None, f'Could not parse OpenAI rewrite: {exc}'
+ 
+     def _create_project_for_lead(lead_id, demo=True, refresh=False):
+         conn = db_conn()
+@@ -528,7 +529,7 @@
+             p = _project_dict(existing); conn.close(); return p, None
+         business = _business_from_lead(lead)
+         content = _fallback_content(business, lead)
+-        ai = _ai_content(business, lead)
++        ai, _ai_error = _ai_content(business, lead)
+         if ai:
+             for key, value in ai.items():
+                 if key in content and value not in (None,'',[]): content[key] = value
+@@ -716,10 +717,18 @@
+             lr=conn.execute('SELECT * FROM leads WHERE id=?',(project['lead_id'],)).fetchone(); lead=dict(lr) if lr else None
+             if lead:
+                 for k in ('ai_issues','ai_strengths'): lead[k]=_loads(lead.get(k),[])
+-        conn.close(); ai=_ai_content(project['business'],lead)
+-        if not ai: return jsonify({'error':'AI copy could not be generated. Check the OpenAI key/model in Settings.'}),400
+-        content=project['content']; content.update({k:v for k,v in ai.items() if v not in (None,'',[])}); content=_sanitise_generated_content(content, project['business'])
+-        conn=db_conn(); conn.execute('UPDATE site_projects SET content_json=?,updated_at=? WHERE id=?',(json.dumps(content),now_iso(),project_id)); conn.commit(); row=conn.execute('SELECT * FROM site_projects WHERE id=?',(project_id,)).fetchone(); conn.close(); return jsonify(_project_dict(row))
++        conn.close(); ai, ai_error=_ai_content(project['business'],lead)
++        content=project['content']
++        if ai:
++            content.update({k:v for k,v in ai.items() if v not in (None,'',[])})
++            ai_used=True; warning=''
++        else:
++            # Never leave the button dead: fall back to NORTHBROWN's category-aware rewrite.
++            fallback=_fallback_content(project['business'],lead)
++            content.update({k:v for k,v in fallback.items() if k not in ('section_order','visible') and v not in (None,'',[])})
++            ai_used=False; warning=ai_error or 'OpenAI rewrite was unavailable, so category-aware smart copy was used instead.'
++        content=_sanitise_generated_content(content, project['business'])
++        conn=db_conn(); conn.execute('UPDATE site_projects SET content_json=?,updated_a

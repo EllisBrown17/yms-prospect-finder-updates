@@ -67,6 +67,7 @@ def patch_server(src,range_insert):
 
 def patch_html(src,css,js):
     s=src
+    platform="Mac" if sys.platform=="darwin" else ("Windows" if os.name=="nt" else "Desktop")
     if "V5.0.2 intelligence workspace UX */" not in s:
         pos=s.rfind("</style>")
         if pos<0:fail("5.0.2 could not locate the stylesheet.")
@@ -75,8 +76,8 @@ def patch_html(src,css,js):
         pos=s.rfind("</script>")
         if pos<0:fail("5.0.2 could not locate the application script.")
         s=s[:pos]+"\n"+js+"\n"+s[pos:]
-    s=re.sub(r'<title>YMS Prospect Finder V[^<]+ — YMS-Tools</title>','<title>YMS Prospect Finder V5.0.2 — YMS-Tools</title>',s,count=1)
-    s=re.sub(r'<b id="versionLabel">Prospect Finder V[^<]+</b>','<b id="versionLabel">Prospect Finder V5.0.2 Mac</b>',s,count=1)
+    s=re.sub(r'<title>YMS Prospect Finder V[^<]+ — YMS-Tools</title>',f'<title>YMS Prospect Finder V5.0.2 {platform} — YMS-Tools</title>',s,count=1)
+    s=re.sub(r'<b id="versionLabel">Prospect Finder V[^<]+</b>',f'<b id="versionLabel">Prospect Finder V5.0.2 {platform}</b>',s,count=1)
     s=s.replace("Start with an ALFRA product. Find the companies that can actually use it.","Browse the ALFRA range. Turn products into qualified sales opportunities.",1)
     s=s.replace("One sales queue. Every email and outcome remembered.","Your outreach command centre. Work the right email next.",1)
     return s

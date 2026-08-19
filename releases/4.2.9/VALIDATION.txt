@@ -1,0 +1,14 @@
+YMS Prospect Finder 4.2.9
+- Installer Python compile: PASS
+- ZIP integrity: PASS
+- ZIP contents: server.py + index.html
+- Frontend JavaScript syntax (node --check): PASS
+- Global runOneProspectStep helper restored: PASS
+- Global prospectWorkNotice helper retained/restored: PASS
+- AI Qualify and Website Evidence single-prospect buttons can call the global helper: PASS
+- Smart Pipeline Pause / Resume / Stop backend behaviour from 4.2.8 preserved: YES
+- Smart Pipeline controls re-docked beside the main Smart Pipeline action instead of floating over Live Activity: PASS
+- Existing floating control host hidden only when safe and not the Live Activity card: PASS
+- Completed scan checkpoints remain untouched by this UI hotfix: YES
+- Runtime server syntax compile after patch: enforced by installer
+SHA256: 1df49224d976516c0563229c669c2a0dd4430ddd0af830677e4b3215e64af816

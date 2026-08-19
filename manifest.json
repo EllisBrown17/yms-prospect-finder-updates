@@ -1,18 +1,18 @@
 {
-  "version": "4.2.8",
-  "published_at": "2026-08-19T11:58:00+01:00",
-  "notes": "Prospect + Smart Pipeline controls hotfix. Fixes the missing prospectWorkNotice frontend helper that was preventing single-company prospect drawers from opening. Adds safe Pause, Resume and Stop controls for Smart Pipeline: active workers are allowed to finish/checkpoint, completed companies stay saved, pause waits before any new company starts, and stop leaves unscanned queued companies untouched so they can be picked up on a later run. Keeps the 4.2.6 pipeline skip-fix and 4.2.7 desktop launcher repair intact.",
+  "version": "4.2.9",
+  "published_at": "2026-08-19T12:10:00+01:00",
+  "notes": "Single-prospect + Smart Pipeline UI hotfix. Restores the missing global runOneProspectStep helper used by the individual Website evidence and AI qualify buttons, keeps prospectWorkNotice available globally, and re-docks Pause / Resume / Stop beside the main Smart Pipeline action so the controls no longer cover the Live Activity panel. The 4.2.6 pipeline skip fix, 4.2.7 desktop launcher repair and 4.2.8 safe checkpointed pause/stop backend behaviour are preserved.",
   "mandatory": false,
   "mac": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.8/YMS_Prospect_Finder_V4_2_8_PROSPECT_AND_SCAN_CONTROLS.zip",
-    "sha256": "25ee57d4911991ece4a29bdc847425ce93ed78413d2b7bef39781c5bee9a14d7",
-    "git_blob_sha": "d50573f477406d407e963856202bd6673390df13",
-    "blob_sha": "d50573f477406d407e963856202bd6673390df13"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.9/YMS_Prospect_Finder_V4_2_9_SINGLE_PROSPECT_UI_FIX.zip",
+    "sha256": "1df49224d976516c0563229c669c2a0dd4430ddd0af830677e4b3215e64af816",
+    "git_blob_sha": "7da8d89be4de09aa75d13eca4ae663ca5c72f817",
+    "blob_sha": "7da8d89be4de09aa75d13eca4ae663ca5c72f817"
   },
   "windows": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.8/YMS_Prospect_Finder_V4_2_8_PROSPECT_AND_SCAN_CONTROLS.zip",
-    "sha256": "25ee57d4911991ece4a29bdc847425ce93ed78413d2b7bef39781c5bee9a14d7",
-    "git_blob_sha": "d50573f477406d407e963856202bd6673390df13",
-    "blob_sha": "d50573f477406d407e963856202bd6673390df13"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.9/YMS_Prospect_Finder_V4_2_9_SINGLE_PROSPECT_UI_FIX.zip",
+    "sha256": "1df49224d976516c0563229c669c2a0dd4430ddd0af830677e4b3215e64af816",
+    "git_blob_sha": "7da8d89be4de09aa75d13eca4ae663ca5c72f817",
+    "blob_sha": "7da8d89be4de09aa75d13eca4ae663ca5c72f817"
   }
 }

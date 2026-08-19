@@ -1,0 +1,103 @@
+diff -ruN '--exclude=NORTHBROWN_ICON.png' base203/payload/START_NORTHBROWN_INTERNAL.sh payload/START_NORTHBROWN_INTERNAL.sh
+--- base203/payload/START_NORTHBROWN_INTERNAL.sh	2026-08-19 10:48:50.914421392 +0000
++++ payload/START_NORTHBROWN_INTERNAL.sh	2026-08-19 10:48:50.916330176 +0000
+@@ -9,7 +9,7 @@
+ refresh_app_icon() {
+   local APP_BUNDLE="$HOME/Applications/NORTHBROWN Lead Engine.app"
+   local ICON_SRC="$ROOT/NORTHBROWN_ICON.png"
+-  local STAMP="$ROOT/.icon_ready_2_0_3"
++  local STAMP="$ROOT/.icon_ready_2_0_4"
+   [ "$(uname -s 2>/dev/null || true)" = "Darwin" ] || return 0
+   [ -d "$APP_BUNDLE" ] || return 0
+   [ -f "$ICON_SRC" ] || return 0
+@@ -41,7 +41,7 @@
+ 
+ refresh_app_icon || true
+ 
+-printf '\033[38;5;190mNORTHBROWN.\033[0m  Lead Engine 2.0.3 — Builder + Smart Finder · OTA READY\n\n'
++printf '\033[38;5;190mNORTHBROWN.\033[0m  Lead Engine 2.0.4 — Smarter Website Generation · OTA READY\n\n'
+ echo "Installed at: $ROOT" | tee -a "$LOG"
+ 
+ if ! command -v python3 >/dev/null 2>&1; then
+@@ -110,8 +110,8 @@
+ # still holding the port after an update, stop it so the new version actually starts.
+ if curl -fsS "$URL/healthz" >/dev/null 2>&1; then
+   RUNNING_VERSION=$(curl -fsS "$URL/healthz" 2>/dev/null | python3 -c 'import sys,json; print(json.load(sys.stdin).get("version", ""))' 2>/dev/null || true)
+-  if [ "$RUNNING_VERSION" = "2.0.3" ]; then
+-    echo "NORTHBROWN 2.0.3 is already running at $URL"
++  if [ "$RUNNING_VERSION" = "2.0.4" ]; then
++    echo "NORTHBROWN 2.0.4 is already running at $URL"
+     open "$URL"
+     exit 0
+   fi
+diff -ruN '--exclude=NORTHBROWN_ICON.png' base203/payload/VERSION.txt payload/VERSION.txt
+--- base203/payload/VERSION.txt	2026-08-19 10:48:50.914580479 +0000
++++ payload/VERSION.txt	2026-08-19 10:48:50.916374535 +0000
+@@ -1 +1 @@
+-2.0.3
++2.0.4
+diff -ruN '--exclude=NORTHBROWN_ICON.png' base203/payload/app.py payload/app.py
+--- base203/payload/app.py	2026-08-19 10:48:50.914666508 +0000
++++ payload/app.py	2026-08-19 10:48:50.916504366 +0000
+@@ -29,7 +29,7 @@
+ DATA_DIR = os.getenv('NORTHBROWN_DATA_DIR') or os.path.join(APP_DIR, 'data')
+ os.makedirs(DATA_DIR, exist_ok=True)
+ DB_PATH = os.path.join(DATA_DIR, 'northbrown_leads.sqlite3')
+-APP_VERSION = '2.0.3'
++APP_VERSION = '2.0.4'
+ UPDATE_CACHE_DIR = os.path.join(DATA_DIR, 'updates')
+ os.makedirs(UPDATE_CACHE_DIR, exist_ok=True)
+ 
+diff -ruN '--exclude=NORTHBROWN_ICON.png' base203/payload/builder_routes.py payload/builder_routes.py
+--- base203/payload/builder_routes.py	2026-08-19 10:48:50.913879732 +0000
++++ payload/builder_routes.py	2026-08-19 10:48:50.916057579 +0000
+@@ -150,11 +150,15 @@
+                 if 3 <= len(t) <= 80 and t.lower() not in generic and t not in headings:
+                     headings.append(t)
+             result['headings'] = headings[:20]
+-            service_words = ('roof','plumb','electric','repair','install','service','funeral','account','tax','kitchen','bathroom','hair','beauty','landscap','clean','heating','boiler','solicitor','conveyanc','web','design','fabricat','engineering','joinery','building','dent','therapy','physio','estate','letting','catering','menu','treatment')
+-            services = [x for x in headings if any(w in x.lower() for w in service_words)]
+-            if len(services) < 2:
+-                services = headings[:6]
+-            result['services'] = services[:6]
++            service_words = ('roof','plumb','electric','repair','install','service','funeral','account','tax','kitchen','bathroom','hair','beauty','barber','haircut','cut','fade','beard','shave','trim','groom','landscap','clean','heating','boiler','solicitor','conveyanc','fabricat','engineering','joinery','building','dent','therapy','physio','estate','letting','catering','menu','treatment','mot','tyre','brake','flower','bouquet')
++            extra_text = []
++            for tag in soup.find_all(['li','button','option','a'])[:250]:
++                t = ' '.join(tag.stripped_strings).strip()
++                if 3 <= len(t) <= 80 and t not in headings and t not in extra_text:
++                    extra_text.append(t)
++            candidates_text = headings + extra_text
++            services = [x for x in candidates_text if any(w in x.lower() for w in service_words)]
++            result['services'] = services[:12]
+             socials = {}
+             for a in soup.find_all('a', href=True):
+                 href = a.get('href','')
+@@ -211,11 +215,187 @@
+             embed=f'https://www.google.com/maps/embed/v1/place?key={quote_plus(embed_key)}&q={target}'
+         return {'maps_url':maps,'directions_url':directions,'reviews_url':reviews,'embed_url':embed}
+ 
++
++    # Category intelligence keeps generated demos anchored to the actual business.
++    CATEGORY_PLAYBOOKS = [
++        {'key':'barber','signals':('barber','barbershop','barber shop'), 'label':'Barber shop',
++         'terms':('barber','haircut','hair cut','cut','fade','beard','shave','trim','groom','scissor','restyle'),
++         'services':[
++             ('Haircuts','Classic and modern barbering with a clean, considered finish.'),
++             ('Fades & short styles','Sharp short styles and fade-focused cuts.'),
++             ('Beard grooming','Beard trims and shaping for a tidy, balanced finish.'),
++             ('Scissor work','Scissor-led cutting for shape, texture and a natural finish.'),
++             ('Restyles','A fresh direction when you want to change up your usual look.'),
++             ('Barbering appointments','Straightforward local barbering with an easy route to book or enquire.')],
++         'hero':'Sharp barbering. Easy to book.',
++         'services_title':'Barbering services',
++         'about':'A local barber shop focused on straightforward, well-presented barbering and an easy customer experience.'},
++        {'key':'hair_salon','signals':('hair salon','hairdresser','hairdressing','unisex hair','hair stylist'), 'label':'Hair salon',
++         'terms':('hair','cut','colour','color','blow dry','blowdry','style','styling','balayage','highlight','treatment','restyle'),
++         'services':[('Cut & finish','Haircuts shaped around your style and everyday routine.'),('Styling','Polished styling for everyday looks and special occasions.'),('Colour services','Colour-led appointments with the final service agreed before booking.'),('Blow-dries','A smooth, finished look with professional styling.'),('Restyles','A fresh shape or direction when you are ready for a change.'),('Hair treatments','Care-focused treatments to support the look and feel of your hair.')],
++         'hero':'Hair that feels like you.', 'services_title':'Hair services', 'about':'A local hair salon built around personal service, clear appointment information and an easy route to book.'},
++        {'key':'beauty','signals':('beauty salon','beautician','nail salon','spa','lash','brow'), 'label':'Beauty salon',
++         'terms':('beauty','nail','brow','lash','facial','wax','massage','treatment','manicure','pedicure'),
++         'services':[('Beauty treatments','A clear selection of beauty appointments tailored around the salon offer.'),('Brows','Brow-focused treatments and shaping.'),('Lashes','Lash treatments with appointment details kept simple and clear.'),('Nails','Nail appointments presented in an easy-to-browse format.'),('Skin & facial care','Treatment-led options for skin and facial care.'),('Appointments','Simple booking and enquiry routes for new and returning clients.')],
++         'hero':'Feel good. Look polished.', 'services_title':'Beauty treatments', 'about':'A local beauty business focused on personal service, clear treatment information and easy booking.'},
++        {'key':'roofer','signals':('roofing','roofer','roofers'), 'label':'Roofing company','terms':('roof','gutter','chimney','tile','slate','flat roof','repair','leadwork'),
++         'services':[('Roof repairs','Clear help for damaged, leaking or worn roofing.'),('New roofs','Roofing work for replacement and new-install projects.'),('Flat roofing','Fl

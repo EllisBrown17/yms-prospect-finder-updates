@@ -1,18 +1,8 @@
 {
-  "version": "5.0.0",
-  "published_at": "2026-08-19T15:12:00+01:00",
-  "notes": "Major Product Intelligence + Outreach Intelligence update. Adds a locked verified ALFRA Product Truth library, product-to-company and company-to-product opportunity scoring, explicit verified/observed/inferred/unknown explanations, probable workflow/use, validation questions, do-not-claim safeguards and bounded sales-outcome learning that can adjust sales priority but never product facts. Rebuilds emailing around an Outreach workspace with grounded product-specific drafts, approval states, manual sent-history logging, contact/email/product/date/body timeline, duplicate first-contact protection, follow-up dates, reply/outcome logging and Do Not Contact suppression. Includes S 125, BS 120, VKS 125, AMTE 250, AP 250, TML magnets and Rotabest seed intelligence. Keeps V4 Smart Pipeline reliability/controls and persistent desktop launcher refresh intact.",
+  "version": "5.0.1",
+  "published_at": "2026-08-19T16:12:00+01:00",
+  "notes": "Critical Products/Outreach navigation hotfix. YMS 5.0.0 generated the two new inline navigation handlers as show(\'products\',this) and show(\'outreach\',this). Safari compiles inline handlers when clicked and rejected those backslashes with SyntaxError: Invalid escape in identifier. 5.0.1 repairs exactly those two handlers. The main Product Intelligence/Outreach JavaScript already passes syntax validation and is left unchanged. All product intelligence, outreach history, Smart Pipeline fixes and prospect data are retained, and the Desktop launcher/icon is refreshed after update.",
   "mandatory": false,
-  "mac": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/5.0.0/YMS_Prospect_Finder_V5_0_0_PRODUCT_OUTREACH_INTELLIGENCE.zip",
-    "sha256": "5a875f3a5b52c8158c1a3ca6c12c7c5f3e472898bd0d306d4dcdbd7a0ea2d127",
-    "git_blob_sha": "a819f9a8ae219c6ba11ee0467f4e58888b694a8a",
-    "blob_sha": "a819f9a8ae219c6ba11ee0467f4e58888b694a8a"
-  },
-  "windows": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/5.0.0/YMS_Prospect_Finder_V5_0_0_PRODUCT_OUTREACH_INTELLIGENCE.zip",
-    "sha256": "5a875f3a5b52c8158c1a3ca6c12c7c5f3e472898bd0d306d4dcdbd7a0ea2d127",
-    "git_blob_sha": "a819f9a8ae219c6ba11ee0467f4e58888b694a8a",
-    "blob_sha": "a819f9a8ae219c6ba11ee0467f4e58888b694a8a"
-  }
+  "mac": {"url":"https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/5.0.1/YMS_Prospect_Finder_V5_0_1_SAFARI_UI_HOTFIX.zip","sha256":"11fcd8941372ba0764944e4049976544392efce74d6f3189379e0a534ace1c85","git_blob_sha":"c52c77e5396835ebc4f3c78cc73fa9404ea1187a","blob_sha":"c52c77e5396835ebc4f3c78cc73fa9404ea1187a"},
+  "windows": {"url":"https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/5.0.1/YMS_Prospect_Finder_V5_0_1_SAFARI_UI_HOTFIX.zip","sha256":"11fcd8941372ba0764944e4049976544392efce74d6f3189379e0a534ace1c85","git_blob_sha":"c52c77e5396835ebc4f3c78cc73fa9404ea1187a","blob_sha":"c52c77e5396835ebc4f3c78cc73fa9404ea1187a"}
 }

@@ -1,11 +1,11 @@
 {
   "schema": 2,
-  "version": "2.0.7",
-  "allowed_from": ["2.0.6"],
-  "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/northbrown/releases/NORTHBROWN-update-2.0.7.zip",
-  "size": 4950,
-  "sha256": "3e36b05f071597f4fc26ec210ba9cbcc01b3133668c010de25a0551340f60327",
-  "notes": "NORTHBROWN 2.0.7 makes demo sites genuinely business-specific with unique layout recipes and Remix design, guarantees a business logo or NORTHBROWN-generated logo placeholder, and adds Google Local Trust: free interactive Maps Embed plus Maps/directions/review-listing links, with optional enhanced Places rating/review snippets. The OTA bridge uses SHA-256 verified hex+gzip patch transport and automatically rolls back to 2.0.6 on any failure.",
-  "published_at": "2026-08-19T14:46:18Z",
+  "version": "2.0.8",
+  "allowed_from": ["2.0.7"],
+  "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/northbrown/releases/NORTHBROWN-update-2.0.8.zip",
+  "size": 4168,
+  "sha256": "3f74b6e0dd784d1cbff99e24623f40ee592be08cc3290e02869a2ee0f26ad953",
+  "notes": "NORTHBROWN 2.0.8 fixes Google Maps location binding in generated websites. Maps and Google links are rebuilt at render/export time from the Google Place ID when available, otherwise from business name, address, town and postcode. Existing projects immediately use a newly configured Maps Embed API key. Projects without enough location data no longer fall back to a whole-world embed. Includes compile checks and automatic rollback to the updater-created 2.0.7 backup on failure.",
+  "published_at": "2026-08-19T15:16:00Z",
   "mandatory": false
 }

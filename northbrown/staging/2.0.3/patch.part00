@@ -1,0 +1,182 @@
+diff -ruN base202/payload/START_NORTHBROWN_INTERNAL.sh payload/START_NORTHBROWN_INTERNAL.sh
+--- base202/payload/START_NORTHBROWN_INTERNAL.sh	2026-08-19 10:15:25.144765470 +0000
++++ payload/START_NORTHBROWN_INTERNAL.sh	2026-08-19 10:13:29.903391563 +0000
+@@ -9,7 +9,7 @@
+ refresh_app_icon() {
+   local APP_BUNDLE="$HOME/Applications/NORTHBROWN Lead Engine.app"
+   local ICON_SRC="$ROOT/NORTHBROWN_ICON.png"
+-  local STAMP="$ROOT/.icon_ready_2_0_2"
++  local STAMP="$ROOT/.icon_ready_2_0_3"
+   [ "$(uname -s 2>/dev/null || true)" = "Darwin" ] || return 0
+   [ -d "$APP_BUNDLE" ] || return 0
+   [ -f "$ICON_SRC" ] || return 0
+@@ -41,7 +41,7 @@
+ 
+ refresh_app_icon || true
+ 
+-printf '\033[38;5;190mNORTHBROWN.\033[0m  Lead Engine 2.0 — Builder Edition · OTA READY\n\n'
++printf '\033[38;5;190mNORTHBROWN.\033[0m  Lead Engine 2.0.3 — Builder + Smart Finder · OTA READY\n\n'
+ echo "Installed at: $ROOT" | tee -a "$LOG"
+ 
+ if ! command -v python3 >/dev/null 2>&1; then
+@@ -106,11 +106,18 @@
+ PORT=${PORT:-5055}
+ URL="http://127.0.0.1:${PORT}"
+ 
+-# If an existing NORTHBROWN backend is already running, simply open it.
++# Reuse only a backend running the same version. If an older NORTHBROWN process is
++# still holding the port after an update, stop it so the new version actually starts.
+ if curl -fsS "$URL/healthz" >/dev/null 2>&1; then
+-  echo "NORTHBROWN is already running at $URL"
+-  open "$URL"
+-  exit 0
++  RUNNING_VERSION=$(curl -fsS "$URL/healthz" 2>/dev/null | python3 -c 'import sys,json; print(json.load(sys.stdin).get("version", ""))' 2>/dev/null || true)
++  if [ "$RUNNING_VERSION" = "2.0.3" ]; then
++    echo "NORTHBROWN 2.0.3 is already running at $URL"
++    open "$URL"
++    exit 0
++  fi
++  OLD_PID=$(lsof -tiTCP:"$PORT" -sTCP:LISTEN 2>/dev/null | head -1 || true)
++  [ -n "$OLD_PID" ] && kill "$OLD_PID" >/dev/null 2>&1 || true
++  sleep 1
+ fi
+ 
+ echo
+diff -ruN base202/payload/VERSION.txt payload/VERSION.txt
+--- base202/payload/VERSION.txt	2026-08-19 10:15:25.144875227 +0000
++++ payload/VERSION.txt	2026-08-19 10:13:29.903544912 +0000
+@@ -1 +1 @@
+-2.0.2
++2.0.3
+diff -ruN base202/payload/app.py payload/app.py
+--- base202/payload/app.py	2026-08-19 10:15:25.144925659 +0000
++++ payload/app.py	2026-08-19 10:13:29.902235978 +0000
+@@ -29,7 +29,7 @@
+ DATA_DIR = os.getenv('NORTHBROWN_DATA_DIR') or os.path.join(APP_DIR, 'data')
+ os.makedirs(DATA_DIR, exist_ok=True)
+ DB_PATH = os.path.join(DATA_DIR, 'northbrown_leads.sqlite3')
+-APP_VERSION = '2.0.2'
++APP_VERSION = '2.0.3'
+ UPDATE_CACHE_DIR = os.path.join(DATA_DIR, 'updates')
+ os.makedirs(UPDATE_CACHE_DIR, exist_ok=True)
+ 
+@@ -80,7 +80,7 @@
+ 
+ @app.get('/healthz')
+ def healthz():
+-    return jsonify({'ok': True, 'app': 'NORTHBROWN Lead Engine'})
++    return jsonify({'ok': True, 'app': 'NORTHBROWN Lead Engine', 'version': APP_VERSION})
+ 
+ 
+ @app.get('/service-worker.js')
+@@ -97,6 +97,10 @@
+ 
+ DEFAULT_SETTINGS = {
+     'google_places_api_key': '',
++    # Maps Embed API is free/unlimited from Google, but still needs a Cloud key with billing enabled.
++    'google_maps_embed_api_key': '',
++    # Free mode stops Website Builder from making extra paid Place Details refresh calls.
++    'builder_google_mode': 'free',
+     'openai_api_key': '',
+     'openai_model': '',
+     'smtp_host': '',
+@@ -316,7 +320,7 @@
+ 
+ def public_settings(settings):
+     safe = dict(settings)
+-    for key in ('google_places_api_key', 'openai_api_key', 'smtp_password', 'imap_password'):
++    for key in ('google_places_api_key', 'google_maps_embed_api_key', 'openai_api_key', 'smtp_password', 'imap_password'):
+         safe[key] = '••••••••' if settings.get(key) else ''
+     return safe
+ 
+@@ -962,6 +966,97 @@
+     places_usage=usage_today('google_places_text_search'); return jsonify({'ok':True,'found':len(places),'added':added,'skipped':skipped,'places_requests_today':int(places_usage['units'])})
+ 
+ 
++
++SMART_FINDER_CATEGORIES = [
++    'roofers','plumbers','electricians','builders','joiners','landscapers','garage services',
++    'funeral directors','hair salons','beauty salons','accountants','solicitors','estate agents',
++    'dentists','physiotherapists','cleaning companies','kitchen fitters','bathroom fitters',
++    'dog groomers','florists','cafes','independent restaurants'
++]
++SMART_FINDER_CHAIN_TOKENS = {
++    'tesco','sainsbury','asda','morrisons','aldi','lidl','mcdonald','kfc','starbucks','costa coffee',
++    'subway','greggs','boots','superdrug','b&q','wickes','screwfix','toolstation','halfords','currys',
++    'next','primark','home bargains','b&m','jd sports','sports direct','wetherspoon','premier inn',
++    'travelodge','specsavers','vision express','nationwide','barclays','lloyds bank','halifax','natwest',
++    'santander','hsbc'
++}
++
++def _smart_finder_unsuitable(name):
++    low=(name or '').lower()
++    return any(token in low for token in SMART_FINDER_CHAIN_TOKENS)
++
++def _start_specific_scan(lead_ids, mode='smart'):
++    ids=[]
++    for value in lead_ids:
++        try:
++            i=int(value)
++            if i not in ids: ids.append(i)
++        except Exception:
++            pass
++    if not ids:
++        return None,0
++    conn=db_conn(); marks=','.join('?' for _ in ids)
++    rows=conn.execute(f"SELECT id,business_name FROM leads WHERE id IN ({marks}) AND website IS NOT NULL AND trim(website)<>''",ids).fetchall()
++    if not rows:
++        conn.close(); return None,0
++    job_id=f"scan-{int(time.time())}-{os.urandom(3).hex()}"; ts=now_iso()
++    conn.execute('INSERT INTO scan_jobs_persist(job_id,status,mode,total,started_at,started_at_epoch,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)',(job_id,'running',mode,len(rows),ts,time.time(),ts,ts))
++    for pos,r in enumerate(rows,1):
++        conn.execute('INSERT INTO scan_queue(job_id,lead_id,position,status) VALUES(?,?,?,?)',(job_id,r['id'],pos,'pending'))
++    conn.commit(); conn.close(); _start_scan_worker(job_id)
++    return job_id,len(rows)
++
++@app.post('/api/smart-finder')
++def smart_finder():
++    data=request.get_json(silent=True) or {}
++    location=(data.get('location') or '').strip()
++    if not location:
++        return jsonify({'error':'Enter an area for Smart Finder.'}),400
++    target=max(10,min(200,int(data.get('target') or 100)))
++    radius=max(1,min(75,int(data.get('radius_miles') or 15)))
++    mode=(data.get('mode') or 'smart').lower()
++    if mode not in ('fast','smart','full'):
++        mode='smart'
++    settings=get_settings(); key=(settings.get('google_places_api_key') or '').strip()
++    if not key:
++        return jsonify({'error':'Smart Finder needs your Google Places key in Settings. Website Builder Google maps/review links can still use the free Google mode.'}),400
++    categories=data.get('categories') if isinstance(data.get('categories'),list) else SMART_FINDER_CATEGORIES
++    categories=[str(x).strip() for x in categories if str(x).strip()][:30] or SMART_FINDER_CATEGORIES
++    headers={'Content-Type':'application/json','X-Goog-Api-Key':key,'X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress,places.websiteUri,places.nationalPhoneNumber,places.primaryTypeDisplayName'}
++    added_ids=[]; found=0; skipped=0; requests_used=0; ts=now_iso(); conn=db_conn()
++    try:
++        for category in categories:
++            if len(added_ids)>=target:
++                break
++            query=f'{category} within {radius} miles of {location}'
++            requests_used+=1; log_usage_event('google_places_text_search',1,0,{'query':query,'limit':20,'smart_finder':True})
++            try:
++                r=requests.post('https://places.googleapis.com/v1/places:searchText',headers=headers,json={'textQuery':query,'pageSize':20,'regionCode':'GB'},timeout=30)
++                if r.status_code>=400:
++                    continue
++                places=r.json().get('places',[])
++            except Exception:
++                continue
++            found += len(places)
++            for p in places:
++                if len(added_ids)>=target:
++                    break
++                display=p.get('displayName') or {}; name=(display.get('text') or '').strip(); pid=(p.get('id') or '').strip(); website=(p.get('websiteUri') or '').strip()
++                if not name or not pid or not website or _smart_finder_unsuitable(name):
++                    skipped+=1; continue
++                existing=conn.execute('SELECT id FROM leads WHERE google_place_id=?',(pid,)).fetchone()
++                if existing:
++                    skipped+=1; continue
++                ptype=p.get('primaryTypeDisplayName') or {}
++                cur=conn.execute("INSERT INTO leads(business_name,website,email,phone,address,town,category,source,google_place_id,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
++                    (name,website,'',p.get('nationalPhoneNumber') or '',p.get('formattedAddress') or '',location,ptype.get('text') or category,'smart_finder',pid,'new',ts,ts))
++                added_ids.append(cur.lastrowid)
++        conn.commit()
++   

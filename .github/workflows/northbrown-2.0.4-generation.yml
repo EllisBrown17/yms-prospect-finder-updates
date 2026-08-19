@@ -24,7 +24,6 @@ jobs:
           WORK="$(mktemp -d)"
           mkdir -p "$WORK/base202" "$WORK/base203" northbrown/releases
 
-          # Reconstruct the known-good full 2.0 application source from the existing staging set.
           python - <<'PY'
           from pathlib import Path
           p=Path('northbrown/staging/2.0.0/ota.part04')
@@ -41,7 +40,6 @@ jobs:
           unzip -q "$WORK/base.zip" -d "$WORK/base202"
           P202="$WORK/base202/payload"
 
-          # Bring the verified base to the user's current 2.0.2 bridge state.
           python - "$P202" <<'PY'
           from pathlib import Path
           import sys
@@ -51,12 +49,10 @@ jobs:
           f=p/'START_NORTHBROWN_INTERNAL.sh'; s=f.read_text().replace('.icon_ready_2_0_0','.icon_ready_2_0_2'); f.write_text(s)
           PY
 
-          # Apply all previously staged 2.0.3 QoL features to a fresh copy.
           cp -R "$P202" "$WORK/payload"
           cat northbrown/staging/2.0.3/patch.part* > "$WORK/203.patch"
           (cd "$WORK" && patch --batch -p0 < "$WORK/203.patch")
 
-          # Snapshot 2.0.3, then apply the category-aware 2.0.4 generation fix.
           rm -f "$WORK/payload/release.json"
           cp -R "$WORK/payload" "$WORK/base203/payload"
           cat northbrown/staging/2.0.4/patch.part* > "$WORK/204.patch"
@@ -64,7 +60,6 @@ jobs:
           (cd "$WORK" && patch --batch -p0 < "$WORK/204.patch")
           P="$WORK/payload"
 
-          # Rebuild the internal release manifest after all source changes.
           python - "$P" <<'PY'
           from pathlib import Path
           import hashlib, json, sys
@@ -78,7 +73,6 @@ jobs:
           (p/'release.json').write_text(json.dumps(r,indent=2)+'\n')
           PY
 
-          # Validation: do not publish unless the exact application is internally consistent.
           test "$(tr -d '\r\n' < "$P/VERSION.txt")" = '2.0.4'
           python -m py_compile "$P/app.py" "$P/feature_routes.py" "$P/builder_routes.py"
           node --check "$P/static/app.js"
@@ -91,8 +85,6 @@ jobs:
           grep -q "scanDismissBtn" "$P/templates/index.html"
           grep -q "Free Google tools for websites" "$P/templates/index.html"
 
-          # Regression test for the exact Birkenshaw-type failure: boilerplate must be rejected
-          # and barber output must resolve to barbering services rather than generic headings.
           python - "$P/builder_routes.py" <<'PY'
           from pathlib import Path
           s=Path(__import__('sys').argv[1]).read_text()
@@ -134,4 +126,13 @@ jobs:
           git config user.email 'actions@users.noreply.github.com'
           git add northbrown/releases/NORTHBROWN-update-2.0.4.zip northbrown/update.json
           git commit -m 'Publish NORTHBROWN OTA 2.0.4 smarter generation'
-          git push
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo 'Could not publish NORTHBROWN 2.0.4 after three safe retries.' >&2
+          exit 1

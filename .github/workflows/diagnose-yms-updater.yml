@@ -13,30 +13,29 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - name: Inspect updater bridge history
+      - name: Inspect original updater source
         run: |
           set -euo pipefail
-          for spec in \
-            '4.1.1 releases/4.1.1/YMS_Prospect_Finder_OTA_BRIDGE.zip' \
-            '4.1.2 releases/4.1.2/YMS_Prospect_Finder_V4_1_2_OTA_VERIFICATION_BRIDGE.zip' \
-            '4.2.11 releases/4.2.11/YMS_Prospect_Finder_V4_2_11_PERSISTENT_DESKTOP_FIX.zip'; do
-            VER="${spec%% *}"; ZIP="${spec#* }"; DIR="/tmp/yms-${VER}"
-            rm -rf "$DIR" && mkdir -p "$DIR"
-            unzip -o "$ZIP" -d "$DIR" >/dev/null
-            echo
-            echo "================ $VER ================"
-            find "$DIR" -maxdepth 2 -type f -print
-            for f in "$DIR"/*; do
-              [ -f "$f" ] || continue
-              if file "$f" | grep -qi text; then
-                echo "--- $f ---"
-                grep -nEi 'manifest|release channel|release_channel|check for updates|github|raw.githubusercontent|updater|update_available|latest|channel|sha256' "$f" || true
-              fi
-            done
-          done
-          echo
-          echo '================ 4.2.0 archive inventory ================'
-          for z in releases/4.2.0/*.zip; do
-            echo "--- $z ---"
-            unzip -l "$z" | sed -n '1,12p'
-          done
+          rm -rf /tmp/yms420ota && mkdir -p /tmp/yms420ota
+          unzip -o releases/4.2.0/YMS_Prospect_Finder_V4_2_0_OTA.zip -d /tmp/yms420ota >/dev/null
+          echo '--- files ---'
+          find /tmp/yms420ota -maxdepth 2 -type f -print -exec wc -c {} \;
+          echo '--- updater references ---'
+          grep -nEi 'manifest|release channel|release_channel|check for updates|github|raw.githubusercontent|updater|update_available|latest|channel|sha256|package_url' /tmp/yms420ota/server.py || true
+          echo '--- updater-related source windows ---'
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('/tmp/yms420ota/server.py').read_text('utf-8')
+          lines=s.splitlines()
+          needles=['manifest','release channel','package_url','update/check','update_status','check_update','raw.githubusercontent','github.com','UPDATE_MANIFEST','update_manifest']
+          hits=[]
+          for i,line in enumerate(lines):
+              if any(n.lower() in line.lower() for n in needles): hits.append(i)
+          spans=[]
+          for i in hits:
+              a=max(0,i-12); b=min(len(lines),i+26)
+              if any(a>=x and b<=y for x,y in spans): continue
+              spans.append((a,b))
+              print(f'\n### lines {a+1}-{b}')
+              for j in range(a,b): print(f'{j+1}: {lines[j]}')
+          PY

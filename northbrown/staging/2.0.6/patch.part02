@@ -1,0 +1,39 @@
+nt').textContent='100%'}return true}return false}catch(e){clearInterval(smartFinderPollHandle);$('#smartFinderBtn').disabled=false;$('#smartFinderBtn').innerHTML='Smart Finder — find &amp; scan <span>✦</span>';toast(e.message,true);return true}};const done=await tick();if(!done)smartFinderPollHandle=setInterval(tick,700)}
++$('#smartFinderBtn').onclick=async()=>{const b=$('#smartFinderBtn');const location=($('#smartFinderLocation').value||$('#discoverLocation').value||'').trim();b.disabled=true;b.textContent='Starting Smart Finder…';requestScanNotifications();const box=$('#smartFinderProgress');box.hidden=false;box.classList.remove('failed');$('#smartFinderFill').style.width='2%';$('#smartFinderPercent').textContent='0%';$('#smartFinderStage').textContent='Starting Smart Finder';$('#smartFinderDetail').textContent='Preparing local business searches…';$('#smartFinderCount').textContent='0 / 0';try{const r=await api('/api/smart-finder',{method:'POST',body:{location,radius_miles:+$('#smartFinderRadius').value,target:+$('#smartFinderTarget').value,mode:'smart'}});b.textContent='Finding local companies…';watchSmartFinder(r.job_id)}catch(e){box.classList.add('failed');toast(e.message,true);b.innerHTML='Smart Finder — find &amp; scan <span>✦</span>';b.disabled=false}};
+ $('#addManualBtn').onclick=async()=>{try{await api('/api/leads',{method:'POST',body:{business_name:$('#manualName').value,website:$('#manualWebsite').value,email:$('#manualEmail').value,town:$('#manualTown').value,category:$('#manualCategory').value}});toast('Prospect added.');$('#manualModal').classList.remove('open');setView('prospects');await loadLeads();await loadOverview();}catch(e){toast(e.message,true)}};
+ 
+ $('#importBtn').onclick=()=>$('#csvInput').click(); $('#csvInput').onchange=async e=>{const f=e.target.files[0];if(!f)return;const fd=new FormData();fd.append('file',f);try{const r=await api('/api/import',{method:'POST',body:fd});toast(`${r.imported} prospects imported.`);await loadLeads();await loadOverview();}catch(err){toast(err.message,true)}e.target.value=''};
+diff -ruN base205/payload/templates/index.html payload/templates/index.html
+--- base205/payload/templates/index.html	2026-08-19 13:36:33.861679008 +0000
++++ payload/templates/index.html	2026-08-19 13:36:33.863277135 +0000
+@@ -8,9 +8,9 @@
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+-  <link rel="icon" type="image/png" href="/northbrown-icon-2.0.5.png">
+-  <link rel="shortcut icon" type="image/png" href="/northbrown-icon-2.0.5.png">
+-  <link rel="apple-touch-icon" href="/northbrown-icon-2.0.5.png">
++  <link rel="icon" type="image/png" href="/northbrown-icon-2.0.6.png">
++  <link rel="shortcut icon" type="image/png" href="/northbrown-icon-2.0.6.png">
++  <link rel="apple-touch-icon" href="/northbrown-icon-2.0.6.png">
+   <link rel="stylesheet" href="/static/app.css">
+ </head>
+ <body>
+@@ -20,7 +20,7 @@
+ <div class="app-shell">
+   <aside class="sidebar">
+     <div class="brand" aria-label="Northbrown">
+-      <img class="brand-app-icon" src="/northbrown-icon-2.0.5.png" alt="NORTHBROWN logo">
++      <img class="brand-app-icon" src="/northbrown-icon-2.0.6.png" alt="NORTHBROWN logo">
+       <div>
+         <div class="brand-word">NORTHBROWN<span>.</span></div>
+         <div class="brand-sub">LEAD ENGINE</div>
+@@ -521,7 +521,7 @@
+       <label>Location<input id="discoverLocation" value="West Yorkshire" placeholder="e.g. Huddersfield, West Yorkshire"></label>
+       <label>Number of results<select id="discoverLimit"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></label>
+       <button id="discoverBtn" class="btn primary wide">Find businesses <span>↗</span></button>
+-      <div class="smart-finder-box"><div class="eyebrow lime">SMART FINDER</div><h3>Scan loads of local companies.</h3><p>NORTHBROWN searches across useful local-business categories, filters obvious national chains and immediately Smart-scans the new websites it finds.</p><div class="two-col"><label>Area<input id="smartFinderLocation" value="West Yorkshire" placeholder="e.g. Huddersfield"></label><label>Radius<select id="smartFinderRadius"><option value="5">5 miles</option><option value="10">10 miles</option><option value="15" selected>15 miles</option><option value="25">25 miles</option><option value="40">40 miles</option></select></label></div><label>How many new businesses<select id="smartFinderTarget"><option value="25">Up to 25</option><option value="50">Up to 50</option><option value="100" selected>Up to 100</option><option value="150">Up to 150</option><option value="200">Up to 200</option></select></label><button id="smartFinderBtn" class="btn secondary wide">Smart Finder — find &amp; scan <span>✦</span></button><small class="finder-note">Uses your configured Google Places discovery key. Duplicates and obvious chains are skipped automatically.</small></div>
++      <div class="smart-finder-box"><div class="eyebrow lime">SMART FINDER</div><h3>Scan loads of local companies.</h3><p>NORTHBROWN searches across useful local-business categories, filters obvious national chains and immediately Smart-scans the new websites it finds.</p><div class="two-col"><label>Area<input id="smartFinderLocation" value="West Yorkshire" placeholder="e.g. Huddersfield"></label><label>Radius<select id="smartFinderRadius"><option value="5">5 miles</option><option value="10">10 miles</option><option value="15" selected>15 miles</option><option value="25">25 miles</option><option value="40">40 miles</option></select></label></div><label>How many new businesses<select id="smartFinderTarget"><option value="25">Up to 25</option><option value="50">Up to 50</option><option value="100" selected>Up to 100</option><option value="150">Up to 150</option><option value="200">Up to 200</option></select></label><button id="smartFinderBtn" class="btn secondary wide">Smart Finder — find &amp; scan <span>✦</span></button><div id="smartFinderProgress" class="finder-progress" hidden><div class="finder-progress-head"><strong id="smartFinderStage">Starting…</strong><span id="smartFinderPercent">0%</span></div><div class="finder-progress-track"><i id="smartFinderFill"></i></div><div class="finder-progress-meta"><span id="smartFinderDetail">Preparing local searches…</span><span id="smartFinderCount">0 / 0</span></div></div><small class="finder-note">Uses your configured Google Places discovery key. Duplicates and obvious chains are skipped automatically.</small></div>
+       <div class="modal-divider"><span>or</span></div>
+       <button id="manualLeadBtn" class="btn secondary wide">Add one business manually</button>
+     </div>

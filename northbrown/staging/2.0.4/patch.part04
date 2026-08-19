@@ -1,0 +1,51 @@
+eadings into business services.
++Never reuse directory/aggregator boilerplate such as 'For more details, please visit our website', a raw URL, or a sentence that simply repeats the address.
++For a barber, for example, the copy must sound unmistakably like a barber shop and the service cards must be barbering services.
++
++Facts: {json.dumps(facts, ensure_ascii=False)[:14000]}
++
+ Return ONLY valid JSON with keys: hero_headline, hero_subheading, hero_cta, hero_secondary, services_title, services (array of up to 6 objects with name and description), about_title, about_body, proof_title, proof_body, contact_title, contact_body.
+-Tone: polished UK small-business website copy, concise, specific to the category, natural rather than salesy.'''
++Tone: polished UK small-business website copy, concise, specific, natural and customer-facing. Avoid talking about 'the website', 'this concept', 'digital experience' or NORTHBROWN in the client's main business copy.'''
+         text = openai_text(prompt, settings)
+         if not text:
+             return None
+         try:
+             m = re.search(r'\{.*\}', text, re.S)
+             obj = json.loads(m.group(0) if m else text)
+-            return obj if isinstance(obj, dict) else None
++            return _sanitise_generated_content(obj, business) if isinstance(obj, dict) else None
+         except Exception:
+             return None
+ 
+@@ -336,6 +532,7 @@
+         if ai:
+             for key, value in ai.items():
+                 if key in content and value not in (None,'',[]): content[key] = value
++        content = _sanitise_generated_content(content, business)
+         template = _template_for(business.get('category'))
+         accent, background, surface, text_color = _palette_for(template, business.get('theme_color'))
+         pages = [{'slug':'home','title':'Home','kind':'home','headline':content.get('hero_headline',''),'body':''}]
+@@ -521,7 +718,7 @@
+                 for k in ('ai_issues','ai_strengths'): lead[k]=_loads(lead.get(k),[])
+         conn.close(); ai=_ai_content(project['business'],lead)
+         if not ai: return jsonify({'error':'AI copy could not be generated. Check the OpenAI key/model in Settings.'}),400
+-        content=project['content']; content.update({k:v for k,v in ai.items() if v not in (None,'',[])})
++        content=project['content']; content.update({k:v for k,v in ai.items() if v not in (None,'',[])}); content=_sanitise_generated_content(content, project['business'])
+         conn=db_conn(); conn.execute('UPDATE site_projects SET content_json=?,updated_at=? WHERE id=?',(json.dumps(content),now_iso(),project_id)); conn.commit(); row=conn.execute('SELECT * FROM site_projects WHERE id=?',(project_id,)).fetchone(); conn.close(); return jsonify(_project_dict(row))
+ 
+     @app.post('/api/builder/projects/<int:project_id>/asset')
+diff -ruN '--exclude=NORTHBROWN_ICON.png' base203/payload/templates/index.html payload/templates/index.html
+--- base203/payload/templates/index.html	2026-08-19 10:48:50.914451845 +0000
++++ payload/templates/index.html	2026-08-19 10:48:50.916353403 +0000
+@@ -8,8 +8,8 @@
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+-  <link rel="icon" type="image/png" href="/static/NORTHBROWN_ICON.png?v=203">
+-  <link rel="apple-touch-icon" href="/static/NORTHBROWN_ICON.png?v=203">
++  <link rel="icon" type="image/png" href="/static/NORTHBROWN_ICON.png?v=204">
++  <link rel="apple-touch-icon" href="/static/NORTHBROWN_ICON.png?v=204">
+   <link rel="stylesheet" href="/static/app.css">
+ </head>
+ <body>

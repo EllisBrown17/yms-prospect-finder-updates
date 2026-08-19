@@ -1,0 +1,1 @@
+{"version":"2.0.7","base_version":"2.0.6","transport":"hex-gzip-patch-v1","parts":["hexpart00.txt","hexpart01.txt","hexpart02.txt","hexpart03.txt"],"gzip_sha256":"12a315aa83310e9fe3c1d556abaa909089e3f79da93fb1ea81cee2724eddd937","patch_sha256":"df7ac18a78dec3c7cef0a3db10964166b3ceba1d35ba74c5155416417656358c","patch_size":54838}

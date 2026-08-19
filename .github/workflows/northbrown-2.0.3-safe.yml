@@ -21,8 +21,8 @@ jobs:
         run: |
           set -euo pipefail
           VERSION='2.0.3'
-          EXPECTED_SHA='eb2d1ef2f00d9ad40e1111de585bdb26d276b50822719a71133b8a6a47531829'
-          EXPECTED_SIZE='277322'
+          EXPECTED_SHA='ef43f28cfee91eda58a175a8f8fcc4785c213d73f8ea866796d90c61cad66990'
+          EXPECTED_SIZE='276408'
           STAGE="northbrown/staging/${VERSION}"
           ZIP="northbrown/releases/NORTHBROWN-update-${VERSION}.zip"
           mkdir -p northbrown/releases
@@ -46,6 +46,7 @@ jobs:
           test -f "$P/static/app.css"
           test -f "$P/templates/index.html"
           test -f "$P/NORTHBROWN_ICON.png"
+          test -f "$P/static/NORTHBROWN_ICON.png"
           test "$(tr -d '\r\n' < "$P/VERSION.txt")" = "$VERSION"
 
           python -m py_compile "$P/app.py" "$P/feature_routes.py" "$P/builder_routes.py"
@@ -70,9 +71,13 @@ jobs:
           grep -q 'NORTHBROWN_HEALTHCHECK_OK' "$P/app.py"
           grep -q 'northbrown-full-v2' "$P/app.py"
           grep -q 'google_maps_embed_api_key' "$P/app.py"
-          grep -q 'Free Google mode for Website Builder' "$P/templates/index.html"
+          grep -q "@app.post('/api/smart-finder')" "$P/app.py"
+          grep -q 'SMART FINDER' "$P/templates/index.html"
+          grep -q 'Free Google tools for websites' "$P/templates/index.html"
+          grep -q 'scanDismissBtn' "$P/templates/index.html"
           grep -q 'View reviews on Google' "$P/builder_routes.py"
           grep -q 'Created by Ellis Brown / NORTHBROWN' "$P/builder_routes.py"
+          grep -q 'NORTHBROWN_ICON.png?v=203' "$P/templates/index.html"
 
       - name: Publish only after validation passes
         shell: bash
@@ -90,7 +95,7 @@ jobs:
             "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/${ZIP}",
             "size": ${SIZE},
             "sha256": "${SHA}",
-            "notes": "NORTHBROWN 2.0.3: safe full-file OTA update with internal file checksums, staged health checks, database/code backup and automatic rollback for future releases. Website Builder now has a no-charge Google Maps embed option, keyless Google review/location/directions links, and Free Google mode that avoids extra paid Place Details refresh calls.",
+            "notes": "NORTHBROWN 2.0.3: Smart Finder can discover and immediately scan up to 200 local companies across useful categories while filtering obvious national chains. Scan Intelligence now has a close button after a run. Website Builder adds free Google Maps Embed support, keyless Maps/directions/review-listing links and a Free Google mode that avoids extra Place Details refreshes. The NORTHBROWN logo is refreshed as the Mac desktop icon and browser favicon. OTA packages now carry internal file checksums and stronger staged validation/rollback protections.",
             "published_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
             "mandatory": false
           }

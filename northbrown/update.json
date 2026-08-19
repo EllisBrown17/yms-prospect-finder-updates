@@ -1,8 +1,11 @@
 {
-  "version": "1.4.3",
-  "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/northbrown/releases/NORTHBROWN-update-1.4.3.zip",
-  "sha256": "9cfa287aceb3f453ba88977c7107e08b3e0d086cf803b4248e5763729fed4e6c",
-  "notes": "OTA channel temporarily paused at the last safe release while NORTHBROWN 2.0.2 is being republished as a complete full-file update. Do not retry the broken 2.0.1 bootstrap.",
-  "published_at": "2026-08-18T22:27:00Z",
+  "schema": 2,
+  "version": "2.0.6",
+  "allowed_from": ["2.0.5"],
+  "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/northbrown/releases/NORTHBROWN-update-2.0.6.zip",
+  "size": 10052,
+  "sha256": "c1da606d75d96a094d8e0306fd08327b02af77faf26c099b861b07602583fe0a",
+  "notes": "NORTHBROWN 2.0.6 adds visible Smart Finder discovery progress immediately after you start a local-company search, with stage, percentage and category count, then automatically hands over to the normal website Scan Intelligence progress. Includes the 2.0.5 reliability fixes for prospect opening, Builder saving, AI Rewrite, collapsible Scan Intelligence, NORTHBROWN brand reference and browser icon.",
+  "published_at": "2026-08-19T13:49:38Z",
   "mandatory": false
 }

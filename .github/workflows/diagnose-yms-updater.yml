@@ -2,6 +2,8 @@ name: Diagnose YMS updater channel
 on:
   push:
     branches: [yms-5.0.2-updater-channel-fix]
+  pull_request:
+    branches: [main]
 permissions:
   contents: read
 jobs:
@@ -9,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Inspect 4.2.11 updater implementation
         run: |
           set -euo pipefail
@@ -28,13 +32,12 @@ jobs:
           for i,line in enumerate(lines):
               if any(n.lower() in line.lower() for n in needles):
                   hits.append(i)
-          shown=set()
+          shown=[]
           for i in hits:
               a=max(0,i-8); b=min(len(lines),i+18)
-              key=(a,b)
               if any(a>=x and b<=y for x,y in shown):
                   continue
-              shown.add(key)
+              shown.append((a,b))
               print(f'\n### lines {a+1}-{b}')
               for j in range(a,b): print(f'{j+1}: {lines[j]}')
           PY

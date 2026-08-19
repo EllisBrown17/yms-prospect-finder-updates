@@ -1,0 +1,57 @@
+d score and rationale.'; $('#salesAngle').textContent=l.ai_sales_angle||'—'; $('#drawerEmail').textContent=l.email||'—'; $('#drawerPhone').textContent=l.phone||'—'; const w=$('#drawerWebsite'); w.textContent=l.website||'—'; w.href=l.website||'#'; $('#draftSubject').value=l.draft_subject||''; $('#draftBody').value=l.draft_body||'';
++    $('#issueList').innerHTML=(l.ai_issues||[]).map(x=>`<div class="issue">${esc(x)}</div>`).join('')||'<div class="empty-state">No analysis yet.</div>';
++    $('#strengthList').innerHTML=(l.ai_strengths||[]).map(x=>`<div class="strength">${esc(x)}</div>`).join('');
++    const circ=2*Math.PI*49; const score=l.score||0; $('#scoreArc').style.strokeDashoffset=circ-(circ*score/100);
++    $('#packageName').textContent='Calculating package fit…'; $('#packagePrice').textContent='—'; $('#packageReason').textContent=''; $('#packageConfidence').textContent='—'; $('#packageDeposit').textContent='—'; $('#packageBalance').textContent='—'; $('#priorityScore').textContent='—'; $('#salesToolOutput').innerHTML='';
++    try{
++      const r=await api(`/api/intelligence/${id}`); const i=r.intelligence||{};
++      $('#packageName').textContent=i.recommended_package||'Custom Scope';
++      $('#packagePrice').textContent=i.package_price_from?`from ${money(i.package_price)}`:(Number(i.package_price)>0?money(i.package_price):'Quote');
++      $('#packageReason').textContent=i.package_reason||'Package recommendation based on the scanned website and your NORTHBROWN package catalogue.';
++      $('#packageConfidence').textContent=i.package_confidence?`${i.package_confidence}% fit`:'—';
++      $('#packageDeposit').textContent=Number(i.package_deposit)>0?money(i.package_deposit):'—';
++      $('#packageBalance').textContent=Number(i.package_balance)>0?money(i.package_balance):'—';
++      $('#priorityScore').textContent=i.priority_score!=null?`${i.priority_score}/100`:'—';
++      state.currentIntel=i;
++    }catch(e){ $('#packageName').textContent='Run a website scan'; $('#packageReason').textContent='Package fit becomes available once NORTHBROWN has enough evidence.'; }
++    $('#leadDrawer').classList.add('open'); $('#leadDrawerBackdrop').classList.add('open');
++  }catch(e){toast(`Could not open prospect: ${e.message}`,true)}finally{leadOpenInFlight=false}
+ }
++// Delegated lead opening survives list refreshes and avoids broken row listeners.
++document.addEventListener('click',e=>{const el=e.target.closest('[data-lead]');if(!el||el.closest('#leadDrawer')||el.closest('#scanHistoryList'))return;const id=Number(el.dataset.lead);if(id){e.preventDefault();openLead(id)}});
+ function closeLead(){ $('#leadDrawer').classList.remove('open'); $('#leadDrawerBackdrop').classList.remove('open'); }
+ $('#closeDrawer').onclick=closeLead; $('#leadDrawerBackdrop').onclick=closeLead;
+ 
+ let scanClockHandle=null, scanPollHandle=null, scanLocalStarted=0, currentScanJob=null, scanActivityOpen=false, notifiedJobs=new Set();
++let scanPanelCollapsed=localStorage.getItem('northbrown_scan_collapsed')==='1';
++let globalScanHideTimer=null;
+ function fmtElapsed(seconds){seconds=Math.max(0,Math.floor(Number(seconds)||0));const h=Math.floor(seconds/3600),m=Math.floor((seconds%3600)/60),sec=seconds%60;return h?`${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`}
+ function requestScanNotifications(){try{if('Notification'in window&&Notification.permission==='default')Notification.requestPermission()}catch{}}
++function updateGlobalScanBar(r={}){
++  const bar=$('#globalScanBar');if(!bar)return;const total=Number(r.total||0),processed=Number(r.processed??((r.completed||0)+(r.failed||0))),pct=Number(r.percent??(total?processed/total*100:0));
++  clearTimeout(globalScanHideTimer);bar.hidden=false;bar.classList.toggle('done',['complete','stopped'].includes(r.status));bar.classList.toggle('failed',r.status==='failed');
++  $('#globalScanFill').style.width=`${Math.max(0,Math.min(100,pct))}%`;$('#globalScanCount').textContent=total?`${processed} / ${total}`:'Preparing';$('#globalScanPercent').textContent=`${Math.round(pct)}%`;
++  $('#globalScanTitle').textContent=r.status==='paused'?'Scan paused':r.status==='complete'?'Scan complete':r.status==='stopping'?'Stopping safely…':r.status==='failed'?'Scan problem':'Scan running';
++  $('#globalScanDetail').textContent=r.current_business?`${r.current_business} · ${phaseLabel(r.phase)}`:(r.phase_detail||'Preparing website scan…');
++  if(['complete','stopped','failed'].includes(r.status))globalScanHideTimer=setTimeout(()=>{bar.hidden=true},8000);
++}
++$('#globalScanOpen').onclick=()=>{const p=$('#scanProgressPanel');p.classList.add('show');if(scanPanelCollapsed){scanPanelCollapsed=false;p.classList.remove('collapsed');localStorage.setItem('northbrown_scan_collapsed','0');const b=$('#scanCollapseBtn');b.textContent='⌃';b.setAttribute('aria-expanded','true')}};
+ function openScanProgress({title='Scanning websites…',total=0,current='',mode='smart'}={}){
+-  const panel=$('#scanProgressPanel');if(!panel)return;panel.classList.add('show');panel.classList.remove('complete','failed');
++  const panel=$('#scanProgressPanel');if(!panel)return;panel.classList.add('show');panel.classList.remove('complete','failed');panel.classList.toggle('collapsed',scanPanelCollapsed);const cb=$('#scanCollapseBtn');if(cb){cb.textContent=scanPanelCollapsed?'⌄':'⌃';cb.setAttribute('aria-expanded',String(!scanPanelCollapsed));}
+   $('#scanProgressTitle').textContent=title;$('#scanProgressCount').textContent=total?`0 / ${total}`:'Preparing…';$('#scanProgressPercent').textContent='0%';$('#scanProgressFill').style.width='0%';$('#scanCurrentBusiness').textContent=current||'Preparing first website…';$('#scanElapsed').textContent='00:00';$('#scanEta').textContent='—';$('#scanModeBadge').textContent=String(mode||'smart').toUpperCase();$('#scanPhaseDetail').textContent='Getting the audit ready…';$('#scanFinding').textContent='NORTHBROWN will surface useful findings here as they are discovered.';$('#scanSummary').hidden=true;
+   ['scanCompleted','scanHot','scanEmails','scanSkipped','scanFailed','scanAiCalls','scanPlaces'].forEach(id=>$('#'+id).textContent='0');$('#scanCost').textContent='~£0.00';
+-  scanLocalStarted=Date.now();clearInterval(scanClockHandle);scanClockHandle=setInterval(()=>{$('#scanElapsed').textContent=fmtElapsed((Date.now()-scanLocalStarted)/1000)},500);
++  scanLocalStarted=Date.now();clearInterval(scanClockHandle);scanClockHandle=setInterval(()=>{$('#scanElapsed').textContent=fmtElapsed((Date.now()-scanLocalStarted)/1000)},500);updateGlobalScanBar({status:'running',total,processed:0,percent:0,current_business:current,phase:'website'});
+ }
+ function phaseLabel(p=''){return ({website:'Loading website',mobile:'Mobile & layout',conversion:'Conversion journey',seo:'SEO foundations',decision:'Smart scan decision',contact:'Contact intelligence',technical:'Technical checks',scoring:'Scoring',ai:'AI assessment',package:'Package matching',save:'Saving prospect',complete:'Complete',failed:'Failed',control:'Scan control',skip:'Skipped'})[p]||p||'Working'}
+ function renderScanActivity(items=[]){const box=$('#scanActivityLog');if(!box)return;box.innerHTML=items.length?items.map(a=>`<div class="scan-log-row ${esc(a.kind||'')}"><span>${esc(phaseLabel(a.phase))}</span><div><b>${esc(a.business_name||a.detail||'Scan')}</b><small>${esc(a.finding||a.detail||'')}</small></div></div>`).join(''):'<div class="empty-state">Activity will appear as the scan runs.</div>';box.scrollTop=box.scrollHeight}
+@@ -85,7 +100,7 @@
+   const statusTitle=r.status==='complete'?'Scan complete':r.status==='paused'?'Scan paused':r.status==='stopping'?'Finishing current prospect…':r.status==='stopped'?'Scan stopped safely':'Scanning websites…';$('#scanProgressTitle').textContent=statusTitle;$('#scanCurrentBusiness').textContent=r.current_business||((r.status==='complete'||r.status==='stopped')?'No active prospect':'Preparing next website…');$('#scanCurrentPhase').textContent=phaseLabel(r.phase);$('#scanPhaseDetail').textContent=r.phase_detail||'Working through the audit…';$('#scanFinding').textContent=r.finding||'No new finding yet.';
+   $('#scanCompleted').textContent=r.completed||0;$('#scanHot').textContent=r.high_priority||0;$('#scanEmails').textContent=r.emails_found||0;$('#scanSkipped').textContent=r.skipped||0;$('#scanFailed').textContent=r.failed||0;$('#scanAiCalls').textContent=r.ai_calls||0;$('#scanPlaces').textContent=r.places_requests_today||0;$('#scanCost').textContent=`~£${Number(r.estimated_cost||0).toFixed(2)}`;
+   const pause=$('#scanPauseBtn'),stop=$('#scanStopBtn'),retry=$('#scanRetryBtn'),dismiss=$('#scanDismissBtn');pause.hidden=['complete','stopped','failed'].includes(r.status);stop.hidden=['complete','stopped','failed'].includes(r.status);pause.textContent=r.status==='paused'?'Resume':'Pause';pause.dataset.action=r.status==='paused'?'resume':'pause';retry.hidden=!(Number(r.failed||0)>0&&['complete','stopped','failed'].includes(r.status));if(dismiss)dismiss.hidden=!['complete','stopped','failed'].includes(r.status);
+-  if(r.summary){$('#scanSummary').hidden=false;$('#scanSummary').textContent=r.summary}renderScanActivity(r.activity||[]);
++  if(r.summary){$('#scanSummary').hidden=false;$('#scanSummary').textContent=r.summary}renderScanActivity(r.activity||[]);updateGlobalScanBar(r);
+   if(['complete','stopped'].includes(r.status)){clearInterval(scanClockHandle);clearInterval(scanPollHandle);loadScanHistory();Promise.all([loadLeads(),loadOverview()]);if(!notifiedJobs.has(r.job_id)){notifiedJobs.add(r.job_id);notifyScanComplete(r)}}
+ }
+ async function watchScanJob(jobId){currentScanJob=jobId;clearInterval(scanPollHandle);let lastProcessed=-1;const tick=async()=>{try{const r=await api(`/api/scan-status/${jobId}`);updateScanProgress(r);if(r.processed!==lastProcessed){lastProcessed=r.processed;await Promise.all([loadLeads(),loadOverview()])}r

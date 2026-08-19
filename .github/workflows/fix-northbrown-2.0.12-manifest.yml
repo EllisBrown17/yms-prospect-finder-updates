@@ -1,0 +1,51 @@
+name: Fix NORTHBROWN 2.0.12 manifest
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/fix-northbrown-2.0.12-manifest.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  fix-manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify release and repair manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="northbrown/releases/NORTHBROWN-update-2.0.12.zip"
+          MANIFEST="northbrown/update.json"
+          unzip -t "$ZIP"
+          SIZE="$(stat -c%s "$ZIP")"
+          SHA="$(sha256sum "$ZIP" | awk '{print $1}')"
+          python - "$MANIFEST" "$SIZE" "$SHA" <<'PY'
+          import json,sys
+          p,size,sha=sys.argv[1],int(sys.argv[2]),sys.argv[3]
+          with open(p,'r',encoding='utf-8') as f:
+              data=json.load(f)
+          if data.get('version')!='2.0.12':
+              raise SystemExit('Refusing to modify non-2.0.12 manifest')
+          data['size']=size
+          data['sha256']=sha
+          data['notes']=data.get('notes','')+' Manifest repaired against the exact published ZIP after successful ZIP integrity verification.'
+          with open(p,'w',encoding='utf-8') as f:
+              json.dump(data,f,indent=2)
+              f.write('\n')
+          print('size',size)
+          print('sha256',sha)
+          PY
+      - name: Commit repaired manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add northbrown/update.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Repair NORTHBROWN 2.0.12 OTA manifest"
+          git push origin HEAD:main

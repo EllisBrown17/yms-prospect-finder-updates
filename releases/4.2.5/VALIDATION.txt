@@ -1,0 +1,7 @@
+YMS Prospect Finder V4.2.5
+PASS: installer compiles
+PASS: generated full server compiles in simulated layered install
+PASS: progress UI functions patched deterministically
+PASS: Smart Pipeline uses continuous worker pool + per-company resilient processor
+PASS: server-provided moving ETA + confidence + heartbeat health
+PASS: paused state exits UI polling and preserves completed work

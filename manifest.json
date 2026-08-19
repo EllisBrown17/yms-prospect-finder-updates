@@ -1,18 +1,18 @@
 {
-  "version": "4.2.4",
-  "published_at": "2026-08-18T23:18:00+01:00",
-  "notes": "Smart Finder optimisation engine. Finder now runs four qualification workers, ranks stronger prospects first, allows a larger bounded discovery queue so Google discovery and AI qualification stay concurrent, isolates company-specific failures instead of stopping the whole scan, defers temporary 503/429/network failures and retries them automatically, skips recently confirmed dead-end web-presence/evidence records during unattended runs, retries failed Google searches without killing the session, and checkpoints paused work for reliable one-click resume. Existing Facebook fallback and individual AI workflows are preserved.",
+  "version": "4.2.5",
+  "published_at": "2026-08-19T10:47:00+01:00",
+  "notes": "Smart Pipeline reliability update. The selected-prospect pipeline now uses a continuous four-worker queue instead of chunk barriers, uses the resilient per-company processor already proven by Smart Finder, retries temporary service failures without stopping the whole batch, isolates bad prospects, checkpoints every completed company, and reports a live rate-based ETA with confidence and heartbeat health. Paused jobs now stop the progress UI cleanly instead of appearing stuck, with completed work preserved.",
   "mandatory": false,
   "mac": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.4/YMS_Prospect_Finder_V4_2_4_SMART_FINDER_OPTIMISED.zip",
-    "sha256": "4c1452be8fba1dc3322d3931811ae18ee6878cdf0fab27542e19d9dc4e0c4a16",
-    "git_blob_sha": "e09404a7c7a5f36190e6ecd080422d132fd5f641",
-    "blob_sha": "e09404a7c7a5f36190e6ecd080422d132fd5f641"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.5/YMS_Prospect_Finder_V4_2_5_PIPELINE_RELIABILITY.zip",
+    "sha256": "a0a36f9d1a22161e2cb88f5414c00e1bf3c758ac3d0c510dde55d0be91eae65f",
+    "git_blob_sha": "f17b136b2dd1aa82150adb4d00d915deddd6bcdd",
+    "blob_sha": "f17b136b2dd1aa82150adb4d00d915deddd6bcdd"
   },
   "windows": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.4/YMS_Prospect_Finder_V4_2_4_SMART_FINDER_OPTIMISED.zip",
-    "sha256": "4c1452be8fba1dc3322d3931811ae18ee6878cdf0fab27542e19d9dc4e0c4a16",
-    "git_blob_sha": "e09404a7c7a5f36190e6ecd080422d132fd5f641",
-    "blob_sha": "e09404a7c7a5f36190e6ecd080422d132fd5f641"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.5/YMS_Prospect_Finder_V4_2_5_PIPELINE_RELIABILITY.zip",
+    "sha256": "a0a36f9d1a22161e2cb88f5414c00e1bf3c758ac3d0c510dde55d0be91eae65f",
+    "git_blob_sha": "f17b136b2dd1aa82150adb4d00d915deddd6bcdd",
+    "blob_sha": "f17b136b2dd1aa82150adb4d00d915deddd6bcdd"
   }
 }

@@ -1,0 +1,45 @@
+name: Validate YMS 5.0.1 hotfix
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Reproduce 5.0.0 syntax error and validate 5.0.1 repair
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/yms500 && mkdir -p /tmp/yms500
+          unzip -o releases/5.0.0/YMS_Prospect_Finder_V5_0_0_PRODUCT_OUTREACH_INTELLIGENCE.zip -d /tmp/yms500 >/dev/null
+          python3 -m py_compile releases/5.0.1/source/server.py
+          python3 - <<'PY'
+          from pathlib import Path
+          old=Path('/tmp/yms500/server.py').read_text('utf-8')
+          ns={'__name__':'fixture500'}
+          exec(compile(old,'server500.py','exec'),ns)
+          v5=ns['V5_JS']
+          assert "\\'" in v5
+          js=v5[v5.find('<script>')+8:v5.rfind('</script>')]
+          Path('/tmp/broken.js').write_text(js,encoding='utf-8')
+          hot=Path('releases/5.0.1/source/server.py').read_text('utf-8')
+          ns2={'__name__':'fixture501'}
+          exec(compile(hot,'server501.py','exec'),ns2)
+          fixture='<html><head><title>YMS Prospect Finder V5.0.0 — YMS-Tools</title></head><body><b id="versionLabel">Prospect Finder V5.0.0</b>'+v5+'</body></html>'
+          repaired,count=ns2['patch_html'](fixture)
+          assert count>0
+          block=repaired[repaired.find('<script>'):repaired.rfind('</script>')+9]
+          assert "\\'" not in block
+          Path('/tmp/repaired.js').write_text(block[block.find('<script>')+8:block.rfind('</script>')],encoding='utf-8')
+          print('repaired_tokens',count)
+          PY
+          if node --check /tmp/broken.js >/tmp/broken.log 2>&1; then
+            echo '5.0.0 fixture unexpectedly passed'; exit 1
+          fi
+          echo '5.0.0 reproduced:'
+          head -8 /tmp/broken.log || true
+          node --check /tmp/repaired.js

@@ -1,11 +1,11 @@
 {
   "schema": 2,
-  "version": "2.0.10",
-  "allowed_from": ["2.0.7", "2.0.8", "2.0.9"],
-  "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/northbrown/releases/NORTHBROWN-update-2.0.10.zip",
-  "size": 5220,
-  "sha256": "1b056a155c4a652b7a4d67118bc97ed215e31589f79a576806271048c23a1934",
-  "notes": "NORTHBROWN 2.0.10 is a recovery OTA for the 2.0.9 install problem. It can migrate directly from 2.0.7, 2.0.8 or 2.0.9 by rebuilding from the fresh updater-created backup, then applying the Google Maps location binding and Design DNA v1 in one verified migration. It preserves prospect data and settings, compiles the patched Python before committing, validates the map and Design DNA features, and automatically rolls back through the existing updater if anything fails.",
-  "published_at": "2026-08-19T16:18:00Z",
+  "version": "2.0.8",
+  "allowed_from": ["2.0.7"],
+  "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/northbrown/releases/NORTHBROWN-update-2.0.8.zip",
+  "size": 4168,
+  "sha256": "3f74b6e0dd784d1cbff99e24623f40ee592be08cc3290e02869a2ee0f26ad953",
+  "notes": "Temporary safe rollback of the NORTHBROWN OTA feed while the Design DNA recovery installer is being corrected. 2.0.10 has been withdrawn after an invalid backup-size check prevented the app from relaunching on some installs.",
+  "published_at": "2026-08-19T16:40:00Z",
   "mandatory": false
 }

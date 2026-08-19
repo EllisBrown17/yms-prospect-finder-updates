@@ -1,18 +1,18 @@
 {
   "version": "5.0.3",
-  "published_at": "2026-08-19T21:58:00+01:00",
+  "published_at": "2026-08-19T22:03:00+01:00",
   "notes": "YMS-Tools branding and top-bar UI polish. Replaces the Prospect Finder header logo with the supplied YMS artwork, optimises title, subtitle and version typography, prevents top controls from colliding, and adds responsive behaviour for narrower windows. Existing Product Intelligence, Outreach, prospect data, Smart Pipeline behaviour and Desktop launcher refresh are retained.",
   "mandatory": false,
   "mac": {
     "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/5.0.3/YMS_Prospect_Finder_V5_0_3_BRANDING_UI.zip",
-    "sha256": "65c31ca1d8b76c16e7ef07a2e5cb85cc6ddf6694e7eb8b1c2c1eab3d1871461b",
-    "git_blob_sha": "37d799d69f2272c958024890af10baea5f10878f",
-    "blob_sha": "37d799d69f2272c958024890af10baea5f10878f"
+    "sha256": "eeee776cb2f04f0dd7abff7e24719281bf0c13e146d857c849a86e88c530ac44",
+    "git_blob_sha": "0df28406f0f9383b2acd13130ffb0b92274465f2",
+    "blob_sha": "0df28406f0f9383b2acd13130ffb0b92274465f2"
   },
   "windows": {
     "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/5.0.3/YMS_Prospect_Finder_V5_0_3_BRANDING_UI.zip",
-    "sha256": "65c31ca1d8b76c16e7ef07a2e5cb85cc6ddf6694e7eb8b1c2c1eab3d1871461b",
-    "git_blob_sha": "37d799d69f2272c958024890af10baea5f10878f",
-    "blob_sha": "37d799d69f2272c958024890af10baea5f10878f"
+    "sha256": "eeee776cb2f04f0dd7abff7e24719281bf0c13e146d857c849a86e88c530ac44",
+    "git_blob_sha": "0df28406f0f9383b2acd13130ffb0b92274465f2",
+    "blob_sha": "0df28406f0f9383b2acd13130ffb0b92274465f2"
   }
 }

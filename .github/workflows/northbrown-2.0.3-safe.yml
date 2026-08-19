@@ -1,0 +1,102 @@
+name: Publish NORTHBROWN 2.0.3 Safe OTA
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'northbrown/staging/2.0.3/trigger.txt'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reconstruct and validate exact binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION='2.0.3'
+          EXPECTED_SHA='eb2d1ef2f00d9ad40e1111de585bdb26d276b50822719a71133b8a6a47531829'
+          EXPECTED_SIZE='277322'
+          STAGE="northbrown/staging/${VERSION}"
+          ZIP="northbrown/releases/NORTHBROWN-update-${VERSION}.zip"
+          mkdir -p northbrown/releases
+          cat "$STAGE"/ota.part* | base64 -d > "$ZIP"
+          test "$(wc -c < "$ZIP")" -eq "$EXPECTED_SIZE"
+          ACTUAL_SHA="$(sha256sum "$ZIP" | awk '{print $1}')"
+          test "$ACTUAL_SHA" = "$EXPECTED_SHA"
+          unzip -t "$ZIP" >/dev/null
+
+          TMP="$(mktemp -d)"
+          unzip -q "$ZIP" -d "$TMP"
+          P="$TMP/payload"
+          test -f "$P/app.py"
+          test -f "$P/feature_routes.py"
+          test -f "$P/builder_routes.py"
+          test -f "$P/requirements.txt"
+          test -f "$P/VERSION.txt"
+          test -f "$P/release.json"
+          test -f "$P/START_NORTHBROWN_INTERNAL.sh"
+          test -f "$P/static/app.js"
+          test -f "$P/static/app.css"
+          test -f "$P/templates/index.html"
+          test -f "$P/NORTHBROWN_ICON.png"
+          test "$(tr -d '\r\n' < "$P/VERSION.txt")" = "$VERSION"
+
+          python -m py_compile "$P/app.py" "$P/feature_routes.py" "$P/builder_routes.py"
+          node --check "$P/static/app.js"
+
+          python - "$P" <<'PY'
+          from pathlib import Path
+          import hashlib, json, sys
+          p=Path(sys.argv[1])
+          r=json.loads((p/'release.json').read_text())
+          assert r.get('format') == 'northbrown-full-v2'
+          assert r.get('version') == '2.0.3'
+          assert '2.0.2' in r.get('allowed_from', [])
+          for rel, expected in r.get('files', {}).items():
+              f=p/rel
+              assert f.is_file(), rel
+              actual=hashlib.sha256(f.read_bytes()).hexdigest()
+              assert actual == expected, rel
+          PY
+
+          grep -q "APP_VERSION = '2.0.3'" "$P/app.py"
+          grep -q 'NORTHBROWN_HEALTHCHECK_OK' "$P/app.py"
+          grep -q 'northbrown-full-v2' "$P/app.py"
+          grep -q 'google_maps_embed_api_key' "$P/app.py"
+          grep -q 'Free Google mode for Website Builder' "$P/templates/index.html"
+          grep -q 'View reviews on Google' "$P/builder_routes.py"
+          grep -q 'Created by Ellis Brown / NORTHBROWN' "$P/builder_routes.py"
+
+      - name: Publish only after validation passes
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION='2.0.3'
+          ZIP="northbrown/releases/NORTHBROWN-update-${VERSION}.zip"
+          SHA="$(sha256sum "$ZIP" | awk '{print $1}')"
+          SIZE="$(wc -c < "$ZIP" | tr -d ' ')"
+          cat > northbrown/update.json <<EOF
+          {
+            "schema": 2,
+            "version": "2.0.3",
+            "allowed_from": ["2.0.2"],
+            "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/${ZIP}",
+            "size": ${SIZE},
+            "sha256": "${SHA}",
+            "notes": "NORTHBROWN 2.0.3: safe full-file OTA update with internal file checksums, staged health checks, database/code backup and automatic rollback for future releases. Website Builder now has a no-charge Google Maps embed option, keyless Google review/location/directions links, and Free Google mode that avoids extra paid Place Details refresh calls.",
+            "published_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "mandatory": false
+          }
+          EOF
+          git config user.name 'NORTHBROWN OTA Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add "$ZIP" northbrown/update.json
+          git commit -m 'Publish NORTHBROWN OTA 2.0.3 safe full package'
+          git push

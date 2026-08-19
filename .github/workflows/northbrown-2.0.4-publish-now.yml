@@ -1,0 +1,131 @@
+name: Publish NORTHBROWN 2.0.4 NOW
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: read
+
+jobs:
+  publish:
+    if: contains(github.event.issue.title, 'NORTHBROWN 2.0.4 PUBLISH NOW')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and validate NORTHBROWN 2.0.4
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION='2.0.4'
+          WORK="$(mktemp -d)"
+          mkdir -p "$WORK/base202" northbrown/releases
+
+          # Recreate the known-good 2.0 source only inside CI. The Mac downloads one normal binary ZIP.
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('northbrown/staging/2.0.0/ota.part04')
+          s=p.read_text()
+          if len(s)==8999:
+              s=s[:3245]+'h'+s[3245:]
+              p.write_text(s)
+          if len(p.read_text())!=9000:
+              raise SystemExit('Unexpected NORTHBROWN base staging length')
+          PY
+          cat northbrown/staging/2.0.0/ota.part* | base64 -d > "$WORK/base.zip"
+          echo '88f45969ed801323252b83529929dd66848560347105816cb15db727e3e69f0e  '"$WORK/base.zip" | sha256sum -c -
+          unzip -t "$WORK/base.zip" >/dev/null
+          unzip -q "$WORK/base.zip" -d "$WORK/base202"
+          P202="$WORK/base202/payload"
+
+          python - "$P202" <<'PY'
+          from pathlib import Path
+          import sys
+          p=Path(sys.argv[1])
+          (p/'VERSION.txt').write_text('2.0.2\n')
+          f=p/'app.py'
+          s=f.read_text().replace("APP_VERSION = '2.0.0'", "APP_VERSION = '2.0.2'", 1)
+          s=s.replace("threading.Timer(0.9, lambda: os._exit(0)).start()", "threading.Timer(3.0, lambda: os._exit(0)).start()", 1)
+          f.write_text(s)
+          f=p/'START_NORTHBROWN_INTERNAL.sh'
+          f.write_text(f.read_text().replace('.icon_ready_2_0_0','.icon_ready_2_0_2'))
+          PY
+
+          cp -R "$P202" "$WORK/payload"
+          cat northbrown/staging/2.0.3/patch.part* > "$WORK/203.patch"
+          (cd "$WORK" && patch --batch -p0 < "$WORK/203.patch")
+          rm -f "$WORK/payload/release.json"
+
+          cat northbrown/staging/2.0.4/patch.part* > "$WORK/204.patch"
+          test "$(wc -c < "$WORK/204.patch")" -eq 35765
+          (cd "$WORK" && patch --batch -p0 < "$WORK/204.patch")
+
+          cat northbrown/staging/2.0.4/final-ui.part* > "$WORK/final-ui.patch"
+          test "$(wc -c < "$WORK/final-ui.patch")" -eq 22275
+          (cd "$WORK" && patch --batch -p0 < "$WORK/final-ui.patch")
+          P="$WORK/payload"
+
+          python - "$P" <<'PY'
+          from pathlib import Path
+          import hashlib,json,sys
+          p=Path(sys.argv[1])
+          required=['app.py','feature_routes.py','builder_routes.py','requirements.txt','VERSION.txt','START_NORTHBROWN_INTERNAL.sh','static/app.js','static/app.css','templates/index.html','NORTHBROWN_ICON.png','static/NORTHBROWN_ICON.png']
+          r={'format':'northbrown-full-v2','version':'2.0.4','allowed_from':['2.0.2','2.0.3'],'database_schema':5,'files':{}}
+          for rel in required:
+              f=p/rel
+              if not f.is_file(): raise SystemExit('Missing required file: '+rel)
+              r['files'][rel]=hashlib.sha256(f.read_bytes()).hexdigest()
+          (p/'release.json').write_text(json.dumps(r,indent=2)+'\n')
+          PY
+
+          test "$(tr -d '\r\n' < "$P/VERSION.txt")" = '2.0.4'
+          python -m py_compile "$P/app.py" "$P/feature_routes.py" "$P/builder_routes.py"
+          node --check "$P/static/app.js"
+          grep -q "APP_VERSION = '2.0.4'" "$P/app.py"
+          grep -q "@app.post('/api/smart-finder')" "$P/app.py"
+          grep -q "Fades & short styles" "$P/builder_routes.py"
+          grep -q "scanCollapseBtn" "$P/templates/index.html"
+          grep -q "BRAND THEME" "$P/templates/index.html"
+          grep -q "NORTHBROWN_ICON.png?v=204-final" "$P/templates/index.html"
+          grep -q "Free Google tools for websites" "$P/templates/index.html"
+          grep -q "Created by Ellis Brown / NORTHBROWN" "$P/builder_routes.py"
+
+          rm -rf "$P/__pycache__"
+          ZIP="northbrown/releases/NORTHBROWN-update-${VERSION}.zip"
+          (cd "$WORK" && zip -qr "$GITHUB_WORKSPACE/$ZIP" payload)
+          unzip -t "$ZIP" >/dev/null
+          test "$(wc -c < "$ZIP")" -gt 120000
+          SHA="$(sha256sum "$ZIP" | awk '{print $1}')"
+          SIZE="$(wc -c < "$ZIP" | tr -d ' ')"
+
+          cat > northbrown/update.json <<EOF
+          {
+            "schema": 2,
+            "version": "2.0.4",
+            "allowed_from": ["2.0.2", "2.0.3"],
+            "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/${ZIP}",
+            "size": ${SIZE},
+            "sha256": "${SHA}",
+            "notes": "NORTHBROWN 2.0.4: smarter category-accurate website generation, Smart Finder, free Google website tools, NORTHBROWN logo in the Mac launcher and browser, restored NORTHBROWN brand theme controls/reference and collapsible Scan Intelligence.",
+            "published_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "mandatory": false
+          }
+          EOF
+
+      - name: Publish live OTA feed
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'NORTHBROWN OTA Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add northbrown/releases/NORTHBROWN-update-2.0.4.zip northbrown/update.json
+          git commit -m 'Publish NORTHBROWN OTA 2.0.4 final build'
+          for attempt in 1 2 3; do
+            git fetch origin main
+            if git rebase origin/main && git push origin HEAD:main; then exit 0; fi
+            git rebase --abort >/dev/null 2>&1 || true
+            sleep 2
+          done
+          exit 1

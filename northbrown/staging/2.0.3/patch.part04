@@ -1,0 +1,4 @@
+tle="Close Scan Intelligence" hidden>×</button></div>
+   </div>
+   <div class="scan-progress-track"><i id="scanProgressFill"></i></div>
+   <div class="scan-progress-meta"><span id="scanProgressCount">0 / 0</span><span id="scanProgressPercent">0%</span></div>

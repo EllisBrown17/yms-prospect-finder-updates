@@ -12,5 +12,5 @@ YMS Prospect Finder 5.0.2 — Intelligence Workspace UX + Full ALFRA Range
 - Persistent Desktop launcher refresh retained: PASS
 Product Intelligence families after install: 20
 Named model/range labels represented: 74
-SHA256: 77d59ad86f017c08e78c938a79de35e75f5c2b04ee41b9c39f20235124d052d8
-Git blob: 02bf17861d700dbeab64ae60d0911aae395eb2e3
+SHA256: b4307d961698b067f6182cf4d78df15aaf0468dd36eb22feadddc9c4d11b95dd
+Git blob: 2a8269a88e5a269f9fa7a8285a8c631712e77865

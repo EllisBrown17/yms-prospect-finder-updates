@@ -1,0 +1,69 @@
+name: Publish NORTHBROWN 2.0.4 direct OTA
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'northbrown/publish-2.0.4.txt'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decode and validate exact OTA package
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p northbrown/releases
+          base64 -d northbrown/releases/NORTHBROWN-update-2.0.4.delta.b64 > northbrown/releases/NORTHBROWN-update-2.0.4.zip
+          ZIP='northbrown/releases/NORTHBROWN-update-2.0.4.zip'
+          test "$(wc -c < "$ZIP" | tr -d ' ')" = '82716'
+          SHA="$(sha256sum "$ZIP" | awk '{print $1}')"
+          test "$SHA" = '051d527ac4622eb87518aa5dcba7d2126189d2f48a64f6e72ed6a3bc3898aa6a'
+          unzip -t "$ZIP" >/dev/null
+          unzip -l "$ZIP" | grep -q 'payload/app.py'
+          unzip -l "$ZIP" | grep -q 'payload/builder_routes.py'
+          unzip -l "$ZIP" | grep -q 'payload/requirements.txt'
+          unzip -l "$ZIP" | grep -q 'payload/VERSION.txt'
+          unzip -l "$ZIP" | grep -q 'payload/static/app.js'
+          unzip -l "$ZIP" | grep -q 'payload/static/app.css'
+          unzip -l "$ZIP" | grep -q 'payload/templates/index.html'
+          TMP="$(mktemp -d)"
+          unzip -q "$ZIP" -d "$TMP"
+          test "$(tr -d '\r\n' < "$TMP/payload/VERSION.txt")" = '2.0.4'
+          python -m py_compile "$TMP/payload/app.py" "$TMP/payload/builder_routes.py"
+          node --check "$TMP/payload/static/app.js"
+          grep -q "APP_VERSION = '2.0.4'" "$TMP/payload/app.py"
+          grep -q "'key':'barber'" "$TMP/payload/builder_routes.py"
+          grep -q 'brand-theme-presets' "$TMP/payload/templates/index.html"
+          grep -q 'scanCollapseBtn' "$TMP/payload/templates/index.html"
+          grep -q 'scanPanelCollapsed' "$TMP/payload/static/app.js"
+          grep -q 'scan-progress-panel.collapsed' "$TMP/payload/static/app.css"
+          cat > northbrown/update.json <<EOF
+          {
+            "schema": 2,
+            "version": "2.0.4",
+            "allowed_from": ["2.0.2", "2.0.3"],
+            "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/northbrown/releases/NORTHBROWN-update-2.0.4.zip",
+            "size": 82716,
+            "sha256": "051d527ac4622eb87518aa5dcba7d2126189d2f48a64f6e72ed6a3bc3898aa6a",
+            "notes": "NORTHBROWN 2.0.4: smarter category-aware website generation; barber sites now generate barber-specific copy and services; restored Website Builder Brand Theme presets; collapsible Scan Intelligence; Smart Finder local discovery; free Google website tools; and preserved NORTHBROWN desktop/browser branding.",
+            "published_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "mandatory": false
+          }
+          EOF
+      - name: Publish OTA
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'NORTHBROWN OTA Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add northbrown/releases/NORTHBROWN-update-2.0.4.zip northbrown/update.json
+          git commit -m 'Publish NORTHBROWN OTA 2.0.4 final'
+          git pull --rebase origin main
+          git push origin HEAD:main

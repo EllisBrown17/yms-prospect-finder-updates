@@ -3,9 +3,9 @@
   "version": "2.0.12",
   "allowed_from": ["2.0.11"],
   "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/northbrown/releases/NORTHBROWN-update-2.0.12.zip",
-  "size": 16000,
-  "sha256": "96d038eaa6344969645982aca044a5b50df2ac9efd65063978db1fea12ca19f2",
-  "notes": "NORTHBROWN 2.0.12 fixes the Smart Finder UI so 500, 1,000, 2,500 and 5,000 targets plus Overnight mode are visible even when an older cached app.js was being served. It cache-busts the static UI files and force-upgrades the Smart Finder controls. It also adds ChatGPT Import inside every prospect: copy a business-specific ChatGPT scan prompt, then drag a .northbrown.json/.json scan back onto that prospect to replace the NORTHBROWN scan score, summary, issues, strengths and sales angle with the imported evidence-led result. A second prompt creates a completely unique static website demo; .html or .zip demos can be dropped into the same panel, stored against that business and opened or downloaded from its prospect record. Imported website previews run sandboxed and imports do not overwrite prospect contact data. The OTA is self-contained, starts from the updater-created 2.0.11 backup, compiles touched Python before commit, preserves data/settings, and automatically rolls back on migration failure.",
-  "published_at": "2026-08-19T18:24:00Z",
+  "size": 3488,
+  "sha256": "7e9e9fcda964833e5f8ae55e303cd152866c3c0fa0ee73de719865266b2744d2",
+  "notes": "NORTHBROWN 2.0.12 fixes the Smart Finder UI so 500, 1,000, 2,500 and 5,000 targets plus Overnight mode are visible even when an older cached app.js was being served. It cache-busts the static UI files and force-upgrades the Smart Finder controls. It also adds ChatGPT Import inside every prospect: copy a business-specific ChatGPT scan prompt, then drag a .northbrown.json/.json scan back onto that prospect to replace the NORTHBROWN scan score, summary, issues, strengths and sales angle with the imported evidence-led result. A second prompt creates a completely unique static website demo; .html or .zip demos can be dropped into the same panel, stored against that business and opened or downloaded from its prospect record. Imported website previews run sandboxed and imports do not overwrite prospect contact data. This corrected recovery launcher first downloads five staged payload parts, reconstructs the exact 16000-byte full 2.0.12 payload, verifies SHA-256 96d038eaa6344969645982aca044a5b50df2ac9efd65063978db1fea12ca19f2, checks ZIP integrity and compiles the migration code before applying it. If staging or migration fails it restores the updater-created 2.0.11 backup and relaunches NORTHBROWN.",
+  "published_at": "2026-08-19T18:36:00Z",
   "mandatory": false
 }

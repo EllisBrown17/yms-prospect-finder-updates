@@ -1,0 +1,49 @@
+name: Diagnose YMS V5 UI
+on:
+  push:
+    branches: [yms-5.0.2-friendly-intelligence]
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Inspect V5 installer strings
+        run: |
+          set -euo pipefail
+          git show 58d8d1ad090e2ab503be567780cc2caedf897129:releases/5.0.1/source/server_500_installer.py > /tmp/v5.py
+          python3 - <<'PY'
+          import importlib.util,re
+          p='/tmp/v5.py'
+          spec=importlib.util.spec_from_file_location('v5',p)
+          m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+          print('STRING VARS:')
+          for k,v in sorted(vars(m).items()):
+              if isinstance(v,str) and len(v)>200:
+                  print(k, len(v))
+                  if '<section' in v or 'function ' in v or '/api/' in v:
+                      print('  sections', re.findall(r'<section[^>]+id=["\']([^"\']+)',v)[:30])
+                      print('  ids', re.findall(r'id=["\']([^"\']+)',v)[:80])
+                      print('  funcs', re.findall(r'(?:async\s+)?function\s+([A-Za-z0-9_$]+)',v)[:120])
+                      print('  api', sorted(set(re.findall(r'/api/[A-Za-z0-9_?=&./{}$-]+',v)))[:120])
+          rt=getattr(m,'V5_RUNTIME','')
+          print('\nRUNTIME FUNCS', re.findall(r'^def\s+([A-Za-z0-9_]+)',rt,re.M))
+          print('RUNTIME APIS', sorted(set(re.findall(r'/api/[A-Za-z0-9_?=&./{}$-]+',rt))))
+          for needle in ['product','outreach','catalog','ledger','learning']:
+              print('\n--',needle,'windows--')
+              low=rt.lower(); pos=0; n=0
+              while True:
+                  i=low.find(needle,pos)
+                  if i<0 or n>=12: break
+                  print(rt[max(0,i-180):min(len(rt),i+420)].replace('\n','\\n'))
+                  pos=i+len(needle); n+=1
+          for k,v in sorted(vars(m).items()):
+              if isinstance(v,str) and ('<section' in v or 'function render' in v or 'Outreach' in v and len(v)>1000):
+                  print('\n===== UI VAR',k,'=====')
+                  for needle in ['products','outreach','renderProduct','renderOutreach','v5']:
+                      low=v.lower(); i=low.find(needle.lower())
+                      if i>=0: print(v[max(0,i-800):min(len(v),i+5000)])
+          PY

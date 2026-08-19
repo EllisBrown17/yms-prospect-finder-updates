@@ -1,0 +1,1 @@
+NORTHBROWN 2.0.4 final package validated locally: 170840 bytes, SHA-256 155bcd6bba88bbfbd4883a437b3ac35ccc013896f6329713a0ddd1791ab997ce. Includes smarter category-aware website generation, restored Brand Theme presets, collapsible Scan Intelligence, Smart Finder, free Google website tools, and NORTHBROWN desktop/browser icon.

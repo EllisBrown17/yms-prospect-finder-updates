@@ -20,14 +20,14 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           old=Path('/tmp/yms500/server.py').read_text('utf-8')
-          ns={'__name__':'fixture500'}
+          ns={'__name__':'fixture500','__file__':'/tmp/yms500/server.py'}
           exec(compile(old,'server500.py','exec'),ns)
           v5=ns['V5_JS']
           assert "\\'" in v5
           js=v5[v5.find('<script>')+8:v5.rfind('</script>')]
           Path('/tmp/broken.js').write_text(js,encoding='utf-8')
           hot=Path('releases/5.0.1/source/server.py').read_text('utf-8')
-          ns2={'__name__':'fixture501'}
+          ns2={'__name__':'fixture501','__file__':str(Path('releases/5.0.1/source/server.py').resolve())}
           exec(compile(hot,'server501.py','exec'),ns2)
           fixture='<html><head><title>YMS Prospect Finder V5.0.0 — YMS-Tools</title></head><body><b id="versionLabel">Prospect Finder V5.0.0</b>'+v5+'</body></html>'
           repaired,count=ns2['patch_html'](fixture)

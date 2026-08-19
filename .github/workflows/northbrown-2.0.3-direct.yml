@@ -1,0 +1,86 @@
+name: Publish NORTHBROWN 2.0.3 exact OTA
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'northbrown/staging/2.0.3/direct-trigger.txt'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rebuild exact release ZIP from staging transport
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION='2.0.3'
+          ZIP="northbrown/releases/NORTHBROWN-update-${VERSION}.zip"
+          mkdir -p northbrown/releases
+          cat northbrown/staging/2.0.3/direct.part* | base64 -d > "$ZIP"
+          test "$(wc -c < "$ZIP")" -eq 164006
+          echo '2aea7e70f0cde99c55587bd84ad6c8601e17c35798eb1e4ef2c82a414c95c4a7  '"$ZIP" | sha256sum -c -
+          unzip -t "$ZIP" >/dev/null
+
+          TMP="$(mktemp -d)"
+          unzip -q "$ZIP" -d "$TMP"
+          P="$TMP/payload"
+          for f in app.py feature_routes.py builder_routes.py requirements.txt VERSION.txt release.json START_NORTHBROWN_INTERNAL.sh static/app.js static/app.css templates/index.html NORTHBROWN_ICON.png static/NORTHBROWN_ICON.png; do
+            test -f "$P/$f"
+          done
+          test "$(tr -d '\r\n' < "$P/VERSION.txt")" = "$VERSION"
+          python -m py_compile "$P/app.py" "$P/feature_routes.py" "$P/builder_routes.py"
+          node --check "$P/static/app.js"
+          python - "$P" <<'PY'
+          from pathlib import Path
+          import hashlib, json, sys
+          p=Path(sys.argv[1]); r=json.loads((p/'release.json').read_text())
+          assert r.get('format') == 'northbrown-full-v2'
+          assert r.get('version') == '2.0.3'
+          assert '2.0.2' in r.get('allowed_from', [])
+          for rel, expected in r.get('files', {}).items():
+              f=p/rel
+              assert f.is_file(), rel
+              assert hashlib.sha256(f.read_bytes()).hexdigest() == expected, rel
+          PY
+          grep -q "APP_VERSION = '2.0.3'" "$P/app.py"
+          grep -q "@app.post('/api/smart-finder')" "$P/app.py"
+          grep -q 'SMART FINDER' "$P/templates/index.html"
+          grep -q 'scanDismissBtn' "$P/templates/index.html"
+          grep -q 'Free Google tools for websites' "$P/templates/index.html"
+          grep -q 'View reviews on Google' "$P/builder_routes.py"
+          grep -q 'Created by Ellis Brown / NORTHBROWN' "$P/builder_routes.py"
+          grep -q 'NORTHBROWN_ICON.png?v=203' "$P/templates/index.html"
+          grep -q '.icon_ready_2_0_3' "$P/START_NORTHBROWN_INTERNAL.sh"
+
+      - name: Publish manifest last
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP='northbrown/releases/NORTHBROWN-update-2.0.3.zip'
+          SHA="$(sha256sum "$ZIP" | awk '{print $1}')"
+          SIZE="$(wc -c < "$ZIP" | tr -d ' ')"
+          cat > northbrown/update.json <<EOF
+          {
+            "schema": 2,
+            "version": "2.0.3",
+            "allowed_from": ["2.0.2"],
+            "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/${ZIP}",
+            "size": ${SIZE},
+            "sha256": "${SHA}",
+            "notes": "NORTHBROWN 2.0.3: Smart Finder finds and immediately scans up to 200 local businesses, skips obvious national chains, Scan Intelligence can be closed after completion, Website Builder adds Google Maps/directions/review-listing tools plus no-extra-Place-Details Free Google mode, and the NORTHBROWN logo is refreshed for the Mac app icon and browser favicon. The OTA package is a complete verified ZIP with rollback protections.",
+            "published_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "mandatory": false
+          }
+          EOF
+          git config user.name 'NORTHBROWN OTA Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add "$ZIP" northbrown/update.json
+          git commit -m 'Publish NORTHBROWN OTA 2.0.3 exact verified package'
+          git push

@@ -1,0 +1,39 @@
+=205" alt="NORTHBROWN logo">
+       <div>
+         <div class="brand-word">NORTHBROWN<span>.</span></div>
+         <div class="brand-sub">LEAD ENGINE</div>
+@@ -58,6 +59,17 @@
+       </div>
+     </header>
+ 
++    <div id="globalScanBar" class="global-scan-bar" hidden role="status" aria-live="polite">
++      <div class="global-scan-main">
++        <span class="live-dot"></span>
++        <div class="global-scan-copy"><strong id="globalScanTitle">Scanning websites…</strong><small id="globalScanDetail">Preparing scan…</small></div>
++        <span id="globalScanCount">0 / 0</span>
++        <b id="globalScanPercent">0%</b>
++        <button id="globalScanOpen" class="mini-action">Details</button>
++      </div>
++      <div class="global-scan-track"><i id="globalScanFill"></i></div>
++    </div>
++
+     <section id="dashboardView" class="view active">
+       <div class="hero-panel glass-panel">
+         <div class="hero-copy">
+@@ -235,6 +247,7 @@
+           <div class="builder-editor-title"><button class="icon-btn" id="builderBackBtn" title="Back to projects">←</button><div><div class="eyebrow">WEBSITE BUILDER</div><h3 id="builderProjectTitle">Website</h3></div></div>
+           <div class="builder-editor-actions">
+             <span id="builderSaveState" class="safe-badge">Saved</span>
++            <button class="btn secondary" id="builderSaveBtn">Save now</button>
+             <button class="btn secondary" id="builderUndoBtn">Undo</button>
+             <button class="btn secondary" id="builderAiCopyBtn">AI rewrite</button>
+             <button class="btn secondary" id="builderPullBtn">Pull latest data</button>
+@@ -422,7 +435,7 @@
+           <div class="brand-preview"><div class="brand-mark big">N<span>B</span><i></i></div><div class="brand-word big-word">NORTHBROWN<span>.</span></div></div>
+           <h3>Built to feel like your studio.</h3>
+           <p>Charcoal surfaces, off-white typography and the signature lime accent carry the NORTHBROWN identity through the software without turning it into a gimmick.</p>
+-          <img src="/static/brand-reference.png" alt="Northbrown brand reference" class="brand-reference">
++          <img src="/static/brand-reference.svg?v=205" alt="NORTHBROWN brand reference" class="brand-reference">
+         </div>
+       </div>
+     </section>

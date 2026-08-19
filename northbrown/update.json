@@ -1,11 +1,11 @@
 {
   "schema": 2,
-  "version": "2.0.8",
-  "allowed_from": ["2.0.7"],
-  "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/northbrown/releases/NORTHBROWN-update-2.0.8.zip",
-  "size": 4168,
-  "sha256": "3f74b6e0dd784d1cbff99e24623f40ee592be08cc3290e02869a2ee0f26ad953",
-  "notes": "NORTHBROWN 2.0.8 fixes Google Maps location binding in generated websites. Maps and Google links are rebuilt at render/export time from the Google Place ID when available, otherwise from business name, address, town and postcode. Existing projects immediately use a newly configured Maps Embed API key. Projects without enough location data no longer fall back to a whole-world embed. Includes compile checks and automatic rollback to the updater-created 2.0.7 backup on failure.",
-  "published_at": "2026-08-19T15:16:00Z",
+  "version": "2.0.9",
+  "allowed_from": ["2.0.8"],
+  "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/northbrown/releases/NORTHBROWN-update-2.0.9.zip",
+  "size": 21080,
+  "sha256": "fa8fa6380ee5b617e0dbac5c863e4d884282c47db83eaf619acdc2b6f9328b42",
+  "notes": "NORTHBROWN 2.0.9 adds Design DNA v1. Every new or regenerated demo gets a business-fit design strategy before copy or HTML is assembled, including archetype, hero, navigation, layout grid, service presentation, trust/review treatment, CTA, footer and page plan. The builder compares the design fingerprint with the 10 most recent demos, enforces a minimum 72% design difference, blocks repeated hero+service combinations and repeated first-four section sequences, and assembles the page from reusable components instead of one fixed website blueprint. Business-fit scores below 70 are rejected. A new regenerate-design endpoint creates a fresh validated Design DNA without changing the prospect data. Includes compile checks and automatic rollback to the updater-created 2.0.8 backup on failure.",
+  "published_at": "2026-08-19T15:49:26Z",
   "mandatory": false
 }

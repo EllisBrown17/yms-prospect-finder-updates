@@ -1,0 +1,50 @@
+d)}catch(e){toast(e.message,true)}};
+-$('#scanActivityBtn').onclick=()=>{scanActivityOpen=!scanActivityOpen;$('#scanActivityLog').hidden=!scanActivityOpen;$('#scanActivityBtn').textContent=scanActivityOpen?'Hide activity':'Activity'};
++$('#scanActivityBtn').onclick=()=>{scanActivityOpen=!scanActivityOpen;$('#scanActivityLog').hidden=!scanActivityOpen;$('#scanActivityBtn').textContent=scanActivityOpen?'Hide activity':'Activity'};$('#scanDismissBtn').onclick=()=>{$('#scanProgressPanel').classList.remove('show');scanActivityOpen=false;$('#scanActivityLog').hidden=true};
+ async function restoreActiveScan(){try{const r=await api('/api/scan-active');if(r&&r.job_id){openScanProgress({title:'Resuming scan…',total:r.total,current:r.current_business,mode:r.mode});updateScanProgress(r);watchScanJob(r.job_id)}}catch{}}
+ async function loadScanHistory(){const box=$('#scanHistoryList');if(!box)return;try{const rows=await api('/api/scan-history');box.innerHTML=rows.length?rows.map(r=>`<div class="scan-history-row" data-job="${esc(r.job_id)}"><div><b>${esc((r.mode||'smart').toUpperCase())} · ${new Date(r.started_at).toLocaleString()}</b><small>${esc(r.summary||`${r.completed||0} scored · ${r.failed||0} failed · ${r.skipped||0} skipped`)}</small></div><span class="stage">${esc(r.status)}</span></div>`).join(''):'<div class="empty-state">No scan history yet.</div>';$$('#scanHistoryList [data-job]').forEach(el=>el.onclick=async()=>{try{const r=await api(`/api/scan-status/${el.dataset.job}`);currentScanJob=r.job_id;openScanProgress({title:'Scan details',total:r.total,current:r.current_business,mode:r.mode});updateScanProgress(r)}catch(e){toast(e.message,true)}})}catch(e){box.innerHTML='<div class="empty-state">Scan history unavailable.</div>'}}
+ $('#refreshScanHistoryBtn').onclick=loadScanHistory;
+@@ -107,6 +107,7 @@
+ $('#newScanBtn').onclick=openScan; $('#heroScanBtn').onclick=openScan; $$('[data-close-modal]').forEach(x=>x.onclick=closeScan);
+ $('#manualLeadBtn').onclick=()=>{closeScan();$('#manualModal').classList.add('open')}; $$('[data-close-manual]').forEach(x=>x.onclick=()=>$('#manualModal').classList.remove('open'));
+ $('#discoverBtn').onclick=async()=>{const b=$('#discoverBtn');b.textContent='Finding businesses…';b.disabled=true;try{const r=await api('/api/discover',{method:'POST',body:{category:$('#discoverCategory').value,location:$('#discoverLocation').value,limit:+$('#discoverLimit').value}});toast(`${r.added} businesses added · ${r.places_requests_today||1} Places request${(r.places_requests_today||1)===1?'':'s'} today.`);closeScan();setView('prospects');await loadLeads();await loadOverview();}catch(e){toast(e.message,true)}finally{b.innerHTML='Find businesses <span>↗</span>';b.disabled=false}};
++$('#smartFinderBtn').onclick=async()=>{const b=$('#smartFinderBtn');const location=($('#smartFinderLocation').value||$('#discoverLocation').value||'').trim();b.disabled=true;b.textContent='Finding local companies…';requestScanNotifications();try{const r=await api('/api/smart-finder',{method:'POST',body:{location,radius_miles:+$('#smartFinderRadius').value,target:+$('#smartFinderTarget').value,mode:'smart'}});toast(`${r.added} new businesses found · ${r.skipped} skipped · ${r.queued_for_scan} queued to scan.`);closeScan();setView('prospects');await Promise.all([loadLeads(),loadOverview()]);if(r.scan_job_id){openScanProgress({title:'Smart Finder scan',total:r.queued_for_scan,current:'Preparing first local business…',mode:r.mode||'smart'});watchScanJob(r.scan_job_id)}}catch(e){toast(e.message,true)}finally{b.innerHTML='Smart Finder — find &amp; scan <span>✦</span>';b.disabled=false}};
+ $('#addManualBtn').onclick=async()=>{try{await api('/api/leads',{method:'POST',body:{business_name:$('#manualName').value,website:$('#manualWebsite').value,email:$('#manualEmail').value,town:$('#manualTown').value,category:$('#manualCategory').value}});toast('Prospect added.');$('#manualModal').classList.remove('open');setView('prospects');await loadLeads();await loadOverview();}catch(e){toast(e.message,true)}};
+ 
+ $('#importBtn').onclick=()=>$('#csvInput').click(); $('#csvInput').onchange=async e=>{const f=e.target.files[0];if(!f)return;const fd=new FormData();fd.append('file',f);try{const r=await api('/api/import',{method:'POST',body:fd});toast(`${r.imported} prospects imported.`);await loadLeads();await loadOverview();}catch(err){toast(err.message,true)}e.target.value=''};
+diff -ruN base202/payload/templates/index.html payload/templates/index.html
+--- base202/payload/templates/index.html	2026-08-19 10:15:25.144794351 +0000
++++ payload/templates/index.html	2026-08-19 10:13:29.902869824 +0000
+@@ -8,8 +8,8 @@
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+-  <link rel="icon" type="image/png" href="/static/NORTHBROWN_ICON.png">
+-  <link rel="apple-touch-icon" href="/static/NORTHBROWN_ICON.png">
++  <link rel="icon" type="image/png" href="/static/NORTHBROWN_ICON.png?v=203">
++  <link rel="apple-touch-icon" href="/static/NORTHBROWN_ICON.png?v=203">
+   <link rel="stylesheet" href="/static/app.css">
+ </head>
+ <body>
+@@ -327,6 +327,7 @@
+             <h4>Lead discovery</h4>
+             <label>Google Places API key<input name="google_places_api_key" type="password" autocomplete="off" placeholder="Paste key"></label>
+             <p>Used to find live local businesses and pull their website, phone and address from Google Places.</p>
++            <div class="free-google-box"><div><b>Free Google tools for websites</b><small>Maps Embed API requests are free/unlimited from Google. Add a Maps Embed key to show interactive maps in generated sites. NORTHBROWN also creates keyless Google Maps, directions and review-listing links.</small></div><label>Google Maps Embed API key<input name="google_maps_embed_api_key" type="password" autocomplete="off" placeholder="Optional — free Maps Embed key"></label><label>Website Builder Google mode<select name="builder_google_mode"><option value="free">Free — no extra Place Details refreshes</option><option value="enhanced">Enhanced — allow Places detail refreshes</option></select></label></div>
+           </div>
+ 
+           <div class="settings-section">
+@@ -496,6 +497,7 @@
+       <label>Location<input id="discoverLocation" value="West Yorkshire" placeholder="e.g. Huddersfield, West Yorkshire"></label>
+       <label>Number of results<select id="discoverLimit"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></label>
+       <button id="discoverBtn" class="btn primary wide">Find businesses <span>↗</span></button>
++      <div class="smart-finder-box"><div class="eyebrow lime">SMART FINDER</div><h3>Scan loads of local companies.</h3><p>NORTHBROWN searches across useful local-business categories, filters obvious national chains and immediately Smart-scans the new websites it finds.</p><div class="two-col"><label>Area<input id="smartFinderLocation" value="West Yorkshire" placeholder="e.g. Huddersfield"></label><label>Radius<select id="smartFinderRadius"><option value="5">5 miles</option><option value="10">10 miles</option><option value="15" selected>15 miles</option><option value="25">25 miles</option><option value="40">40 miles</option></select></label></div><label>How many new businesses<select id="smartFinderTarget"><option value="25">Up to 25</option><option value="50">Up to 50</option><option value="100" selected>Up to 100</option><option value="150">Up to 150</option><option value="200">Up to 200</option></select></label><button id="smartFinderBtn" class="btn secondary wide">Smart Finder — find &amp; scan <span>✦</span></button><small class="finder-note">Uses your configured Google Places discovery key. Duplicates and obvious chains are skipped automatically.</small></div>
+       <div class="modal-divider"><span>or</span></div>
+       <button id="manualLeadBtn" class="btn secondary wide">Add one business manually</button>
+     </div>
+@@ -520,7 +522,7 @@
+ <div id="scanProgressPanel" class="scan-progress-panel" aria-live="polite">
+   <div class="scan-progress-head">
+     <div><div class="eyebrow lime">SCAN INTELLIGENCE</div><strong id="scanProgressTitle">Preparing scan…</strong><span id="scanModeBadge" class="scan-mode-badge">SMART</span></div>
+-    <div class="scan-time-grid"><div class="scan-timer"><small>ELAPSED</small><strong id="scanElapsed">00:00</strong></div><div class="scan-timer"><small>ETA</small><strong id="scanEta">—</strong></div></div>
++    <div class="scan-head-actions"><div class="scan-time-grid"><div class="scan-timer"><small>ELAPSED</small><strong id="scanElapsed">00:00</strong></div><div class="scan-timer"><small>ETA</small><strong id="scanEta">—</strong></div></div><button id="scanDismissBtn" class="scan-dismiss" ti

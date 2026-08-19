@@ -1,0 +1,58 @@
+:pal.surface,bTextColor:pal.text};
++  Object.entries(pairs).forEach(([id,v])=>{const el=$('#'+id);if(el)el.value=v});
++  const st=$('#builderBrandThemeStatus');if(st)st.textContent=label||'Theme applied';
++  markBuilderDirty();refreshBuilderPreview(false);
++}
++function applyBuilderBrandTheme(kind){
++  const p=builderState.project,b=p?.business||{};if(!p)return;
++  if(kind==='northbrown')return setBuilderPalette({accent:'#c6ff00',background:'#0d0d0e',surface:'#151719',text:'#f0efea'},'NORTHBROWN theme · Charcoal + lime');
++  if(kind==='light')return setBuilderPalette({accent:builderValidHex(b.theme_color)?b.theme_color:'#202224',background:'#f5f4ef',surface:'#ffffff',text:'#17191a'},'Clean light theme');
++  if(kind==='category'){const pal=builderCategoryPalette(b.category);return setBuilderPalette(pal,pal.label)}
++  const accent=builderValidHex(b.theme_color)?b.theme_color:builderCategoryPalette(b.category).accent;
++  return setBuilderPalette({accent,background:'#0f1112',surface:'#181b1d',text:'#f1f0ea'},builderValidHex(b.theme_color)?`Business brand · Pulled ${accent}`:'Business brand · Using best category colour');
++}
++function updateBuilderBrandThemeStatus(){
++  const p=builderState.project,b=p?.business||{},st=$('#builderBrandThemeStatus');if(!st||!p)return;
++  st.textContent=builderValidHex(b.theme_color)?`Brand colour found: ${b.theme_color}`:'No reliable brand colour pulled yet · use Category fit or customise below';
++}
+ async function openBuilderProject(id){
+   try{if(builderState.dirty)await saveBuilderProject(true);const p=await api(`/api/builder/projects/${id}`);builderState.project=p;builderState.selectedPage='home';builderState.dirty=false;builderSetHome(false);renderBuilderEditor();refreshBuilderPreview()}catch(e){toast(e.message,true)}
+ }
+@@ -206,7 +243,7 @@
+   $('#builderProjectTitle').textContent=b.name||p.name;$('#builderSaveState').textContent='Saved';$('#builderExportBtn').href=`/api/builder/projects/${p.id}/export`;
+   const vals={bBusinessName:b.name,bCategory:b.category,bTown:b.town,bPhone:b.phone,bEmail:b.email,bAddress:b.address,bWebsite:b.website,bLogoUrl:b.logo_url,bHeroImage:b.hero_image_url,bHeroHeadline:c.hero_headline,bHeroSubheading:c.hero_subheading,bHeroCta:c.hero_cta,bHeroSecondary:c.hero_secondary,bServicesTitle:c.services_title,bServices:builderServicesToText(c.services||[]),bAboutTitle:c.about_title,bAboutBody:c.about_body,bProofTitle:c.proof_title,bProofBody:c.proof_body,bContactTitle:c.contact_title,bContactBody:c.contact_body,bTemplate:p.template_key,bAccent:p.accent,bBackground:p.background,bSurface:p.surface,bTextColor:p.text_color};
+   Object.entries(vals).forEach(([id,v])=>{const el=$('#'+id);if(el)el.value=v??''});$('#bDemoMode').checked=!!p.is_demo;$('#bStudioCredit').checked=c.studio_credit!==false;
+-  renderBuilderSections();renderBuilderPages();
++  updateBuilderBrandThemeStatus();renderBuilderSections();renderBuilderPages();
+ }
+ function renderBuilderSections(){
+   const p=builderState.project,c=p?.content||{},order=c.section_order||['hero','services','about','proof','gallery','contact'],vis=c.visible||{};const box=$('#builderSectionList');if(!box)return;
+@@ -234,6 +271,7 @@
+ function refreshBuilderPreview(force=true){const p=builderState.project;if(!p)return;const slug=builderState.selectedPage||'home';$('#builderPreviewPath').textContent=slug==='home'?'Home':slug;const frame=$('#builderFrame');const url=`/builder/preview/${p.token}/${encodeURIComponent(slug)}?t=${Date.now()}`;if(force||frame.src!==url)frame.src=url}
+ function activateBuilderTab(tab){$$('[data-builder-tab]').forEach(b=>b.classList.toggle('active',b.dataset.builderTab===tab));$$('[data-builder-panel]').forEach(p=>p.classList.toggle('active',p.dataset.builderPanel===tab))}
+ $$('[data-builder-tab]').forEach(b=>b.onclick=()=>activateBuilderTab(b.dataset.builderTab));
++$$('[data-brand-theme]').forEach(b=>b.onclick=()=>applyBuilderBrandTheme(b.dataset.brandTheme));
+ $$('.builder-device-switch [data-device]').forEach(b=>b.onclick=()=>{$$('.builder-device-switch [data-device]').forEach(x=>x.classList.toggle('active',x===b));$('#builderFrameShell').className=`builder-frame-shell ${b.dataset.device}`});
+ ['bBusinessName','bCategory','bTown','bPhone','bEmail','bAddress','bWebsite','bLogoUrl','bHeroImage','bHeroHeadline','bHeroSubheading','bHeroCta','bHeroSecondary','bServicesTitle','bServices','bAboutTitle','bAboutBody','bProofTitle','bProofBody','bContactTitle','bContactBody','bTemplate','bAccent','bBackground','bSurface','bTextColor','bDemoMode','bStudioCredit','bPageTitle','bPageSlug','bPageHeadline','bPageBody'].forEach(id=>{const el=$('#'+id);if(el){el.addEventListener('input',markBuilderDirty);el.addEventListener('change',markBuilderDirty)}});
+ $('#builderRefreshBtn').onclick=loadBuilderProjects;
+--- payload/templates/index.html
++++ payload/templates/index.html
+@@ -8,8 +8,8 @@
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+-  <link rel="icon" type="image/png" href="/static/NORTHBROWN_ICON.png?v=204">
+-  <link rel="apple-touch-icon" href="/static/NORTHBROWN_ICON.png?v=204">
++  <link rel="icon" type="image/png" href="/static/NORTHBROWN_ICON.png?v=204-final">
++  <link rel="apple-touch-icon" href="/static/NORTHBROWN_ICON.png?v=204-final">
+   <link rel="stylesheet" href="/static/app.css">
+ </head>
+ <body>
+@@ -301,6 +301,16 @@
+             </div>
+ 
+             <div class="builder-tab-panel" data-builder-panel="style">
++              <div class="builder-group"><div class="section-label">BRAND THEME</div>
++                <p class="tiny-note">Apply a complete colour direction in one click. “Business brand” uses the colour NORTHBROWN pulled from the current site when available.</p>
++                <div class="brand-theme-actions">
++              

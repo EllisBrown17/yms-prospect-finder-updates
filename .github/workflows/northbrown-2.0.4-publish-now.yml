@@ -3,17 +3,22 @@ name: Publish NORTHBROWN 2.0.4 NOW
 on:
   issues:
     types: [opened]
+  pull_request:
+    types: [opened]
 
 permissions:
   contents: write
   issues: read
+  pull-requests: read
 
 jobs:
   publish:
-    if: contains(github.event.issue.title, 'NORTHBROWN 2.0.4 PUBLISH NOW')
+    if: (github.event_name == 'issues' && contains(github.event.issue.title, 'NORTHBROWN 2.0.4 PUBLISH NOW')) || (github.event_name == 'pull_request' && contains(github.event.pull_request.title, 'NORTHBROWN 2.0.4 PUBLISH NOW'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Build and validate NORTHBROWN 2.0.4
         shell: bash

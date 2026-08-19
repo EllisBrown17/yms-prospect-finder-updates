@@ -1,0 +1,58 @@
+t=? WHERE id=?',(json.dumps(content),now_iso(),project_id)); conn.commit(); row=conn.execute('SELECT * FROM site_projects WHERE id=?',(project_id,)).fetchone(); conn.close(); out=_project_dict(row); out['_ai_used']=ai_used; out['_ai_warning']=warning; return jsonify(out)
+ 
+     @app.post('/api/builder/projects/<int:project_id>/asset')
+     def builder_asset_upload(project_id):
+diff -ruN '--exclude=__pycache__' '--exclude=release.json' '--exclude=NORTHBROWN_ICON.png' '--exclude=favicon-*.png' payload/static/app.css payload/static/app.css
+--- payload/static/app.css	2026-08-19 12:30:59.000000000 +0000
++++ payload/static/app.css	2026-08-19 12:55:25.513958994 +0000
+@@ -55,3 +55,7 @@
+ .brand-theme-presets{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.brand-theme-card{appearance:none;text-align:left;padding:11px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:#111315;color:var(--offwhite);cursor:pointer;transition:.18s ease}.brand-theme-card:hover{border-color:rgba(198,255,0,.24);transform:translateY(-1px)}.brand-theme-card.active{border-color:rgba(198,255,0,.48);box-shadow:inset 0 0 0 1px rgba(198,255,0,.09);background:rgba(198,255,0,.045)}.brand-theme-card b{display:block;font-size:10px}.brand-theme-card small{display:block;margin-top:3px;color:#74797d;font-size:7.5px;line-height:1.4}.brand-theme-card.northbrown-theme b{color:var(--lime)}
+ .scan-head-actions{display:flex;align-items:flex-start;gap:8px}.scan-collapse,.scan-dismiss{width:30px;height:30px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:#151719;color:#aeb2b4;cursor:pointer;font-size:15px;line-height:1}.scan-collapse:hover,.scan-dismiss:hover{border-color:rgba(198,255,0,.28);color:var(--lime)}.scan-progress-panel.collapsed{width:min(430px,calc(100vw - 32px));padding-bottom:14px}.scan-progress-panel.collapsed .scan-live-card,.scan-progress-panel.collapsed .scan-counters,.scan-progress-panel.collapsed .scan-cost-line,.scan-progress-panel.collapsed .scan-summary,.scan-progress-panel.collapsed .scan-controls,.scan-progress-panel.collapsed .scan-activity-log{display:none!important}.scan-progress-panel.collapsed .scan-progress-track{margin-top:12px}.scan-progress-panel.collapsed .scan-progress-meta{margin-bottom:0}
+ @media(max-width:760px){.brand-theme-presets{grid-template-columns:1fr}.scan-progress-panel.collapsed{width:calc(100vw - 24px)}}
++
++/* 2.0.5 global scan confidence bar */
++.global-scan-bar{position:sticky;top:90px;z-index:34;margin:-2px 0 14px;border:1px solid rgba(198,255,0,.18);border-radius:14px;background:rgba(17,19,21,.96);backdrop-filter:blur(16px);box-shadow:0 12px 35px rgba(0,0,0,.22);overflow:hidden}.global-scan-main{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;gap:11px;align-items:center;padding:10px 12px}.global-scan-copy{min-width:0}.global-scan-copy strong{display:block;font-size:10px;color:#eef0e9}.global-scan-copy small{display:block;margin-top:3px;color:#767b7f;font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.global-scan-main>span:not(.live-dot),.global-scan-main>b{font-size:9px;font-variant-numeric:tabular-nums;color:#b7babd}.global-scan-main>b{color:var(--lime)}.global-scan-track{height:4px;background:#24272a}.global-scan-track i{display:block;height:100%;width:0;background:var(--lime);transition:width .35s ease;box-shadow:0 0 16px rgba(198,255,0,.35)}.global-scan-bar.done{border-color:rgba(198,255,0,.26)}.global-scan-bar.failed{border-color:rgba(255,107,107,.35)}.global-scan-bar.failed .global-scan-track i{background:#ff6b6b}.builder-save-error{color:#ff9d9d!important;border-color:rgba(255,107,107,.32)!important}.brand-reference{background:#0d0d0e;min-height:180px;object-fit:cover}.prospect-row,[data-lead]{cursor:pointer}.lead-table tbody tr[data-lead]:hover{background:rgba(198,255,0,.025)}
++@media(max-width:760px){.global-scan-bar{top:80px;margin-bottom:10px}.global-scan-main{grid-template-columns:auto minmax(0,1fr) auto auto}.global-scan-main .mini-action{display:none}.global-scan-copy small{max-width:52vw}}
+diff -ruN '--exclude=__pycache__' '--exclude=release.json' '--exclude=NORTHBROWN_ICON.png' '--exclude=favicon-*.png' payload/static/app.js payload/static/app.js
+--- payload/static/app.js	2026-08-19 12:30:59.000000000 +0000
++++ payload/static/app.js	2026-08-19 12:54:17.977881218 +0000
+@@ -1,5 +1,6 @@
+ const state = { leads: [], currentLead: null, currentIntel: null, currentDemoProjectId: null, minScore: 0, query: '' };
+-const builderState = { projects: [], project: null, selectedPage: 'home', saveTimer: null, dirty: false, saving: false };
++const builderState = { projects: [], project: null, selectedPage: 'home', saveTimer: null, dirty: false, saving: false, editSeq: 0, savePromise: null };
++let leadOpenInFlight=false;
+ const $ = s => document.querySelector(s);
+ const $$ = s => [...document.querySelectorAll(s)];
+ 
+@@ -37,44 +38,58 @@
+ function renderTopProspects(){
+   const leads=[...state.leads].filter(x=>x.score!==null).sort((a,b)=>b.score-a.score).slice(0,5);
+   $('#topProspects').innerHTML=leads.length?leads.map(l=>`<div class="prospect-row" data-lead="${l.id}"><div><div class="business-name">${esc(l.business_name)}</div><div class="business-sub">${esc(l.town||l.address||'Local business')} · ${esc(l.category||'Business')}</div></div><div class="score-pill ${scoreClass(l.score)}"><span class="score-dot"></span><b>${l.score}/100</b></div><div class="email-state">${l.email?'Email found':'No email yet'}</div><div class="row-arrow">→</div></div>`).join(''):'<div class="empty-state">No scored prospects yet.</div>';
+-  $$('#topProspects [data-lead]').forEach(x=>x.addEventListener('click',()=>openLead(+x.dataset.lead)));
+ }
+ function renderLeadTable(){
+   const rows=state.leads.map(l=>`<tr data-lead="${l.id}"><td class="business-cell"><strong>${esc(l.business_name)}</strong><small>${esc(l.town||l.address||'—')} · ${esc(l.category||'Business')}</small></td><td><div class="need-cell"><span class="score-num">${l.score??'—'}</span><div class="tiny-meter"><i style="--score:${l.score??0}%"></i></div><small class="${l.scan_stale?'stale-scan':''}">${esc(l.score_label||'Not scanned')}${l.scan_stale?' · Rescan due':(l.scan_age_days!=null?` · ${l.scan_age_days}d ago`:'')}</small></div></td><td class="contact-cell">${esc(l.email||l.phone||'Not found yet')}</td><td><span class="stage">${esc(stageLabel(l.status))}</span></td><td><button class="more-btn">→</button></td></tr>`).join('');
+   $('#leadRows').innerHTML=rows||'<tr><td colspan="5"><div class="empty-state">No prospects match this filter.</div></td></tr>';
+   $('#mobileLeadCards').innerHTML=state.leads.map(l=>`<div class="mobile-lead-card" data-lead="${l.id}"><div><strong>${esc(l.business_name)}</strong><small>${esc(l.town||'—')} · ${esc(l.category||'Business')}</small><small>${esc(l.email||'No email found yet')}</small></div><div class="score-num">${l.score??'—'}</div></div>`).join('');
+-  $$('[data-lead]').forEach(el=>{ if(el.closest('#topProspects')) return; el.addEventListener('click',()=>openLead(+el.dataset.lead)); });
+ }
+ async function openLead(id){
+-  const l=await api(`/api/leads/${id}`); state.currentLead=l; $('#drawerName').textContent=l.business_name; $('#drawerScore').textContent=l.score??'—'; $('#drawerLabel').textContent=l.score_label||'Not scanned'; $('#drawerSummary').textContent=l.ai_summary||'Run a scan to generate the website need score and rationale.'; $('#salesAngle').textContent=l.ai_sales_angle||'—'; $('#drawerEmail').textContent=l.email||'—'; $('#drawerPhone').textContent=l.phone||'—'; const w=$('#drawerWebsite'); w.textContent=l.website||'—'; w.href=l.website||'#'; $('#draftSubject').value=l.draft_subject||''; $('#draftBody').value=l.draft_body||'';
+-  $('#issueList').innerHTML=(l.ai_issues||[]).map(x=>`<div class="issue">${esc(x)}</div>`).join('')||'<div class="empty-state">No analysis yet.</div>';
+-  $('#strengthList').innerHTML=(l.ai_strengths||[]).map(x=>`<div class="strength">${esc(x)}</div>`).join('');
+-  const circ=2*Math.PI*49; const score=l.score||0; $('#scoreArc').style.strokeDashoffset=circ-(circ*score/100);
+-  $('#packageName').textContent='Calculating package fit…'; $('#packagePrice').textContent='—'; $('#packageReason').textContent=''; $('#packageConfidence').textContent='—'; $('#packageDeposit').textContent='—'; $('#packageBalance').textContent='—'; $('#priorityScore').textContent='—'; $('#salesToolOutput').innerHTML='';
++  if(!id||leadOpenInFlight)return; leadOpenInFlight=true;
+   try{
+-    const r=await api(`/api/intelligence/${id}`); const i=r.intelligence||{};
+-    $('#packageName').textContent=i.recommended_package||'Custom Scope';
+-    $('#packagePrice').textContent=i.package_price_from?`from ${money(i.package_price)}`:(Number(i.package_price)>0?money(i.package_price):'Quote');
+-    $('#packageReason').textContent=i.package_reason||'Package recommendation based on the scanned website and your NORTHBROWN package catalogue.';
+-    $('#packageConfidence').textContent=i.package_confidence?`${i.package_confidence}% fit`:'—';
+-    $('#packageDeposit').textContent=Number(i.package_deposit)>0?money(i.package_deposit):'—';
+-    $('#packageBalance').textContent=Number(i.package_balance)>0?money(i.package_balance):'—';
+-    $('#priorityScore').textContent=i.priority_score!=null?`${i.priority_score}/100`:'—';
+-    state.currentIntel=i;
+-  }catch(e){ $('#packageName').textContent='Run a website scan'; $('#packageReason').textContent='Package fit becomes available once NORTHBROWN has enough evidence.'; }
+-  $('#leadDrawer').classList.add('open'); $('#leadDrawerBackdrop').classList.add('open');
++    const l=await api(`/api/leads/${id}`); state.currentLead=l; $('#drawerName').textContent=l.business_name; $('#drawerScore').textContent=l.score??'—'; $('#drawerLabel').textContent=l.score_label||'Not scanned'; $('#drawerSummary').textContent=l.ai_summary||'Run a scan to generate the website nee

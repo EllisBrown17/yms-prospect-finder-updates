@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - 'northbrown/staging/2.0.4/trigger.txt'
+  issues:
+    types: [opened]
   workflow_dispatch:
 
 permissions:
@@ -12,6 +14,7 @@ permissions:
 
 jobs:
   publish:
+    if: github.event_name != 'issues' || contains(github.event.issue.title, 'NORTHBROWN 2.0.4 RELEASE')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

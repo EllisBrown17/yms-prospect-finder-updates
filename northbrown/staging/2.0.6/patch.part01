@@ -1,0 +1,57 @@
+:queued,'mode':mode})
++        if conn:
++            try: conn.close()
++            except Exception: pass
++
++
++@app.post('/api/smart-finder')
++def smart_finder():
++    data=request.get_json(silent=True) or {}
++    location=(data.get('location') or '').strip()
++    if not location:
++        return jsonify({'error':'Enter an area for Smart Finder.'}),400
++    target=max(10,min(200,int(data.get('target') or 100)))
++    radius=max(1,min(75,int(data.get('radius_miles') or 15)))
++    mode=(data.get('mode') or 'smart').lower()
++    if mode not in ('fast','smart','full'): mode='smart'
++    settings=get_settings(); key=(settings.get('google_places_api_key') or '').strip()
++    if not key:
++        return jsonify({'error':'Smart Finder needs your Google Places key in Settings. Website Builder Google maps/review links can still use the free Google mode.'}),400
++    categories=data.get('categories') if isinstance(data.get('categories'),list) else SMART_FINDER_CATEGORIES
++    categories=[str(x).strip() for x in categories if str(x).strip()][:30] or SMART_FINDER_CATEGORIES
++    job_id=f"finder-{int(time.time())}-{os.urandom(3).hex()}"
++    with SMART_FINDER_JOBS_LOCK:
++        SMART_FINDER_JOBS[job_id]={'job_id':job_id,'status':'finding','stage':'Starting Smart Finder','detail':f'Preparing {len(categories)} local business searches…','location':location,'radius_miles':radius,'target':target,'mode':mode,'total_categories':len(categories),'completed_categories':0,'current_category':'','found':0,'added':0,'skipped':0,'requests_used':0,'scan_job_id':None,'queued_for_scan':0,'started_at':now_iso(),'started_epoch':time.time()}
++    threading.Thread(target=_run_smart_finder_job,args=(job_id,location,target,radius,mode,categories,key),daemon=True).start()
++    return jsonify({'ok':True,'job_id':job_id,'status':'finding','total_categories':len(categories),'mode':mode})
++
++
++@app.get('/api/smart-finder-status/<job_id>')
++def smart_finder_status(job_id):
++    snap=_smart_finder_snapshot(job_id)
++    if not snap: return jsonify({'error':'Smart Finder job not found.'}),404
++    return jsonify(snap)
+ 
+ @app.post('/api/scan/<int:lead_id>')
+ def scan_lead(lead_id):
+diff -ruN base205/payload/static/app.css payload/static/app.css
+--- base205/payload/static/app.css	2026-08-19 13:36:33.861749214 +0000
++++ payload/static/app.css	2026-08-19 13:36:33.863394092 +0000
+@@ -59,3 +59,6 @@
+ /* 2.0.5 global scan confidence bar */
+ .global-scan-bar{position:sticky;top:90px;z-index:34;margin:-2px 0 14px;border:1px solid rgba(198,255,0,.18);border-radius:14px;background:rgba(17,19,21,.96);backdrop-filter:blur(16px);box-shadow:0 12px 35px rgba(0,0,0,.22);overflow:hidden}.global-scan-main{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;gap:11px;align-items:center;padding:10px 12px}.global-scan-copy{min-width:0}.global-scan-copy strong{display:block;font-size:10px;color:#eef0e9}.global-scan-copy small{display:block;margin-top:3px;color:#767b7f;font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.global-scan-main>span:not(.live-dot),.global-scan-main>b{font-size:9px;font-variant-numeric:tabular-nums;color:#b7babd}.global-scan-main>b{color:var(--lime)}.global-scan-track{height:4px;background:#24272a}.global-scan-track i{display:block;height:100%;width:0;background:var(--lime);transition:width .35s ease;box-shadow:0 0 16px rgba(198,255,0,.35)}.global-scan-bar.done{border-color:rgba(198,255,0,.26)}.global-scan-bar.failed{border-color:rgba(255,107,107,.35)}.global-scan-bar.failed .global-scan-track i{background:#ff6b6b}.builder-save-error{color:#ff9d9d!important;border-color:rgba(255,107,107,.32)!important}.brand-reference{background:#0d0d0e;min-height:180px;object-fit:cover}.prospect-row,[data-lead]{cursor:pointer}.lead-table tbody tr[data-lead]:hover{background:rgba(198,255,0,.025)}
+ @media(max-width:760px){.global-scan-bar{top:80px;margin-bottom:10px}.global-scan-main{grid-template-columns:auto minmax(0,1fr) auto auto}.global-scan-main .mini-action{display:none}.global-scan-copy small{max-width:52vw}}
++
++/* 2.0.6 live Smart Finder discovery progress */
++.finder-progress{margin-top:12px;padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:#101214}.finder-progress-head,.finder-progress-meta{display:flex;justify-content:space-between;gap:12px;align-items:center}.finder-progress-head strong{font-size:11px;color:#f0f1eb}.finder-progress-head span,.finder-progress-meta{font-size:9px;color:#7c8185}.finder-progress-track{height:8px;margin:9px 0 7px;border-radius:999px;background:#25282b;overflow:hidden;border:1px solid rgba(255,255,255,.04)}.finder-progress-track i{display:block;height:100%;width:0;background:var(--lime);border-radius:inherit;box-shadow:0 0 18px rgba(198,255,0,.24);transition:width .3s ease}.finder-progress-meta span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.finder-progress.failed{border-color:rgba(255,107,107,.3)}.finder-progress.failed .finder-progress-track i{background:#ff6b6b}
+diff -ruN base205/payload/static/app.js payload/static/app.js
+--- base205/payload/static/app.js	2026-08-19 13:36:33.861827236 +0000
++++ payload/static/app.js	2026-08-19 13:36:33.863458383 +0000
+@@ -144,7 +144,10 @@
+ }
+ $$('.brand-theme-card').forEach(btn=>btn.onclick=()=>applyBrandTheme(btn.dataset.brandTheme));
+ 
+-$('#smartFinderBtn').onclick=async()=>{const b=$('#smartFinderBtn');const location=($('#smartFinderLocation').value||$('#discoverLocation').value||'').trim();b.disabled=true;b.textContent='Finding local companies…';requestScanNotifications();try{const r=await api('/api/smart-finder',{method:'POST',body:{location,radius_miles:+$('#smartFinderRadius').value,target:+$('#smartFinderTarget').value,mode:'smart'}});toast(`${r.added} new businesses found · ${r.skipped} skipped · ${r.queued_for_scan} queued to scan.`);closeScan();setView('prospects');await Promise.all([loadLeads(),loadOverview()]);if(r.scan_job_id){openScanProgress({title:'Smart Finder scan',total:r.queued_for_scan,current:'Preparing first local business…',mode:r.mode||'smart'});watchScanJob(r.scan_job_id)}}catch(e){toast(e.message,true)}finally{b.innerHTML='Smart Finder — find &amp; scan <span>✦</span>';b.disabled=false}};
++let smartFinderPollHandle=null;
++function updateSmartFinderProgress(r){const box=$('#smartFinderProgress');if(!box)return;box.hidden=false;box.classList.toggle('failed',r.status==='failed');const pct=Math.max(0,Math.min(100,Number(r.percent||0)));$('#smartFinderFill').style.width=`${pct}%`;$('#smartFinderPercent').textContent=`${Math.round(pct)}%`;$('#smartFinderStage').textContent=r.stage||'Finding local companies…';$('#smartFinderDetail').textContent=r.detail||r.current_category||'Searching…';$('#smartFinderCount').textContent=`${r.completed_categories||0} / ${r.total_categories||0}`;}
++async function watchSmartFinder(jobId){clearInterval(smartFinderPollHandle);const tick=async()=>{try{const r=await api(`/api/smart-finder-status/${jobId}`);updateSmartFinderProgress(r);if(r.status==='failed'){clearInterval(smartFinderPollHandle);$('#smartFinderBtn').disabled=false;$('#smartFinderBtn').innerHTML='Smart Finder — find &amp; scan <span>✦</span>';toast(r.error||'Smart Finder failed.',true);return true}if(r.status==='scanning'||r.status==='complete'){clearInterval(smartFinderPollHandle);toast(`${r.added||0} new businesses found · ${r.skipped||0} skipped · ${r.queued_for_scan||0} queued to scan.`);await Promise.all([loadLeads(),loadOverview()]);$('#smartFinderBtn').disabled=false;$('#smartFinderBtn').innerHTML='Smart Finder — find &amp; scan <span>✦</span>';if(r.scan_job_id){closeScan();setView('prospects');openScanProgress({title:'Smart Finder website scan',total:r.queued_for_scan,current:'Preparing first local business…',mode:r.mode||'smart'});watchScanJob(r.scan_job_id)}else{$('#smartFinderStage').textContent='Discovery complete';$('#smartFinderFill').style.width='100%';$('#smartFinderPerce

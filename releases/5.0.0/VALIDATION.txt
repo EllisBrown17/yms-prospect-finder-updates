@@ -1,0 +1,17 @@
+YMS Prospect Finder 5.0.0 — Product + Outreach Intelligence
+- Installer Python compile: PASS
+- Layered runtime compile: PASS
+- Product Truth remains separate from learned sales signals: PASS
+- Company -> product and product -> company opportunity APIs: PASS
+- Verified / observed / inferred / unknown explanation labels: PASS
+- Product-use workflow, validation questions and do-not-claim safeguards: PASS
+- Sales-outcome learning is product-specific and bounded to priority only: PASS
+- Outreach ledger records recipient, date, product, subject, body and source: PASS
+- Manual Mark Sent is the only action that records an external email as sent: PASS
+- Duplicate first-contact protection: PASS
+- Reply, note, outcome, follow-up and Do Not Contact timeline: PASS
+- Product-grounded drafting with deterministic fallback: PASS
+- Existing lead/prospect data retained: PASS
+- Persistent 4.2.11 Desktop launcher refresh preserved: PASS
+SHA256: 5a875f3a5b52c8158c1a3ca6c12c7c5f3e472898bd0d306d4dcdbd7a0ea2d127
+Git blob: a819f9a8ae219c6ba11ee0467f4e58888b694a8a

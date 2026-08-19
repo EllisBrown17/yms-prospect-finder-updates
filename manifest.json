@@ -1,18 +1,18 @@
 {
-  "version": "4.2.7",
-  "published_at": "2026-08-19T11:46:00+01:00",
-  "notes": "Desktop launcher repair. Keeps the 4.2.6 Smart Pipeline fix intact, writes a stable runtime pointer, rebuilds the macOS Desktop YMS Prospect Finder.app so it starts the current local server instead of an old versioned Downloads path, avoids starting duplicate servers, waits for 127.0.0.1:8765 before opening the browser, and preserves the previous Desktop launcher as a timestamped OLD copy. Windows receives only the safe runtime version bump; no launcher changes are made there.",
+  "version": "4.2.8",
+  "published_at": "2026-08-19T11:58:00+01:00",
+  "notes": "Prospect + Smart Pipeline controls hotfix. Fixes the missing prospectWorkNotice frontend helper that was preventing single-company prospect drawers from opening. Adds safe Pause, Resume and Stop controls for Smart Pipeline: active workers are allowed to finish/checkpoint, completed companies stay saved, pause waits before any new company starts, and stop leaves unscanned queued companies untouched so they can be picked up on a later run. Keeps the 4.2.6 pipeline skip-fix and 4.2.7 desktop launcher repair intact.",
   "mandatory": false,
   "mac": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.7/YMS_Prospect_Finder_V4_2_7_DESKTOP_LAUNCHER_FIX.zip",
-    "sha256": "88a80b41b00c0ffce2c0e9a1a5d8e30f7a4d5e90d3a6b83ad5bf0d39226b71d8",
-    "git_blob_sha": "dc1636a1eff002d68e9ab0fbf1df0b18964b2f49",
-    "blob_sha": "dc1636a1eff002d68e9ab0fbf1df0b18964b2f49"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.8/YMS_Prospect_Finder_V4_2_8_PROSPECT_AND_SCAN_CONTROLS.zip",
+    "sha256": "25ee57d4911991ece4a29bdc847425ce93ed78413d2b7bef39781c5bee9a14d7",
+    "git_blob_sha": "d50573f477406d407e963856202bd6673390df13",
+    "blob_sha": "d50573f477406d407e963856202bd6673390df13"
   },
   "windows": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.7/YMS_Prospect_Finder_V4_2_7_DESKTOP_LAUNCHER_FIX.zip",
-    "sha256": "88a80b41b00c0ffce2c0e9a1a5d8e30f7a4d5e90d3a6b83ad5bf0d39226b71d8",
-    "git_blob_sha": "dc1636a1eff002d68e9ab0fbf1df0b18964b2f49",
-    "blob_sha": "dc1636a1eff002d68e9ab0fbf1df0b18964b2f49"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.8/YMS_Prospect_Finder_V4_2_8_PROSPECT_AND_SCAN_CONTROLS.zip",
+    "sha256": "25ee57d4911991ece4a29bdc847425ce93ed78413d2b7bef39781c5bee9a14d7",
+    "git_blob_sha": "d50573f477406d407e963856202bd6673390df13",
+    "blob_sha": "d50573f477406d407e963856202bd6673390df13"
   }
 }

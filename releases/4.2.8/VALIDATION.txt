@@ -1,0 +1,14 @@
+YMS Prospect Finder 4.2.8
+- Installer Python compile: PASS
+- ZIP integrity: PASS
+- ZIP contents: server.py + index.html
+- Frontend JavaScript syntax (node --check): PASS
+- Missing prospectWorkNotice repair injected before app JS: PASS
+- Single-prospect drawer dependency restored: PASS
+- Smart Pipeline Pause / Resume / Stop API added: PASS
+- Pause waits between companies so active workers may finish/checkpoint: PASS
+- Stop bypasses queued companies without mutating their prospect records: PASS
+- Completed company checkpoints are preserved: PASS
+- Existing terminal polling arrays recognise stopped state where present: PASS
+- Synthetic backend patch/compile test: PASS
+SHA256: 25ee57d4911991ece4a29bdc847425ce93ed78413d2b7bef39781c5bee9a14d7

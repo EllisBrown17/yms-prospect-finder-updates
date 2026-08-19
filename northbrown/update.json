@@ -1,11 +1,11 @@
 {
   "schema": 2,
-  "version": "2.0.11",
-  "allowed_from": ["2.0.8"],
-  "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/northbrown/releases/NORTHBROWN-update-2.0.11.zip",
-  "size": 4545,
-  "sha256": "e3117e89bb4d564b71328e869a634550656b188fe73380271da2a773d0564ca3",
-  "notes": "NORTHBROWN 2.0.11 adds Design DNA v1 and replaces the fixed-category Smart Finder with broad all-business discovery. New and regenerated demos get business-fit design fingerprints, recent-site diversity checks and materially different page assembly. Smart Scan now searches across a broad range of local business types, keeps no-website businesses as high-priority prospects, deduplicates by Google Place ID and excludes obvious national chains by default with an option to include them. Overnight Scan adds persistent targets up to 5,000, concurrent fast first-pass website scanning, automatic resume/reconnect after browser or app restart, and Mac idle-sleep prevention while the job is active. The small recovery-safe launcher downloads the already-staged 2.0.11 payload pieces, verifies their combined size and SHA-256 before changing working files, compiles all touched Python, starts from the updater-created working 2.0.8 backup, preserves data/settings, and schedules an automatic relaunch if migration fails.",
-  "published_at": "2026-08-19T18:10:00Z",
+  "version": "2.0.12",
+  "allowed_from": ["2.0.11"],
+  "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/northbrown/releases/NORTHBROWN-update-2.0.12.zip",
+  "size": 16000,
+  "sha256": "96d038eaa6344969645982aca044a5b50df2ac9efd65063978db1fea12ca19f2",
+  "notes": "NORTHBROWN 2.0.12 fixes the Smart Finder UI so 500, 1,000, 2,500 and 5,000 targets plus Overnight mode are visible even when an older cached app.js was being served. It cache-busts the static UI files and force-upgrades the Smart Finder controls. It also adds ChatGPT Import inside every prospect: copy a business-specific ChatGPT scan prompt, then drag a .northbrown.json/.json scan back onto that prospect to replace the NORTHBROWN scan score, summary, issues, strengths and sales angle with the imported evidence-led result. A second prompt creates a completely unique static website demo; .html or .zip demos can be dropped into the same panel, stored against that business and opened or downloaded from its prospect record. Imported website previews run sandboxed and imports do not overwrite prospect contact data. The OTA is self-contained, starts from the updater-created 2.0.11 backup, compiles touched Python before commit, preserves data/settings, and automatically rolls back on migration failure.",
+  "published_at": "2026-08-19T18:24:00Z",
   "mandatory": false
 }

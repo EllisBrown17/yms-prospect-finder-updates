@@ -15,14 +15,14 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Recover updater implementation
         run: |
-          set -u
+          set +e
           rm -rf /tmp/yms-updater-scan && mkdir -p /tmp/yms-updater-scan
           echo '================ archive scan ================'
           for z in releases/4.2.0/*.zip; do
             [ -f "$z" ] || continue
             echo
             echo "--- $z ---"
-            unzip -l "$z" 2>&1 | sed -n '1,14p' || true
+            unzip -l "$z" 2>&1 | sed -n '1,14p'
             out="/tmp/yms-updater-scan/$(basename "$z" .zip).server.py"
             unzip -p "$z" server.py > "$out" 2>/tmp/unzip.err
             rc=$?
@@ -31,7 +31,7 @@ jobs:
             if [ -s /tmp/unzip.err ]; then cat /tmp/unzip.err; fi
             if [ "$size" -gt 5000 ]; then
               echo 'Updater-related matches:'
-              grep -nEi 'manifest|release channel|release_channel|check for updates|github|raw.githubusercontent|updater|update_available|latest|channel|sha256|package_url' "$out" | head -120 || true
+              grep -nEi 'manifest|release channel|release_channel|check for updates|github|raw.githubusercontent|updater|update_available|latest|channel|sha256|package_url' "$out" | head -120
             fi
           done
           echo

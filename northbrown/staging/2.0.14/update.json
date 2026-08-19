@@ -1,0 +1,13 @@
+{
+  "schema": 2,
+  "version": "2.0.14",
+  "allowed_from": [
+    "2.0.13"
+  ],
+  "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/northbrown/releases/NORTHBROWN-update-2.0.14.zip",
+  "size": 27084,
+  "sha256": "9bf81a3495b54aac35cc9610a23b8e9614fb53c1132da75206587d6fc6913126",
+  "notes": "Connected NORTHBROWN mailbox and in-app reply inbox. Sends human-approved personalised outreach from the configured NORTHBROWN address, syncs replies by IMAP into prospect threads, classifies replies, creates editable AI reply drafts, schedules two safe follow-ups after first-email approval, and automatically stops sequences on human reply, opt-out, hard bounce, manual stop or client conversion. Out-of-office replies pause and resume safely. Existing prospects, settings, API keys and email credentials are preserved.",
+  "published_at": "2026-08-19T21:55:00Z",
+  "mandatory": false
+}

@@ -1,0 +1,131 @@
+  finally:
++        conn.close()
++    scan_job_id,queued=_start_specific_scan(added_ids,mode)
++    return jsonify({'ok':True,'found':found,'added':len(added_ids),'skipped':skipped,'places_requests':requests_used,'places_requests_today':int(usage_today('google_places_text_search')['units']),'scan_job_id':scan_job_id,'queued_for_scan':queued,'mode':mode})
++
+ @app.post('/api/scan/<int:lead_id>')
+ def scan_lead(lead_id):
+     data=request.get_json(silent=True) or {}; mode=(data.get('mode') or 'full').lower()
+@@ -1332,6 +1427,8 @@
+         'notes': str(manifest.get('notes') or '').strip(),
+         'published_at': str(manifest.get('published_at') or '').strip(),
+         'mandatory': bool(manifest.get('mandatory', False)),
++        'size': int(manifest.get('size') or 0),
++        'allowed_from': manifest.get('allowed_from') or [],
+         'update_available': _version_tuple(version) > _version_tuple(APP_VERSION),
+     })
+     if not base['update_available']:
+@@ -1350,7 +1447,7 @@
+                 if clean.startswith('/') or any(part == '..' for part in clean.split('/')):
+                     return False, 'The update ZIP contains an unsafe path.'
+             prefix = 'payload/' if any(n.startswith('payload/') for n in names) else ''
+-            required = [prefix + 'app.py', prefix + 'requirements.txt', prefix + 'VERSION.txt']
++            required = [prefix + 'app.py', prefix + 'feature_routes.py', prefix + 'builder_routes.py', prefix + 'requirements.txt', prefix + 'VERSION.txt', prefix + 'static/app.js', prefix + 'static/app.css', prefix + 'templates/index.html']
+             if any(x not in names for x in required):
+                 return False, 'The update ZIP is missing required NORTHBROWN files.'
+     except zipfile.BadZipFile:
+@@ -1392,6 +1489,11 @@
+                         raise RuntimeError('Update package is unexpectedly large; installation was cancelled.')
+                     h.update(chunk)
+                     fh.write(chunk)
++        expected_size = int(status.get('size') or 0)
++        if expected_size and total != expected_size:
++            try: os.remove(tmp_path)
++            except OSError: pass
++            raise RuntimeError(f'Update download size did not match the manifest ({total} vs {expected_size} bytes). Nothing was installed.')
+         actual_hash = h.hexdigest().lower()
+         if actual_hash != expected_hash:
+             try: os.remove(tmp_path)
+@@ -1485,7 +1587,7 @@
+     for k,v in data.items():
+         if k not in allowed: continue
+         # Don't overwrite secret with masked placeholder.
+-        if k in ('google_places_api_key','openai_api_key','smtp_password','imap_password') and v=='••••••••': continue
++        if k in ('google_places_api_key','google_maps_embed_api_key','openai_api_key','smtp_password','imap_password') and v=='••••••••': continue
+         conn.execute('INSERT OR REPLACE INTO settings(key,value) VALUES(?,?)',(k,str(v)))
+     conn.commit(); conn.close(); return jsonify({'ok':True,'settings':public_settings(get_settings())})
+ 
+diff -ruN base202/payload/builder_routes.py payload/builder_routes.py
+--- base202/payload/builder_routes.py	2026-08-19 10:15:25.144340232 +0000
++++ payload/builder_routes.py	2026-08-19 10:13:29.902614395 +0000
+@@ -6,7 +6,7 @@
+ import secrets
+ import zipfile
+ from pathlib import Path
+-from urllib.parse import urljoin, urlparse
++from urllib.parse import urljoin, urlparse, quote_plus
+ 
+ import requests
+ from bs4 import BeautifulSoup
+@@ -168,6 +168,9 @@
+         return result
+ 
+     def _google_details(place_id, settings):
++        # Free Google mode deliberately avoids a new Place Details call in Website Builder.
++        if (settings.get('builder_google_mode') or 'free').lower() == 'free':
++            return {}
+         key = (settings.get('google_places_api_key') or '').strip()
+         if not key or not place_id:
+             return {}
+@@ -192,6 +195,22 @@
+         except Exception:
+             return {}
+ 
++    def _google_links(business, settings):
++        name=(business.get('name') or '').strip(); address=(business.get('address') or '').strip(); pid=(business.get('google_place_id') or '').strip()
++        query=', '.join(x for x in (name,address) if x)
++        q=quote_plus(query or name or address)
++        maps=f'https://www.google.com/maps/search/?api=1&query={q}'
++        if pid: maps += '&query_place_id=' + quote_plus(pid)
++        directions=f'https://www.google.com/maps/dir/?api=1&destination={q}'
++        if pid: directions += '&destination_place_id=' + quote_plus(pid)
++        reviews=maps
++        embed_key=(settings.get('google_maps_embed_api_key') or '').strip()
++        embed=''
++        if embed_key and (q or pid):
++            target=quote_plus('place_id:'+pid) if pid else q
++            embed=f'https://www.google.com/maps/embed/v1/place?key={quote_plus(embed_key)}&q={target}'
++        return {'maps_url':maps,'directions_url':directions,'reviews_url':reviews,'embed_url':embed}
++
+     def _template_for(category):
+         c = (category or '').lower()
+         if any(x in c for x in ('funeral','care','therapy','counsell','health')): return 'care'
+@@ -241,6 +260,7 @@
+             'theme_color': site.get('theme_color') or '',
+             'google_place_id': lead.get('google_place_id') or '',
+         }
++        business.update(_google_links(business, settings))
+         return business
+ 
+     def _fallback_content(business, lead=None):
+@@ -367,6 +387,15 @@
+         rating_html = ''
+         if isinstance(rating,(int,float)) and review_count:
+             rating_html = f'<div class="rating-proof"><b>{rating:.1f} ★</b><span>{int(review_count)} Google reviews</span></div>'
++        google_reviews_url = html.escape(str(b.get('reviews_url') or ''), quote=True)
++        google_maps_url = html.escape(str(b.get('maps_url') or ''), quote=True)
++        directions_url = html.escape(str(b.get('directions_url') or ''), quote=True)
++        embed_url = html.escape(str(b.get('embed_url') or ''), quote=True)
++        google_actions = ''.join(x for x in [
++            f'<a class="google-chip" href="{google_reviews_url}" target="_blank" rel="noopener">★ View reviews on Google</a>' if google_reviews_url else '',
++            f'<a class="google-chip" href="{directions_url}" target="_blank" rel="noopener">↗ Get directions</a>' if directions_url else ''
++        ])
++        map_html = f'<div class="google-map"><iframe loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" src="{embed_url}"></iframe></div>' if embed_url else (f'<a class="map-link" href="{google_maps_url}" target="_blank" rel="noopener">Open location in Google Maps ↗</a>' if google_maps_url else '')
+         services = c.get('services') or []
+         services_html = ''.join(f'<article class="service-card"><span>{i+1:02d}</span><h3>{html.escape(str(s.get("name") or "Service"))}</h3><p>{html.escape(str(s.get("description") or ""))}</p></article>' for i,s in enumerate(services[:6]))
+         gallery_html = ''.join(f'<figure><img src="{u}" alt="{name} visual"></figure>' for u in images[:4])
+@@ -388,7 +417,7 @@
+                 return f'<section class="section gallery"><div class="section-heading"><span>03 / VISUALS</span><h2>A stronger first impression.</h2></div><div class="gallery-grid">{gallery_html}</div></section>'
+             if key == 'contact':
+                 details = ''.join(x for x in [f'<a href="tel:{re.sub(r"[^+0-9]","",phone)}">{phone}</a>' if phone else '', f'<a href="mailto:{email}">{email}</a>' if email else '', f'<span>{address}</span>' if address else ''])
+-                return f'<section id="contact" class="contact"><div><span>LET\'S TALK</span><h2>{html.escape(str(c.get("contact_title") or "Ready to talk?"))}</h2><p>{html.escape(str(c.get("contact_body") or ""))}</p></div><div class="contact-details">{details}</div></section>'
++                return f'<section id="contact" class="contact"><div><span>LET\'S TALK</span><h2>{html.escape(str(c.get("contact_title") or "Ready to talk?"))}</h2><p>{html.escape(str(c.get("contact_body") or ""))}</p><div class="google-actions">{google_actions}</div></div><div class="contact-details">{details}{map_html}</div></section>'
+             return ''
+ 
+         if page.get('kind') != 'home' and page.get('slug') != 'home':
+@@ -411,7 +440,7 @@
+         data = request.get_json(silent=True) or {}
+         name = (data.get('name') or 'Untitled website').strip()[:120]
+         category = (data.get('category') or '').strip()[:100]
+-        business = {'name':name,'category':category,'town':'','phone':'','email':'','address':'','website':'','logo_url':'','hero_image_url':'','images':[],'socials':{},'opening_hours':[]}
++        business = {'name':name,'category':category,'town':'','phone':'','email':'','address':'','website':'','logo_url':'','hero_image_url':'','images':[],'socials':{},'opening_hours':[],'google_place_id':'','maps_url':'','directions_url':'','reviews_url':'','embed_

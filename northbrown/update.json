@@ -1,11 +1,11 @@
 {
   "schema": 2,
-  "version": "2.0.9",
-  "allowed_from": ["2.0.8"],
-  "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/northbrown/releases/NORTHBROWN-update-2.0.9.zip",
-  "size": 4327,
-  "sha256": "e1da10fd79c8820b06639eb2044d08bbf74d9cb6efd6a5c43e3b9cfa325bf9b8",
-  "notes": "NORTHBROWN 2.0.9 adds Design DNA v1. Every new or regenerated demo gets a business-fit design strategy before copy or HTML is assembled, including archetype, hero, navigation, layout grid, service presentation, trust/review treatment, CTA, footer and page plan. The builder compares the design fingerprint with the 10 most recent demos, enforces a minimum 72% design difference, blocks repeated hero+service combinations and repeated first-four section sequences, and assembles the page from reusable components instead of one fixed website blueprint. Business-fit scores below 70 are rejected. A new regenerate-design endpoint creates a fresh validated Design DNA without changing the prospect data. The OTA bridge downloads the signed-in-repo Design DNA payload in verified gzip parts, checks both transport and overlay SHA-256 hashes, compiles the patched Python before replacing live files, and relies on the updater-created 2.0.8 backup for rollback on failure.",
-  "published_at": "2026-08-19T15:58:00Z",
+  "version": "2.0.10",
+  "allowed_from": ["2.0.7", "2.0.8", "2.0.9"],
+  "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/northbrown/releases/NORTHBROWN-update-2.0.10.zip",
+  "size": 5220,
+  "sha256": "1b056a155c4a652b7a4d67118bc97ed215e31589f79a576806271048c23a1934",
+  "notes": "NORTHBROWN 2.0.10 is a recovery OTA for the 2.0.9 install problem. It can migrate directly from 2.0.7, 2.0.8 or 2.0.9 by rebuilding from the fresh updater-created backup, then applying the Google Maps location binding and Design DNA v1 in one verified migration. It preserves prospect data and settings, compiles the patched Python before committing, validates the map and Design DNA features, and automatically rolls back through the existing updater if anything fails.",
+  "published_at": "2026-08-19T16:18:00Z",
   "mandatory": false
 }

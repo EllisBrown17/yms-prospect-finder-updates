@@ -1,0 +1,198 @@
+# V5.0.2 expanded ALFRA product-family intelligence.
+# Product facts are verified source-layer data. Sales learning must never rewrite them.
+
+def _v502_add(pid,name,division,category,models,fact,source,use,strong,medium,sectors,roles,questions,workflow,related=()):
+    V5_PRODUCT_CATALOG[pid]={
+        "name":name,"division":division,"category":category,"models":list(models),"status":"verified",
+        "verified_fact":fact,"verified_details":["Current ALFRA product family; exact model/tool selection depends on the customer's application."],
+        "source_label":"Official ALFRA product information","source_url":source,
+        "simple":" → ".join(workflow),"likely_use":use,"workflow":list(workflow),
+        "sectors":list(sectors),"strong":list(strong),"medium":list(medium),"exclude":[],
+        "roles":list(roles),"questions":list(questions),
+        "unknowns":["Current method/equipment","Actual material and application requirements","Required dimensions/capacity","Usage volume","Investment timing"],
+        "do_not_claim":"Do not claim the customer needs this product or that a specific model is technically suitable until the actual application, material, dimensions/capacity and current process are validated.",
+        "related":list(related)
+    }
+
+# Add division/model coverage to the original V5 seed engines.
+V5_PRODUCT_CATALOG["s125"].update({"division":"Control cabinet","models":["S 125"],"source_url":"https://www.alfra.de/en/products/application-solutions-control-cabinet-and-control-engineering/busbar-machining/cutting-device-s-125/"})
+V5_PRODUCT_CATALOG["bs120"].update({"division":"Control cabinet","models":["BS 120"],"source_url":"https://www.alfra.de/en/products/application-solutions-control-cabinet-and-control-engineering/busbar-machining/bs-120/"})
+V5_PRODUCT_CATALOG["vks125"].update({"division":"Control cabinet","models":["VKS 125"],"source_url":"https://www.alfra.de/en/products/application-solutions-control-cabinet-and-control-engineering/profile-rail-and-cable-duct-cutters/vks-125/"})
+V5_PRODUCT_CATALOG["amte250"].update({"division":"Control cabinet","models":["AMTE 250"],"source_url":"https://www.alfra.de/en/products/application-solutions-control-cabinet-and-control-engineering/assembly-tables/amte-250/"})
+V5_PRODUCT_CATALOG["ap250"].update({
+    "name":"ALFRA AP stationary punching presses","division":"Control cabinet","category":"Stationary punching",
+    "models":["AP 250","AP 400","AP 600"],
+    "verified_fact":"Stationary punching machines for producing enclosure openings in control-cabinet housings, doors and mounting panels without pre-drilling.",
+    "verified_details":["ALFRA's stationary press family covers 250 mm, 400 mm and 600 mm projection classes.","Round, square and rectangular openings depend on the selected model and tooling."],
+    "source_label":"Official ALFRA stationary punching information","source_url":"https://www.alfra.de/en/products/application-solutions-control-cabinet-and-control-engineering/stationary-punching/",
+    "simple":"Enclosure/panel → position opening → stationary punch → fit component → continue assembly",
+    "likely_use":"A control-cabinet or enclosure manufacturer producing repeat openings in-house may use an AP press during enclosure preparation before components and wiring are fitted.",
+    "workflow":["Prepare enclosure/panel","Position required opening","Punch with matched tooling","Fit component","Continue assembly"],
+    "questions":["Are enclosure openings produced in-house?","What shapes and sizes are common?","What materials and thicknesses are typical?","What reach/projection is required?","Is this repeat production or bespoke work?"],
+    "unknowns":["Material/thickness","Opening sizes","Required projection/reach","Existing punching method","Tooling requirement","Volume"],
+    "do_not_claim":"Do not choose AP 250, AP 400 or AP 600 until the workpiece, required reach, material, thickness, opening and tooling are confirmed."
+})
+V5_PRODUCT_CATALOG["tml"].update({
+    "name":"ALFRA TML / TMH lifting magnets","division":"Magnet & lifting","category":"Magnetic lifting",
+    "models":["TMH 50","TML 100","TML 250","TML 500","TML 1000","TMH 50 R","TML 90 R","TML 400 R"],
+    "verified_fact":"Permanent magnetic lifting range for suitable ferromagnetic flat and round steel workpieces; model selection depends on the actual load and contact conditions.",
+    "verified_details":["Flat-steel range: TMH 50 and TML 100 / 250 / 500 / 1000.","Round-steel range: TMH 50 R, TML 90 R and TML 400 R."],
+    "source_label":"Official ALFRA lifting range","source_url":"https://www.alfra.de/en/products/application-solutions-magnetics-and-lifting-technology/lifting/",
+    "do_not_claim":"Never recommend a specific lifting magnet or safe lifting capacity from company research alone; validate the load, material, thickness, geometry, surface/contact conditions and lifting arrangement."
+})
+V5_PRODUCT_CATALOG["rotabest"].update({
+    "name":"ALFRA Rotabest magnetic drilling machines","division":"Steel & metal","category":"Magnetic drilling",
+    "models":["RB 35 B","RB 35/50 B Piccolo","RB 50 B","RB 80 B","RB 130 B","RB 50 B RL-E","RB 80 B RL-E","RB 100 B RL-E","RB 130 B RL-E","RB 35 SP","RB 50 SP","V 40"],
+    "verified_fact":"ALFRA Rotabest magnetic/core drilling machine range covering B-LINE electromagnet machines, RL-E right/left-rotation machines, SP-LINE permanent-magnet machines and V-LINE special-operation equipment.",
+    "verified_details":["B-LINE: RB 35 B, RB 35/50 B Piccolo, RB 50 B, RB 80 B, RB 130 B.","RL-E-LINE: RB 50 B RL-E, RB 80 B RL-E, RB 100 B RL-E, RB 130 B RL-E.","SP-LINE: RB 35 SP and RB 50 SP. V-LINE includes the V 40 special-operation drill."],
+    "source_label":"Official ALFRA drilling range","source_url":"https://www.alfra.de/en/products/application-solutions-steel-and-metal-construction/drills/",
+    "do_not_claim":"Do not recommend a specific Rotabest model until hole diameter, cutting depth, material, available mounting surface, access and required operations are confirmed."
+})
+
+_v502_add("bs160","ALFRA BS 160","Control cabinet","Busbar processing",["BS 160"],
+    "Hydraulic busbar bending and hole-punching device for conductor rails, covering larger busbar work than the BS 120 range.",
+    "https://www.alfra.de/en/products/application-solutions-control-cabinet-and-control-engineering/busbar-machining/bs-160/",
+    "Where a switchgear or power-distribution manufacturer processes larger busbar in-house, the BS 160 may fit the bending and punching stage after material is cut to length.",
+    ["busbar bending","busbar punching","busbar fabrication","busbar processing","copper busbar","aluminium busbar"],
+    ["busbar","bus bar","switchboard manufacturer","switchgear manufacturer","mcc panel","power distribution","panel builder"],
+    ["Switchgear & Control Panels","Data Centres, Racks & Technical Furniture"],
+    ["Production Manager","Manufacturing Manager","Engineering Manager","Operations Manager"],
+    ["Do you bend and punch busbar in-house?","What busbar widths and thicknesses are typical?","How are bends and connection holes produced today?","What volume do you process?"],
+    ["Busbar cut to length","Position workpiece","Bend and/or punch","Check finished conductor","Install into assembly"],["s125","bs120"])
+
+_v502_add("psg","ALFRA PSG profile rail cutters","Control cabinet","Profile rail cutting",["PSG Duo","PSG 4","PSG 5+"],
+    "Dedicated profile-rail cutting tools for precise, burr-free preparation of mounting rails used in control-cabinet work.",
+    "https://www.alfra.de/en/products/application-solutions-control-cabinet-and-control-engineering/profile-rail-and-cable-duct-cutters/",
+    "A panel or cabinet builder that cuts DIN/profile rails repeatedly could use a PSG cutter during mounting-plate preparation before component assembly.",
+    ["din rail cutting","profile rail cutting","mounting rail cutting","din rail","mounting rail","control cabinet assembly"],
+    ["panel builder","control panel manufacturer","switchboard manufacturer","control cabinet","electrical enclosure","panel wiring"],
+    ["Switchgear & Control Panels","Electrical Enclosures & Cabinets","Data Centres, Racks & Technical Furniture"],
+    ["Production Manager","Panel Shop Manager","Manufacturing Manager","Engineering Manager"],
+    ["Which mounting/profile rails do you cut in-house?","What are you using to cut them today?","Which profiles are most common?","How repetitive is the task?"],
+    ["Select rail","Measure required length","Cut rail","Fit to mounting plate","Mount components"],["vks125","amte250"])
+
+_v502_add("amt150","ALFRA AMT 150","Control cabinet","Cabinet assembly",["AMT 150"],
+    "Adjustable assembly table for ergonomic control-cabinet and mounting-panel assembly.",
+    "https://www.alfra.de/en/products/application-solutions-control-cabinet-and-control-engineering/assembly-tables/amt-150/",
+    "A panel builder may use the AMT 150 to support and position mounting plates or cabinet workpieces while components, ducting and wiring are fitted.",
+    ["control cabinet assembly","mounting plate assembly","panel assembly","cabinet assembly","panel wiring"],
+    ["control panel manufacturer","switchboard manufacturer","panel builder","electrical enclosure manufacturer","server rack manufacturer"],
+    ["Switchgear & Control Panels","Electrical Enclosures & Cabinets","Data Centres, Racks & Technical Furniture"],
+    ["Production Manager","Manufacturing Manager","Operations Manager","Engineering Manager"],
+    ["How are mounting plates or cabinets supported during assembly?","What size and weight are typical workpieces?","How repetitive is the assembly process?"],
+    ["Load workpiece","Secure on table","Adjust work angle","Fit components / wiring","Complete assembly"],["amte250","vks125"])
+
+_v502_add("mobile_punch","ALFRA mobile sheet-metal punching","Control cabinet","Mobile punching",["MonoCut","TriCut","TriCut+","FormCut","FormCut+","Sanitary hole puncher","Sub-Min-D hole puncher","Special forms"],
+    "ALFRA mobile sheet-metal punch range for producing round and shaped openings in control-cabinet and enclosure work.",
+    "https://www.alfra.de/en/products/application-solutions-control-cabinet-and-control-engineering/mobile-punching/",
+    "A panel builder, enclosure fabricator or electrical assembly team may use mobile punches to create component, gland, connector or control openings in housings and doors.",
+    ["sheet metal punching","enclosure cutout","enclosure cut-out","cabinet punching","panel punching","gland holes","connector cutout"],
+    ["control panel manufacturer","panel builder","switchboard manufacturer","electrical enclosure","control cabinet","panel modification"],
+    ["Switchgear & Control Panels","Electrical Enclosures & Cabinets","Data Centres, Racks & Technical Furniture"],
+    ["Production Manager","Panel Shop Manager","Manufacturing Manager","Electrical Supervisor","Engineering Manager"],
+    ["What enclosure openings do you make in-house?","Which shapes and sizes are common?","What materials and thicknesses do you punch?","How are openings produced today?"],
+    ["Identify opening","Mark / position","Fit correct punch/tool","Punch opening","Install component"],["hand_punch","cabinet_hydraulics","ap250"])
+
+_v502_add("hand_punch","ALFRA hydraulic hand punches","Control cabinet","Mobile punching",["ALFRA Compact","CompactCombi 90°","Compact Flex","Akku-Compact Flex"],
+    "Manual and hydraulic hand-punch systems for creating enclosure openings in fitted or workshop control-cabinet applications.",
+    "https://www.alfra.de/en/products/application-solutions-control-cabinet-and-control-engineering/mobile-punching/",
+    "A control-panel builder or service team may use a hand punch where enclosure openings need to be made at the bench or on an already assembled cabinet.",
+    ["hand punch","hydraulic punch","cabinet modification","enclosure punching","panel cutout","sheet metal punch"],
+    ["panel builder","control panel","switchboard","electrical enclosure","control cabinet service"],
+    ["Switchgear & Control Panels","Electrical Enclosures & Cabinets","Data Centres, Racks & Technical Furniture"],
+    ["Production Manager","Panel Shop Manager","Electrical Supervisor","Maintenance Manager","Engineering Manager"],
+    ["Do you create openings in already assembled cabinets?","What shapes and material thicknesses are typical?","Do you need bench, hand-hydraulic or battery operation?"],
+    ["Confirm opening","Fit punch/die","Position hand tool","Punch opening","Fit component"],["mobile_punch","cabinet_hydraulics"])
+
+_v502_add("cabinet_hydraulics","ALFRA control-cabinet hydraulic pumps & cylinders","Control cabinet","Pumps and accessories",["AHP C","AHP S","LHP 700","Foot pump","SKP-1","SKP-1 Mini","Notching pliers"],
+    "Hydraulic power units, cylinders and related tools used to drive or support ALFRA control-cabinet punching and processing applications.",
+    "https://www.alfra.de/en/products/application-solutions-control-cabinet-and-control-engineering/pumps-and-accessories/",
+    "A cabinet or panel shop already using hydraulic punching or busbar equipment may need the appropriate pump, cylinder or accessory as part of the processing system.",
+    ["hydraulic punching","hydraulic cylinder","hydraulic pump","busbar processing","sheet metal punching"],
+    ["control panel manufacturer","panel builder","switchboard manufacturer","electrical enclosure manufacturer"],
+    ["Switchgear & Control Panels","Electrical Enclosures & Cabinets"],
+    ["Production Manager","Maintenance Manager","Engineering Manager","Purchasing Manager"],
+    ["Which hydraulic cabinet-processing tools are you running?","What power source do you use today?","Is this a new system, replacement or added capacity?"],
+    ["Identify hydraulic application","Confirm compatible tool","Connect pump/cylinder","Perform operation","Maintain system"],["mobile_punch","hand_punch","bs120","s125","ap250"])
+
+_v502_add("aps","ALFRA APS hydraulic steel punching system","Steel & metal","Steel punching",["APS 70","APS 120","AHP-M","AHP-L","Service-Boy","APS Go"],
+    "Portable hydraulic punching system for holes and slots in heavy steelwork, centred on APS 70 and APS 120 punch frames with matching pumps and handling accessories.",
+    "https://www.alfra.de/en/products/application-solutions-steel-and-metal-construction/punching/",
+    "Structural steel, bridge, tank, crane or heavy-fabrication businesses may use APS equipment for repeat hole or slot punching where the application is technically suitable.",
+    ["steel punching","beam punching","t beam punching","hydraulic punch","structural steel holes","bridge fabrication","crane fabrication"],
+    ["structural steel","heavy fabrication","steelwork contractor","metal fabrication","tank fabrication","engineering workshop"],
+    ["Metal Fabrication & Steelwork","Marine, Shipbuilding & Offshore","Mechanical & General Engineering"],
+    ["Fabrication Manager","Production Manager","Workshop Manager","Engineering Manager","Purchasing Manager"],
+    ["What steel sections are you punching?","What material thickness and hole/slot sizes are required?","What edge/jaw reach do you need?","How are holes produced today?"],
+    ["Confirm steel job","Position punch frame","Align hole/slot","Punch","Repeat / continue fabrication"],["rotabest"])
+
+_v502_add("holesaws","ALFRA hole saws & Milford sabre blades","Steel & metal","Cutting tools",["TCT Hole Saws – Short Type","TCT Hole Saws – Long Type","TCT Hole Saws – MBS-Light","TCT Hole Saws – MBS-Pro","HSS Bi-Metal Hole Saws","Multi-Step drills","Original Milford Sabre Saw Blades"],
+    "ALFRA cutting-tool range covering carbide and HSS bi-metal hole saws, multi-step drills and Milford sabre saw blades for supported materials.",
+    "https://www.alfra.de/en/products/application-solutions-steel-and-metal-construction/cutting-tools/",
+    "Fabrication, installation and maintenance teams may use ALFRA hole saws or sabre blades for repeat cutting and opening work where the material and machine suit the chosen tool.",
+    ["hole saw","sabre saw","reciprocating saw","production cutting","pipe cutting","sheet metal holes"],
+    ["metal fabrication","engineering workshop","maintenance","pipe fabrication","steelwork contractor"],
+    ["Metal Fabrication & Steelwork","Mechanical & General Engineering","Marine, Shipbuilding & Offshore","Pipe Fabrication & Process Engineering","Tool Hire & Industrial Resellers"],
+    ["Workshop Manager","Production Manager","Maintenance Manager","Purchasing Manager"],
+    ["What materials are you cutting?","Which hole/cut sizes are common?","What drill or saw platform is used?","Is this production or occasional work?"],
+    ["Identify material/cut","Select tool","Set up drill/saw","Cut","Inspect / finish"],["core_drills","rotabest"])
+
+_v502_add("core_drills","ALFRA core drills & drilling cutters","Steel & metal","Drilling consumables",["HSS core drills","TCT core drills"],
+    "ALFRA HSS and TCT core-drill ranges for use with suitable magnetic/core drilling equipment.",
+    "https://www.alfra.de/en/products/application-solutions-steel-and-metal-construction/drills/",
+    "Businesses running magnetic drills can be recurring users of matched HSS/TCT core drills for steel hole-making.",
+    ["core drill","annular cutter","mag drill cutters","magnetic drill","steel drilling"],
+    ["structural steel","metal fabrication","engineering workshop","steelwork contractor","marine engineering"],
+    ["Metal Fabrication & Steelwork","Marine, Shipbuilding & Offshore","Pipe Fabrication & Process Engineering","Mechanical & General Engineering","Tool Hire & Industrial Resellers"],
+    ["Workshop Manager","Production Manager","Purchasing Manager","Stores Manager"],
+    ["Which magnetic drills are you running?","What cutter diameters and depths are common?","Which materials do you drill?","What is your cutter consumption?"],
+    ["Confirm hole/material","Select cutter","Fit cutter","Core drill","Replace / stock consumables"],["rotabest"])
+
+_v502_add("drill_accessories","ALFRA magnetic-drilling accessories","Steel & metal","Drilling accessories",["Rotabest drilling accessories"],
+    "Accessory range supporting ALFRA magnetic/core drilling machines and drilling operations.",
+    "https://www.alfra.de/en/products/application-solutions-steel-and-metal-construction/drills/",
+    "Existing magnetic-drill users can be recurring accessory customers where an ALFRA accessory matches their machine and drilling task.",
+    ["magnetic drill","mag drill","rotabest","core drilling"],
+    ["structural steel","metal fabrication","engineering workshop","steelwork contractor"],
+    ["Metal Fabrication & Steelwork","Marine, Shipbuilding & Offshore","Pipe Fabrication & Process Engineering","Mechanical & General Engineering","Tool Hire & Industrial Resellers"],
+    ["Workshop Manager","Production Manager","Purchasing Manager","Stores Manager"],
+    ["Which magnetic drill models are you using?","Which drilling operations or accessories are needed?","Is this replacement, additional tooling or a new application?"],
+    ["Identify machine/task","Confirm accessory compatibility","Fit accessory","Perform drilling operation"],["rotabest","core_drills"])
+
+_v502_add("tmc","ALFRA positioning & fixing magnets","Magnet & lifting","Positioning and fixing",["TMC 70","TMC 300","TMC 300 R","TMA 600 adjustable welding angle"],
+    "Permanent magnetic clamps and positioning aids for holding, positioning and welding-related work on suitable ferromagnetic parts.",
+    "https://www.alfra.de/en/products/application-solutions-magnetics-and-lifting-technology/positioning-and-fixing/",
+    "Fabricators and welders may use TMC/TMA magnets to hold or position ferromagnetic sheets, plates, round workpieces or angles during setup and welding.",
+    ["welding fixture","magnetic clamp","welding angle","positioning steel","pipe welding","fabrication jig"],
+    ["welder","metal fabrication","steel fabricator","shipyard","pipe fabrication","engineering workshop"],
+    ["Metal Fabrication & Steelwork","Marine, Shipbuilding & Offshore","Pipe Fabrication & Process Engineering","Mechanical & General Engineering"],
+    ["Workshop Manager","Welding Supervisor","Production Manager","Fabrication Manager"],
+    ["What parts are you holding or positioning?","Are they flat or round?","What thickness/geometry is typical?","What fixtures or clamps are used today?"],
+    ["Identify workpiece","Choose / validate magnetic aid","Position parts","Hold during operation","Release"],["tml","spv"])
+
+_v502_add("spv","ALFRA SP-V universal magnetic drill stand","Magnet & lifting","Magnetic drill stand",["SP-V"],
+    "Universal permanent-magnet drill stand designed to provide a stable drilling platform for compatible power tools on suitable ferromagnetic material.",
+    "https://www.alfra.de/en/products/application-solutions-magnetics-and-lifting-technology/magnetic-drill-stand/",
+    "Metalworking, site and shipyard teams may use the SP-V where they need a portable drilling stand with a permanent magnetic base and compatible drill.",
+    ["magnetic drill stand","portable drill stand","drilling thin steel","shipyard drilling"],
+    ["metal fabrication","steelwork contractor","marine engineering","maintenance"],
+    ["Metal Fabrication & Steelwork","Marine, Shipbuilding & Offshore","Mechanical & General Engineering"],
+    ["Workshop Manager","Site Manager","Maintenance Manager","Engineering Manager"],
+    ["Which drill would you mount in the stand?","What material thickness and geometry do you work on?","Is access restricted?","How do you currently support the drill?"],
+    ["Confirm drill/workpiece","Fit compatible drill","Position stand","Drill","Release / reposition"],["rotabest"])
+
+_v502_add("chip_removal","ALFRA magnetic chip removal","Magnet & lifting","Chip removal",["Magnetic Chip Remover","Magnetic Chip Brush"],
+    "Magnetic tools for collecting ferromagnetic swarf, chips and small metallic debris in workshops and around drilling operations.",
+    "https://www.alfra.de/en/products/application-solutions-magnetics-and-lifting-technology/chip-removal/",
+    "Workshops producing ferromagnetic drilling or machining chips may use magnetic chip-removal tools as a simple housekeeping and clean-up aid.",
+    ["metal swarf","steel chips","drilling chips","machine shop","magnetic chip"],
+    ["engineering workshop","metal fabrication","magnetic drilling","machining"],
+    ["Metal Fabrication & Steelwork","Mechanical & General Engineering","Marine, Shipbuilding & Offshore","Tool Hire & Industrial Resellers"],
+    ["Workshop Manager","Production Manager","Health & Safety Manager","Stores Manager"],
+    ["Do you regularly generate ferromagnetic chips or swarf?","How is swarf collected today?","Is the need around drilling, machining or general workshop clean-up?"],
+    ["Finish drilling/machining","Collect chips","Transfer debris","Release / clean tool"],["rotabest","core_drills"])
+
+for _pid,_p in V5_PRODUCT_CATALOG.items():
+    _p.setdefault("division","Other")
+    _p.setdefault("models",[_p.get("name","")])
+    _p.setdefault("range_note","")

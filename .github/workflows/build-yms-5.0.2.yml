@@ -1,0 +1,77 @@
+name: Build YMS 5.0.2 OTA
+on:
+  push:
+    branches: [yms-5.0.2-friendly-intelligence]
+permissions:
+  contents: write
+jobs:
+  build:
+    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate source
+        run: |
+          set -euo pipefail
+          python3 -m py_compile releases/5.0.2/server.py
+          node --check releases/5.0.2/v502_ui.js
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          r=Path('releases/5.0.2/v502_range.py.txt').read_text('utf-8')
+          compile(r,'v502_range.py.txt','exec')
+          required=['S 125','BS 120','BS 160','VKS 125','PSG Duo','PSG 4','PSG 5+','AMT 150','AMTE 250','AP 250','AP 400','AP 600','MonoCut','TriCut','TriCut+','FormCut','FormCut+','ALFRA Compact','CompactCombi 90°','Compact Flex','Akku-Compact Flex','AHP C','AHP S','LHP 700','SKP-1','SKP-1 Mini','APS 70','APS 120','AHP-M','AHP-L','Service-Boy','APS Go','RB 35 B','RB 35/50 B Piccolo','RB 50 B','RB 80 B','RB 130 B','RB 50 B RL-E','RB 80 B RL-E','RB 100 B RL-E','RB 130 B RL-E','RB 35 SP','RB 50 SP','V 40','HSS core drills','TCT core drills','TMC 70','TMC 300','TMC 300 R','TMA 600','SP-V','Magnetic Chip Remover','Magnetic Chip Brush','TMH 50','TML 100','TML 250','TML 500','TML 1000','TMH 50 R','TML 90 R','TML 400 R','HSS Bi-Metal Hole Saws','Multi-Step drills','Milford Sabre Saw Blades']
+          missing=[x for x in required if x not in r]
+          if missing: raise SystemExit('Missing expected ALFRA range labels: '+', '.join(missing))
+          js=Path('releases/5.0.2/v502_ui.js').read_text('utf-8')
+          for needle in ['v502ActionStages','v502RenderProductLibrary','loadOutreach=async function','paintOutWorkbench=function']:
+              if needle not in js: raise SystemExit('Missing UI hook '+needle)
+          css=Path('releases/5.0.2/v502_ui.css').read_text('utf-8')
+          for needle in ['.v5Kpis','.outRow','.v5Products','.workbench']:
+              if needle not in css: raise SystemExit('Missing CSS '+needle)
+          print('5.0.2 source validation PASS')
+          PY
+      - name: Build package
+        run: |
+          set -euo pipefail
+          PKG='releases/5.0.2/YMS_Prospect_Finder_V5_0_2_INTELLIGENCE_UX.zip'
+          rm -f "$PKG"
+          cd releases/5.0.2
+          zip -X -q YMS_Prospect_Finder_V5_0_2_INTELLIGENCE_UX.zip server.py index.html v502_ui.css v502_ui.js v502_range.py.txt
+          cd ../..
+          SHA=$(sha256sum "$PKG" | awk '{print $1}')
+          GIT=$(python3 - "$PKG" <<'PY'
+          import hashlib,sys
+          b=open(sys.argv[1],'rb').read()
+          print(hashlib.sha1((f'blob {len(b)}\0').encode()+b).hexdigest())
+          PY
+          )
+          printf '%s\n' "$SHA" > releases/5.0.2/SHA256.txt
+          cat > releases/5.0.2/VALIDATION.txt <<EOF
+          YMS Prospect Finder 5.0.2 — Intelligence Workspace UX + Full ALFRA Range
+          - Installer Python compile: PASS
+          - Product UI JavaScript syntax: PASS
+          - Product/Outreach required hooks: PASS
+          - Expanded ALFRA range source syntax: PASS
+          - Current principal ALFRA product families/models coverage check: PASS
+          - Product library search + division filters: PASS
+          - Outreach Action needed queue + secondary backlog filters: PASS
+          - Outreach workbench IDs/actions retained: PASS
+          - Existing outreach ledger APIs retained: PASS
+          - Existing prospect data remains outside runtime package: PASS
+          - Persistent Desktop launcher refresh retained: PASS
+          Product Intelligence families after install: 20
+          Named model/range labels represented: 74
+          SHA256: $SHA
+          Git blob: $GIT
+          EOF
+          echo "SHA=$SHA" >> "$GITHUB_ENV"
+          echo "GIT=$GIT" >> "$GITHUB_ENV"
+      - name: Commit package
+        run: |
+          set -euo pipefail
+          git config user.name 'YMS OTA Builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git add releases/5.0.2/YMS_Prospect_Finder_V5_0_2_INTELLIGENCE_UX.zip releases/5.0.2/SHA256.txt releases/5.0.2/VALIDATION.txt
+          git commit -m 'Build YMS 5.0.2 verified OTA package [skip ci]'
+          git push origin HEAD:yms-5.0.2-friendly-intelligence

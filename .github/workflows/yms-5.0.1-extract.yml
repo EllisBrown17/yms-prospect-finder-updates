@@ -1,0 +1,28 @@
+name: YMS 5.0.1 extract package source
+on:
+  push:
+    branches: [yms-5.0.1-ui-syntax-hotfix]
+permissions:
+  contents: write
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: yms-5.0.1-ui-syntax-hotfix
+      - name: Extract 5.0.0 installer source
+        run: |
+          set -e
+          mkdir -p releases/5.0.1/source
+          unzip -o releases/5.0.0/YMS_Prospect_Finder_V5_0_0_PRODUCT_OUTREACH_INTELLIGENCE.zip -d /tmp/yms500
+          cp /tmp/yms500/server.py releases/5.0.1/source/server_500_installer.py
+          cp /tmp/yms500/index.html releases/5.0.1/source/index_500_payload.html
+          python3 -m py_compile releases/5.0.1/source/server_500_installer.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add releases/5.0.1/source
+          if ! git diff --cached --quiet; then
+            git commit -m 'Extract YMS 5.0.0 installer source for 5.0.1 hotfix [skip ci]'
+            git push origin HEAD:yms-5.0.1-ui-syntax-hotfix
+          fi

@@ -1,0 +1,32 @@
+     <button type="button" class="brand-theme-choice" data-brand-theme="business"><span class="theme-dot business"></span><b>Business brand</b><small>Use their existing identity</small></button>
++                  <button type="button" class="brand-theme-choice" data-brand-theme="category"><span class="theme-dot category"></span><b>Category fit</b><small>Industry-aware palette</small></button>
++                  <button type="button" class="brand-theme-choice" data-brand-theme="northbrown"><span class="theme-dot northbrown"></span><b>NORTHBROWN</b><small>Charcoal + signature lime</small></button>
++                  <button type="button" class="brand-theme-choice" data-brand-theme="light"><span class="theme-dot light"></span><b>Clean light</b><small>Bright premium direction</small></button>
++                </div>
++                <div id="builderBrandThemeStatus" class="brand-theme-status">Custom colours</div>
++              </div>
+               <div class="builder-group"><div class="section-label">DESIGN DIRECTION</div>
+                 <label>Template<select id="bTemplate"><option value="modern">Modern</option><option value="trade">Trades / Home services</option><option value="professional">Professional</option><option value="care">Care / Funeral / Wellbeing</option><option value="hospitality">Hospitality</option><option value="studio">Salon / Studio</option><option value="retail">Retail</option></select></label>
+                 <div class="builder-colour-grid"><label>Accent<input type="color" id="bAccent"></label><label>Background<input type="color" id="bBackground"></label><label>Surface<input type="color" id="bSurface"></label><label>Text<input type="color" id="bTextColor"></label></div>
+@@ -411,7 +421,11 @@
+           <div class="brand-preview"><div class="brand-mark big">N<span>B</span><i></i></div><div class="brand-word big-word">NORTHBROWN<span>.</span></div></div>
+           <h3>Built to feel like your studio.</h3>
+           <p>Charcoal surfaces, off-white typography and the signature lime accent carry the NORTHBROWN identity through the software without turning it into a gimmick.</p>
+-          <img src="/static/brand-reference.png" alt="Northbrown brand reference" class="brand-reference">
++          <div class="brand-theme-board" aria-label="NORTHBROWN brand theme reference">
++            <div class="brand-theme-logo"><img src="/static/NORTHBROWN_ICON.png?v=204-final" alt="NORTHBROWN logo"><div><strong>NORTHBROWN.</strong><small>WEB DESIGN STUDIO</small></div></div>
++            <div class="brand-theme-swatch-row"><span class="swatch charcoal"></span><span class="swatch surface"></span><span class="swatch offwhite"></span><span class="swatch lime"></span></div>
++            <div class="brand-theme-copy"><b>Charcoal · Off-white · Lime</b><small>Premium, restrained and unmistakably NORTHBROWN.</small></div>
++          </div>
+         </div>
+       </div>
+     </section>
+@@ -522,7 +536,7 @@
+ <div id="scanProgressPanel" class="scan-progress-panel" aria-live="polite">
+   <div class="scan-progress-head">
+     <div><div class="eyebrow lime">SCAN INTELLIGENCE</div><strong id="scanProgressTitle">Preparing scan…</strong><span id="scanModeBadge" class="scan-mode-badge">SMART</span></div>
+-    <div class="scan-head-actions"><div class="scan-time-grid"><div class="scan-timer"><small>ELAPSED</small><strong id="scanElapsed">00:00</strong></div><div class="scan-timer"><small>ETA</small><strong id="scanEta">—</strong></div></div><button id="scanDismissBtn" class="scan-dismiss" title="Close Scan Intelligence" hidden>×</button></div>
++    <div class="scan-head-actions"><div class="scan-time-grid"><div class="scan-timer"><small>ELAPSED</small><strong id="scanElapsed">00:00</strong></div><div class="scan-timer"><small>ETA</small><strong id="scanEta">—</strong></div></div><button id="scanCollapseBtn" class="scan-collapse" title="Collapse Scan Intelligence" aria-expanded="true">−</button><button id="scanDismissBtn" class="scan-dismiss" title="Close Scan Intelligence" hidden>×</button></div>
+   </div>
+   <div class="scan-progress-track"><i id="scanProgressFill"></i></div>
+   <div class="scan-progress-meta"><span id="scanProgressCount">0 / 0</span><span id="scanProgressPercent">0%</span></div>

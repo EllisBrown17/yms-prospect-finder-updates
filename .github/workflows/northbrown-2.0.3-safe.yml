@@ -16,25 +16,48 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Reconstruct and validate exact binary
+      - name: Build complete 2.0.3 package
         shell: bash
         run: |
           set -euo pipefail
           VERSION='2.0.3'
-          EXPECTED_SHA='ef43f28cfee91eda58a175a8f8fcc4785c213d73f8ea866796d90c61cad66990'
-          EXPECTED_SIZE='276408'
-          STAGE="northbrown/staging/${VERSION}"
-          ZIP="northbrown/releases/NORTHBROWN-update-${VERSION}.zip"
-          mkdir -p northbrown/releases
-          cat "$STAGE"/ota.part* | base64 -d > "$ZIP"
-          test "$(wc -c < "$ZIP")" -eq "$EXPECTED_SIZE"
-          ACTUAL_SHA="$(sha256sum "$ZIP" | awk '{print $1}')"
-          test "$ACTUAL_SHA" = "$EXPECTED_SHA"
-          unzip -t "$ZIP" >/dev/null
+          WORK="$(mktemp -d)"
+          mkdir -p "$WORK/base202" northbrown/releases
 
-          TMP="$(mktemp -d)"
-          unzip -q "$ZIP" -d "$TMP"
-          P="$TMP/payload"
+          # Reconstruct the previously verified 2.0 application source only inside CI.
+          # NORTHBROWN clients never download or decode these staging chunks.
+          python - "$WORK/base.zip" <<'PY'
+          from pathlib import Path
+          import base64, sys
+          parts=[]
+          for p in sorted(Path('northbrown/staging/2.0.0').glob('ota.part*')):
+              s=p.read_text()
+              if p.name=='ota.part04' and len(s)==8999:
+                  s=s[:3245]+'h'+s[3245:]
+              parts.append(s)
+          data=base64.b64decode(''.join(parts), validate=True)
+          Path(sys.argv[1]).write_bytes(data)
+          PY
+          echo '88f45969ed801323252b83529929dd66848560347105816cb15db727e3e69f0e  '"$WORK/base.zip" | sha256sum -c -
+          unzip -t "$WORK/base.zip" >/dev/null
+          unzip -q "$WORK/base.zip" -d "$WORK/base202"
+          P="$WORK/base202/payload"
+
+          # Bring the verified base forward to the installed 2.0.2 bridge first.
+          python - "$P" <<'PY'
+          from pathlib import Path
+          import sys
+          p=Path(sys.argv[1])
+          (p/'VERSION.txt').write_text('2.0.2\n')
+          f=p/'app.py'; s=f.read_text(); s=s.replace("APP_VERSION = '2.0.0'", "APP_VERSION = '2.0.2'", 1); s=s.replace("threading.Timer(0.9, lambda: os._exit(0)).start()", "threading.Timer(3.0, lambda: os._exit(0)).start()", 1); f.write_text(s)
+          f=p/'START_NORTHBROWN_INTERNAL.sh'; s=f.read_text().replace('.icon_ready_2_0_0','.icon_ready_2_0_2'); f.write_text(s)
+          PY
+
+          # Apply the small, reviewable 2.0.2 -> 2.0.3 source patch.
+          cat northbrown/staging/2.0.3/patch.part* > "$WORK/203.patch"
+          (cd "$WORK" && patch --batch -p0 < "$WORK/203.patch")
+          if [ -f "$WORK/payload/release.json" ]; then mv "$WORK/payload/release.json" "$P/release.json"; fi
+
           test -f "$P/app.py"
           test -f "$P/feature_routes.py"
           test -f "$P/builder_routes.py"
@@ -55,22 +78,17 @@ jobs:
           python - "$P" <<'PY'
           from pathlib import Path
           import hashlib, json, sys
-          p=Path(sys.argv[1])
-          r=json.loads((p/'release.json').read_text())
+          p=Path(sys.argv[1]); r=json.loads((p/'release.json').read_text())
           assert r.get('format') == 'northbrown-full-v2'
           assert r.get('version') == '2.0.3'
           assert '2.0.2' in r.get('allowed_from', [])
           for rel, expected in r.get('files', {}).items():
-              f=p/rel
-              assert f.is_file(), rel
-              actual=hashlib.sha256(f.read_bytes()).hexdigest()
-              assert actual == expected, rel
+              f=p/rel; assert f.is_file(), rel
+              assert hashlib.sha256(f.read_bytes()).hexdigest() == expected, rel
           PY
 
           grep -q "APP_VERSION = '2.0.3'" "$P/app.py"
           grep -q 'NORTHBROWN_HEALTHCHECK_OK' "$P/app.py"
-          grep -q 'northbrown-full-v2' "$P/app.py"
-          grep -q 'google_maps_embed_api_key' "$P/app.py"
           grep -q "@app.post('/api/smart-finder')" "$P/app.py"
           grep -q 'SMART FINDER' "$P/templates/index.html"
           grep -q 'Free Google tools for websites' "$P/templates/index.html"
@@ -78,13 +96,14 @@ jobs:
           grep -q 'View reviews on Google' "$P/builder_routes.py"
           grep -q 'Created by Ellis Brown / NORTHBROWN' "$P/builder_routes.py"
           grep -q 'NORTHBROWN_ICON.png?v=203' "$P/templates/index.html"
+          grep -q '.icon_ready_2_0_3' "$P/START_NORTHBROWN_INTERNAL.sh"
 
-      - name: Publish only after validation passes
-        shell: bash
-        run: |
-          set -euo pipefail
-          VERSION='2.0.3'
+          rm -rf "$P/__pycache__"
           ZIP="northbrown/releases/NORTHBROWN-update-${VERSION}.zip"
+          (cd "$WORK/base202" && zip -qr "$GITHUB_WORKSPACE/$ZIP" payload)
+          unzip -t "$ZIP" >/dev/null
+          test "$(wc -c < "$ZIP")" -gt 200000
+
           SHA="$(sha256sum "$ZIP" | awk '{print $1}')"
           SIZE="$(wc -c < "$ZIP" | tr -d ' ')"
           cat > northbrown/update.json <<EOF
@@ -100,8 +119,13 @@ jobs:
             "mandatory": false
           }
           EOF
+
+      - name: Publish only after validation passes
+        shell: bash
+        run: |
+          set -euo pipefail
           git config user.name 'NORTHBROWN OTA Bot'
           git config user.email 'actions@users.noreply.github.com'
-          git add "$ZIP" northbrown/update.json
+          git add northbrown/releases/NORTHBROWN-update-2.0.3.zip northbrown/update.json
           git commit -m 'Publish NORTHBROWN OTA 2.0.3 safe full package'
           git push

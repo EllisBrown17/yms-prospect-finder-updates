@@ -1,0 +1,99 @@
+rts injuries','Support for sports and activity-related injuries.'),('Rehabilitation','Rehabilitation-focused care and recovery information.'),('Pain & mobility','Treatment information around movement and pain.'),('Appointments','Simple appointment and enquiry routes.')],
++         'hero':'Move better. Feel more confident.', 'services_title':'Physiotherapy services', 'about':'A local physiotherapy business focused on clear treatment information and a simple path to booking.'},
++        {'key':'restaurant','signals':('restaurant','bistro','eatery'), 'label':'Restaurant','terms':('menu','lunch','dinner','food','drink','booking','table','restaurant'),
++         'services':[('Food','A clear route into the food offering and menu.'),('Drinks','Drinks information presented alongside the menu.'),('Bookings','Table booking made easy to find.'),('Opening times','Key visit information shown prominently.'),('Location','Directions and location information kept simple.'),('Enquiries','A straightforward route for general or group enquiries.')],
++         'hero':'Good food. Easy to book.', 'services_title':'Eat, drink & visit', 'about':'A local restaurant website focused on the menu, atmosphere, location and an easy booking journey.'},
++        {'key':'cafe','signals':('cafe','coffee shop','coffee house'), 'label':'Cafe','terms':('coffee','breakfast','brunch','lunch','cake','menu','food','drink'),
++         'services':[('Coffee & drinks','The drinks offer made clear at a glance.'),('Breakfast & brunch','Breakfast and brunch information presented simply.'),('Lunch','Lunch options and menu links kept easy to find.'),('Cakes & treats','A visual space for sweet treats and daily favourites.'),('Visit us','Opening, location and directions in one place.'),('Enquiries','A clear route for general questions and group enquiries.')],
++         'hero':'Coffee, food and a reason to stay awhile.', 'services_title':'What we serve', 'about':'A local cafe website built around the menu, visuals, location and visit information.'},
++        {'key':'dog_groomer','signals':('dog groomer','dog grooming','pet groomer','pet grooming'), 'label':'Dog groomer','terms':('groom','dog','bath','trim','clip','nail','coat','deshed'),
++         'services':[('Full grooms','A complete grooming appointment for coat care and finish.'),('Bath & tidy','Bathing and tidy-up appointments presented clearly.'),('Coat trimming','Coat trimming and shaping information.'),('Nail care','Nail-care appointments and add-ons where offered.'),('De-shedding','Coat-care options for shedding where relevant.'),('Appointments','Easy booking and enquiry information for pet owners.')],
++         'hero':'A cleaner, tidier, happier coat.', 'services_title':'Dog grooming services', 'about':'A local dog grooming business with clear service information and an easy booking journey.'},
++        {'key':'florist','signals':('florist','flower shop'), 'label':'Florist','terms':('flower','bouquet','wedding','funeral','arrangement','delivery','floral'),
++         'services':[('Bouquets','Fresh bouquet options presented clearly.'),('Occasion flowers','Flowers for birthdays, celebrations and other occasions.'),('Wedding flowers','A clear route to discuss wedding flowers.'),('Funeral flowers','Thoughtful floral arrangements for funeral and remembrance needs.'),('Floral arrangements','Made-to-order arrangement enquiries.'),('Collection & delivery','Practical collection or delivery information where offered.')],
++         'hero':'Flowers for the moments that matter.', 'services_title':'Flowers & arrangements', 'about':'A local florist website focused on visual work, key occasions and a simple order or enquiry route.'},
++    ]
++
++    GENERIC_BAD_SERVICE_TERMS = ('advice & support','get in touch','contact us','learn more','read more','welcome','about us','opening hours','reviews','testimonials','gallery','location','our team','website design','seo','marketing','strategy')
++
++    def _detect_business_type(business):
++        text = ' '.join(str(business.get(k) or '') for k in ('category','name','source_description')).lower()
++        for pb in CATEGORY_PLAYBOOKS:
++            if any(sig in text for sig in pb['signals']):
++                return pb
++        return None
++
++    def _clean_source_description(value, business=None):
++        text = ' '.join((value or '').split()).strip()
++        if not text:
++            return ''
++        low = text.lower()
++        boilerplate = ('for more details, please visit our website','please visit our website','visit our website:','serving customers in','located at ')
++        if 'http://' in low or 'https://' in low or any(x in low for x in boilerplate):
++            return ''
++        if business:
++            name=(business.get('name') or '').lower().strip()
++            address=(business.get('address') or '').lower().strip()
++            if name and low.startswith(name) and address and address in low and len(text) < 320:
++                return ''
++        return text[:900]
++
++    def _service_name_clean(value):
++        return re.sub(r'\s+',' ',str(value or '')).strip(' \t\r\n-|•:')[:80]
++
++    def _service_is_relevant(name, playbook):
++        low = _service_name_clean(name).lower()
++        if not low or len(low) < 3 or any(x in low for x in GENERIC_BAD_SERVICE_TERMS):
++            return False
++        if re.search(r'https?://|www\.|\b(?:bd|hd|ls|wf)\d{1,2}\b', low):
++            return False
++        if playbook:
++            return any(term in low for term in playbook['terms'])
++        return True
++
++    def _category_service_objects(business):
++        playbook = _detect_business_type(business)
++        raw = business.get('source_services') or []
++        names=[]
++        for item in raw:
++            name=_service_name_clean(item)
++            if _service_is_relevant(name, playbook) and name.lower() not in [x.lower() for x in names]:
++                names.append(name)
++            if len(names)>=6: break
++        out=[]
++        if playbook:
++            for name in names:
++                out.append({'name':name,'description':f'{name} information and booking or enquiry details, kept clear and easy to find.'})
++            for name,desc in playbook['services']:
++                if len(out)>=6: break
++                if not any(name.lower()==x['name'].lower() for x in out):
++                    out.append({'name':name,'description':desc})
++        else:
++            for name in names[:6]:
++                out.append({'name':name,'description':f'Clear information about {name.lower()} and the next step for customers.'})
++        if not out:
++            category=(business.get('category') or 'service').strip().title()
++            out=[{'name':category,'description':'Clear information about the main service and how to make an enquiry.'}, {'name':'Enquiries','description':'A simple route for customers to ask a question or request more information.'}]
++        return out[:6]
++
++    def _safe_about_copy(business):
++        name=(business.get('name') or 'This business').strip()
++        town=(business.get('town') or '').strip()
++        address=(business.get('address') or '').strip()
++        playbook=_detect_business_type(business)
++        clean=_clean_source_description(business.get('source_description') or '', business)
++        if clean:
++            return clean
++        where=''
++        if address:
++            where=f' Based at {address}.'
++        elif town:
++            where=f' Based in {town}.'
++        base=(playbook.get('about') if playbook else 'A local business with a website focused on clear information, trust and an easy route to get in touch.')
++        return f'{name} is {base[0].lower()+base[1:]}{where}'.strip()
++
++    def _sanitise_generated_content(content, business):
++        content=dict(content or {})
++        playbook=_detect_business_type(business)
++        fallback_services=_category_service_objects(business)
++        proposed=content.get('services') if isinstance(content.

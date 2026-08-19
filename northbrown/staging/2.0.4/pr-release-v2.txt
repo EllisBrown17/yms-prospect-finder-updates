@@ -1,1 +1,1 @@
-Trigger corrected NORTHBROWN 2.0.4 release workflow — retry with robust source discovery.
+Trigger corrected NORTHBROWN 2.0.4 release workflow — build from verified full 2.0.3 base.

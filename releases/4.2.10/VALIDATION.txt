@@ -1,0 +1,11 @@
+YMS Prospect Finder 4.2.10
+- Installer Python compile: PASS
+- ZIP integrity: PASS
+- Synthetic 4.2.6 + 4.2.8 + 4.2.10 runtime compile: PASS
+- Pause now sets the real 4.2.6 pipeline stop_requested checkpoint flag: PASS
+- Stop now sets the real 4.2.6 pipeline stop_requested checkpoint flag: PASS
+- Resume uses the existing resume_progress_job checkpoint queue when safely paused: PASS
+- Completed prospects remain saved: PASS
+- Unscanned queued prospects remain untouched: PASS
+- 4.2.9 single-prospect AI helper/UI layout retained: PASS
+SHA256: 78a3bd8b25ccd3242b70db1adc7402387a3f3af4a0a7d8744d943f55fecfe416

@@ -1,18 +1,18 @@
 {
-  "version": "4.2.9",
-  "published_at": "2026-08-19T12:10:00+01:00",
-  "notes": "Single-prospect + Smart Pipeline UI hotfix. Restores the missing global runOneProspectStep helper used by the individual Website evidence and AI qualify buttons, keeps prospectWorkNotice available globally, and re-docks Pause / Resume / Stop beside the main Smart Pipeline action so the controls no longer cover the Live Activity panel. The 4.2.6 pipeline skip fix, 4.2.7 desktop launcher repair and 4.2.8 safe checkpointed pause/stop backend behaviour are preserved.",
+  "version": "4.2.10",
+  "published_at": "2026-08-19T12:16:00+01:00",
+  "notes": "Smart Pipeline control wiring fix. Pause, Resume and Stop now drive the actual 4.2.6 checkpoint engine instead of a separate ignored control flag. Pause safely lets active workers finish/save and leaves the job resumable; Resume continues from saved processed IDs; Stop prevents new companies starting, lets active workers checkpoint, and leaves unscanned queued companies untouched. Keeps the 4.2.9 single-company AI fix and non-overlapping control layout intact.",
   "mandatory": false,
   "mac": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.9/YMS_Prospect_Finder_V4_2_9_SINGLE_PROSPECT_UI_FIX.zip",
-    "sha256": "1df49224d976516c0563229c669c2a0dd4430ddd0af830677e4b3215e64af816",
-    "git_blob_sha": "7da8d89be4de09aa75d13eca4ae663ca5c72f817",
-    "blob_sha": "7da8d89be4de09aa75d13eca4ae663ca5c72f817"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.10/YMS_Prospect_Finder_V4_2_10_PIPELINE_CONTROLS_FIX.zip",
+    "sha256": "78a3bd8b25ccd3242b70db1adc7402387a3f3af4a0a7d8744d943f55fecfe416",
+    "git_blob_sha": "2fe6c440e35e21cb74283f38fb394ec14cb2b450",
+    "blob_sha": "2fe6c440e35e21cb74283f38fb394ec14cb2b450"
   },
   "windows": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.9/YMS_Prospect_Finder_V4_2_9_SINGLE_PROSPECT_UI_FIX.zip",
-    "sha256": "1df49224d976516c0563229c669c2a0dd4430ddd0af830677e4b3215e64af816",
-    "git_blob_sha": "7da8d89be4de09aa75d13eca4ae663ca5c72f817",
-    "blob_sha": "7da8d89be4de09aa75d13eca4ae663ca5c72f817"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.10/YMS_Prospect_Finder_V4_2_10_PIPELINE_CONTROLS_FIX.zip",
+    "sha256": "78a3bd8b25ccd3242b70db1adc7402387a3f3af4a0a7d8744d943f55fecfe416",
+    "git_blob_sha": "2fe6c440e35e21cb74283f38fb394ec14cb2b450",
+    "blob_sha": "2fe6c440e35e21cb74283f38fb394ec14cb2b450"
   }
 }

@@ -1,0 +1,42 @@
+name: Publish NORTHBROWN 2.0.11
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/publish-northbrown-2.0.11.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Rebuild and verify self-contained OTA
+        shell: bash
+        run: |
+          set -euo pipefail
+          TMP="$(mktemp -d)"
+          for i in 0 1 2 3 4 5; do
+            curl -fsSL "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/nb211-build/northbrown/build/2.0.11/part${i}.b64" >> "$TMP/package.b64"
+          done
+          base64 --decode "$TMP/package.b64" > "$TMP/NORTHBROWN-update-2.0.11.zip"
+          test "$(stat -c%s "$TMP/NORTHBROWN-update-2.0.11.zip")" = "30344"
+          echo "9f21b5b4ae64a0ce29ba8326b6762495a2a236c28f9a76efabf83238cc609f41  $TMP/NORTHBROWN-update-2.0.11.zip" | sha256sum -c -
+          unzip -t "$TMP/NORTHBROWN-update-2.0.11.zip"
+          mkdir -p northbrown/releases
+          cp "$TMP/NORTHBROWN-update-2.0.11.zip" northbrown/releases/NORTHBROWN-update-2.0.11.zip
+      - name: Commit verified release
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add northbrown/releases/NORTHBROWN-update-2.0.11.zip
+          git diff --cached --quiet && exit 0
+          git commit -m "Publish verified NORTHBROWN 2.0.11 OTA"
+          git push origin HEAD:main

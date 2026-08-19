@@ -1,11 +1,11 @@
 {
   "schema": 2,
-  "version": "2.0.8",
-  "allowed_from": ["2.0.7"],
-  "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/northbrown/releases/NORTHBROWN-update-2.0.8.zip",
-  "size": 4168,
-  "sha256": "3f74b6e0dd784d1cbff99e24623f40ee592be08cc3290e02869a2ee0f26ad953",
-  "notes": "Temporary safe rollback of the NORTHBROWN OTA feed while the Design DNA recovery installer is being corrected. 2.0.10 has been withdrawn after an invalid backup-size check prevented the app from relaunching on some installs.",
-  "published_at": "2026-08-19T16:40:00Z",
+  "version": "2.0.11",
+  "allowed_from": ["2.0.8"],
+  "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/northbrown/releases/NORTHBROWN-update-2.0.11.zip",
+  "size": 4545,
+  "sha256": "e3117e89bb4d564b71328e869a634550656b188fe73380271da2a773d0564ca3",
+  "notes": "NORTHBROWN 2.0.11 adds Design DNA v1 and replaces the fixed-category Smart Finder with broad all-business discovery. New and regenerated demos get business-fit design fingerprints, recent-site diversity checks and materially different page assembly. Smart Scan now searches across a broad range of local business types, keeps no-website businesses as high-priority prospects, deduplicates by Google Place ID and excludes obvious national chains by default with an option to include them. Overnight Scan adds persistent targets up to 5,000, concurrent fast first-pass website scanning, automatic resume/reconnect after browser or app restart, and Mac idle-sleep prevention while the job is active. This recovery-safe installer first downloads and SHA-256 verifies the staged 2.0.11 payload before changing working files, compiles all touched Python, starts from the updater-created working 2.0.8 backup, preserves data/settings, and schedules an automatic relaunch if migration fails.",
+  "published_at": "2026-08-19T18:10:00Z",
   "mandatory": false
 }

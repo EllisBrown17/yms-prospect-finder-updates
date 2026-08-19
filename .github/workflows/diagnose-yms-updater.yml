@@ -1,0 +1,57 @@
+name: Diagnose YMS updater channel
+on:
+  push:
+    branches: [yms-5.0.2-updater-channel-fix]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Recover updater implementation
+        run: |
+          set +e
+          rm -rf /tmp/yms-updater-scan && mkdir -p /tmp/yms-updater-scan
+          echo '================ archive scan ================'
+          for z in releases/4.2.0/*.zip; do
+            [ -f "$z" ] || continue
+            echo
+            echo "--- $z ---"
+            unzip -l "$z" 2>&1 | sed -n '1,14p'
+            out="/tmp/yms-updater-scan/$(basename "$z" .zip).server.py"
+            unzip -p "$z" server.py > "$out" 2>/tmp/unzip.err
+            rc=$?
+            size=$(wc -c < "$out" 2>/dev/null || echo 0)
+            echo "server.py stream rc=$rc bytes=$size"
+            if [ -s /tmp/unzip.err ]; then cat /tmp/unzip.err; fi
+            if [ "$size" -gt 5000 ]; then
+              echo 'Updater-related matches:'
+              grep -nEi 'manifest|release channel|release_channel|check for updates|github|raw.githubusercontent|updater|update_available|latest|channel|sha256|package_url' "$out" | head -120
+            fi
+          done
+          echo
+          echo '================ candidate source windows ================'
+          python3 - <<'PY'
+          from pathlib import Path
+          needles=['manifest','release channel','package_url','update/check','update_status','check_update','raw.githubusercontent','github.com','UPDATE_MANIFEST','update_manifest','No update available']
+          for p in sorted(Path('/tmp/yms-updater-scan').glob('*.server.py')):
+              try:s=p.read_text('utf-8')
+              except Exception:continue
+              if len(s)<5000:continue
+              hits=[i for i,line in enumerate(s.splitlines()) if any(n.lower() in line.lower() for n in needles)]
+              if not hits:continue
+              print('\n\n################',p.name,'bytes',len(s),'################')
+              lines=s.splitlines(); spans=[]
+              for i in hits:
+                  a=max(0,i-10); b=min(len(lines),i+22)
+                  if any(a>=x and b<=y for x,y in spans):continue
+                  spans.append((a,b))
+                  print(f'\n### lines {a+1}-{b}')
+                  for j in range(a,b):print(f'{j+1}: {lines[j]}')
+          PY
+          exit 0

@@ -5,12 +5,15 @@ on:
     branches: ["main"]
     paths:
       - ".github/workflows/publish-northbrown-2.0.11.yml"
+  issues:
+    types: [opened]
 
 permissions:
   contents: write
 
 jobs:
   publish:
+    if: github.event_name == 'push' || github.event.issue.title == 'NB211_BUILD'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

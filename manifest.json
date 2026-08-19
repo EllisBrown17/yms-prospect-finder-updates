@@ -1,18 +1,18 @@
 {
-  "version": "5.0.2",
-  "published_at": "2026-08-19T17:15:00+01:00",
-  "notes": "Product Intelligence and Outreach usability overhaul. Adds a clean action-first outreach command centre, readable KPI cards, queue priorities, a guided email workbench and secondary research backlog views. Product Intelligence now has search, division filters, clearer product briefings and ranked opportunity rows, with 20 sales-intelligence product families representing 74 current ALFRA model and range labels across control cabinet, steel and metal, and magnet and lifting applications. Existing outreach history, lead data, Smart Pipeline fixes, sales learning and persistent Desktop launcher refresh are retained.",
+  "version": "5.0.3",
+  "published_at": "2026-08-19T21:58:00+01:00",
+  "notes": "YMS-Tools branding and top-bar UI polish. Replaces the Prospect Finder header logo with the supplied YMS artwork, optimises title, subtitle and version typography, prevents top controls from colliding, and adds responsive behaviour for narrower windows. Existing Product Intelligence, Outreach, prospect data, Smart Pipeline behaviour and Desktop launcher refresh are retained.",
   "mandatory": false,
   "mac": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/5.0.2/YMS_Prospect_Finder_V5_0_2_INTELLIGENCE_UX.zip",
-    "sha256": "b4307d961698b067f6182cf4d78df15aaf0468dd36eb22feadddc9c4d11b95dd",
-    "git_blob_sha": "2a8269a88e5a269f9fa7a8285a8c631712e77865",
-    "blob_sha": "2a8269a88e5a269f9fa7a8285a8c631712e77865"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/5.0.3/YMS_Prospect_Finder_V5_0_3_BRANDING_UI.zip",
+    "sha256": "65c31ca1d8b76c16e7ef07a2e5cb85cc6ddf6694e7eb8b1c2c1eab3d1871461b",
+    "git_blob_sha": "37d799d69f2272c958024890af10baea5f10878f",
+    "blob_sha": "37d799d69f2272c958024890af10baea5f10878f"
   },
   "windows": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/5.0.2/YMS_Prospect_Finder_V5_0_2_INTELLIGENCE_UX.zip",
-    "sha256": "b4307d961698b067f6182cf4d78df15aaf0468dd36eb22feadddc9c4d11b95dd",
-    "git_blob_sha": "2a8269a88e5a269f9fa7a8285a8c631712e77865",
-    "blob_sha": "2a8269a88e5a269f9fa7a8285a8c631712e77865"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/5.0.3/YMS_Prospect_Finder_V5_0_3_BRANDING_UI.zip",
+    "sha256": "65c31ca1d8b76c16e7ef07a2e5cb85cc6ddf6694e7eb8b1c2c1eab3d1871461b",
+    "git_blob_sha": "37d799d69f2272c958024890af10baea5f10878f",
+    "blob_sha": "37d799d69f2272c958024890af10baea5f10878f"
   }
 }

@@ -1,18 +1,18 @@
 {
-  "version": "4.2.5",
-  "published_at": "2026-08-19T10:47:00+01:00",
-  "notes": "Smart Pipeline reliability update. The selected-prospect pipeline now uses a continuous four-worker queue instead of chunk barriers, uses the resilient per-company processor already proven by Smart Finder, retries temporary service failures without stopping the whole batch, isolates bad prospects, checkpoints every completed company, and reports a live rate-based ETA with confidence and heartbeat health. Paused jobs now stop the progress UI cleanly instead of appearing stuck, with completed work preserved.",
+  "version": "4.2.6",
+  "published_at": "2026-08-19T11:20:00+01:00",
+  "notes": "Smart Pipeline skip-fix. Old 4.2.5 skip markers are no longer treated as completed work, pipeline records are rechecked, hard consumer noise remains filtered, unreadable websites can fall back to clearly-labelled limited Companies House/Google business metadata, metadata-only AI results are confidence/score capped, the deterministic relevance gate is advisory rather than an automatic rejection, and the progress panel now separates AI qualified, AI not relevant, needs evidence, filtered noise and errors instead of hiding them all under skipped.",
   "mandatory": false,
   "mac": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.5/YMS_Prospect_Finder_V4_2_5_PIPELINE_RELIABILITY.zip",
-    "sha256": "a0a36f9d1a22161e2cb88f5414c00e1bf3c758ac3d0c510dde55d0be91eae65f",
-    "git_blob_sha": "f17b136b2dd1aa82150adb4d00d915deddd6bcdd",
-    "blob_sha": "f17b136b2dd1aa82150adb4d00d915deddd6bcdd"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.6/YMS_Prospect_Finder_V4_2_6_PIPELINE_SKIP_FIX.zip",
+    "sha256": "0061248b5af0b3fea5fa09a9f6e1a27c23df7bd146a91634196f073a210f3d78",
+    "git_blob_sha": "f65f73a6d1b219191691742de6dc48fad37a13a2",
+    "blob_sha": "f65f73a6d1b219191691742de6dc48fad37a13a2"
   },
   "windows": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.5/YMS_Prospect_Finder_V4_2_5_PIPELINE_RELIABILITY.zip",
-    "sha256": "a0a36f9d1a22161e2cb88f5414c00e1bf3c758ac3d0c510dde55d0be91eae65f",
-    "git_blob_sha": "f17b136b2dd1aa82150adb4d00d915deddd6bcdd",
-    "blob_sha": "f17b136b2dd1aa82150adb4d00d915deddd6bcdd"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.6/YMS_Prospect_Finder_V4_2_6_PIPELINE_SKIP_FIX.zip",
+    "sha256": "0061248b5af0b3fea5fa09a9f6e1a27c23df7bd146a91634196f073a210f3d78",
+    "git_blob_sha": "f65f73a6d1b219191691742de6dc48fad37a13a2",
+    "blob_sha": "f65f73a6d1b219191691742de6dc48fad37a13a2"
   }
 }

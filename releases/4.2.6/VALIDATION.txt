@@ -1,0 +1,8 @@
+YMS Prospect Finder 4.2.6
+- Installer Python compile: PASS
+- ZIP integrity: PASS
+- Additive backend override: built
+- Smart Pipeline old-skip retry: built
+- Public metadata fallback: built
+- Separate outcome counters: built
+SHA256: 0061248b5af0b3fea5fa09a9f6e1a27c23df7bd146a91634196f073a210f3d78

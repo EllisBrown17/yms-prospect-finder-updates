@@ -1,0 +1,66 @@
+late_key:p.template_key,accent:p.accent,background:p.background,surface:p.surface,text_color:p.text_color,business:p.business,content:p.content,pages:p.pages,is_demo:p.is_demo}));
++  builderState.saving=true;const badge=$('#builderSaveState');badge.textContent='Saving…';badge.classList.add('builder-saving');badge.classList.remove('builder-save-error');
++  builderState.savePromise=(async()=>{try{const r=await api(`/api/builder/projects/${p.id}`,{method:'PATCH',body:payload});if(builderState.editSeq===saveSeq){builderState.project=r;builderState.dirty=false;badge.textContent='Saved';badge.classList.remove('builder-saving');refreshBuilderPreview(false)}else{badge.textContent='Unsaved';builderState.dirty=true;builderState.saveTimer=setTimeout(()=>saveBuilderProject(false),250)}return r}catch(e){badge.textContent='Save failed';badge.classList.add('builder-save-error');toast(`Builder save failed: ${e.message}`,true);throw e}finally{builderState.saving=false;builderState.savePromise=null}})();
++  return builderState.savePromise
+ }
+ function refreshBuilderPreview(force=true){const p=builderState.project;if(!p)return;const slug=builderState.selectedPage||'home';$('#builderPreviewPath').textContent=slug==='home'?'Home':slug;const frame=$('#builderFrame');const url=`/builder/preview/${p.token}/${encodeURIComponent(slug)}?t=${Date.now()}`;if(force||frame.src!==url)frame.src=url}
+ function activateBuilderTab(tab){$$('[data-builder-tab]').forEach(b=>b.classList.toggle('active',b.dataset.builderTab===tab));$$('[data-builder-panel]').forEach(p=>p.classList.toggle('active',p.dataset.builderPanel===tab))}
+@@ -260,9 +280,10 @@
+ $('#builderRefreshBtn').onclick=loadBuilderProjects;
+ $('#builderNewBtn').onclick=async()=>{const name=prompt('Business / project name:','New website');if(!name)return;const category=prompt('Business category (optional):','')||'';try{const p=await api('/api/builder/projects',{method:'POST',body:{name,category}});await loadBuilderProjects();openBuilderProject(p.id)}catch(e){toast(e.message,true)}};
+ $('#builderBackBtn').onclick=async()=>{if(builderState.dirty)await saveBuilderProject(true);builderSetHome(true);builderState.project=null;loadBuilderProjects()};
++$('#builderSaveBtn').onclick=async()=>{try{collectBuilderForm();if(!builderState.dirty){builderState.editSeq++;builderState.dirty=true}await saveBuilderProject(true);toast('Website project saved.')}catch(e){}};
+ $('#builderPreviewBtn').onclick=async()=>{if(builderState.dirty)await saveBuilderProject(true);const p=builderState.project;if(p)window.open(`/builder/preview/${p.token}/${builderState.selectedPage||'home'}`,'_blank')};
+ $('#builderUndoBtn').onclick=async()=>{const p=builderState.project;if(!p)return;try{builderState.project=await api(`/api/builder/projects/${p.id}/undo`,{method:'POST'});renderBuilderEditor();refreshBuilderPreview();toast('Last builder change undone.')}catch(e){toast(e.message,true)}};
+-$('#builderAiCopyBtn').onclick=async()=>{const p=builderState.project;if(!p)return;const b=$('#builderAiCopyBtn');b.disabled=true;b.textContent='Writing…';try{if(builderState.dirty)await saveBuilderProject(true);builderState.project=await api(`/api/builder/projects/${p.id}/ai-copy`,{method:'POST'});renderBuilderEditor();refreshBuilderPreview();toast('AI copy refreshed from verified business facts.')}catch(e){toast(e.message,true)}finally{b.disabled=false;b.textContent='AI rewrite'}};
++$('#builderAiCopyBtn').onclick=async()=>{const p=builderState.project;if(!p)return;const b=$('#builderAiCopyBtn');b.disabled=true;b.textContent='Writing…';try{if(builderState.dirty||builderState.saving)await saveBuilderProject(true);const r=await api(`/api/builder/projects/${p.id}/ai-copy`,{method:'POST'});builderState.project=r;builderState.dirty=false;builderState.editSeq++;renderBuilderEditor();refreshBuilderPreview();toast(r._ai_used===false?(r._ai_warning||'OpenAI was unavailable, so NORTHBROWN used its category-aware smart rewrite instead.'):'AI copy refreshed from verified business facts.',r._ai_used===false)}catch(e){toast(`AI rewrite failed: ${e.message}`,true)}finally{b.disabled=false;b.textContent='AI rewrite'}};
+ $('#builderPullBtn').onclick=async()=>{const p=builderState.project;if(!p)return;const b=$('#builderPullBtn');b.disabled=true;b.textContent='Pulling…';try{if(builderState.dirty)await saveBuilderProject(true);builderState.project=await api(`/api/builder/projects/${p.id}/refresh-data`,{method:'POST'});renderBuilderEditor();refreshBuilderPreview();toast('Business details and usable website assets refreshed.')}catch(e){toast(e.message,true)}finally{b.disabled=false;b.textContent='Pull latest data'}};
+ $('#builderPublishBtn').onclick=async()=>{const p=builderState.project;if(!p)return;const b=$('#builderPublishBtn');b.disabled=true;b.textContent='Publishing…';try{if(builderState.dirty)await saveBuilderProject(true);const r=await api(`/api/builder/projects/${p.id}/publish-demo`,{method:'POST'});builderState.project.is_demo=true;$('#bDemoMode').checked=true;refreshBuilderPreview();if(r.shareable){await navigator.clipboard.writeText(r.share_url);toast('Demo published. Share link copied.')}else{toast('Demo mode published locally. Add your Public demo URL in Settings for a sendable HTTPS link.')}}catch(e){toast(e.message,true)}finally{b.disabled=false;b.textContent='Publish demo'}};
+ $('#builderAddPageBtn').onclick=()=>{const p=builderState.project;if(!p)return;const title=prompt('Page name:','Services');if(!title)return;let slug=title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'page';let n=2,base=slug;while(p.pages.some(x=>x.slug===slug))slug=`${base}-${n++}`;p.pages.push({slug,title,kind:'content',headline:title,body:''});builderState.selectedPage=slug;renderBuilderPages();markBuilderDirty()};
+diff -ruN '--exclude=__pycache__' '--exclude=release.json' '--exclude=NORTHBROWN_ICON.png' '--exclude=favicon-*.png' payload/static/brand-reference.svg payload/static/brand-reference.svg
+--- payload/static/brand-reference.svg	1970-01-01 00:00:00.000000000 +0000
++++ payload/static/brand-reference.svg	2026-08-19 13:05:26.106451343 +0000
+@@ -0,0 +1,22 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 460" role="img" aria-labelledby="title desc">
++  <title id="title">NORTHBROWN brand reference</title>
++  <desc id="desc">NORTHBROWN dark charcoal and lime brand system with NB monogram.</desc>
++  <rect width="760" height="460" rx="28" fill="#0B0D0E"/>
++  <rect x="36" y="36" width="116" height="116" rx="22" fill="#121516" stroke="#2B3032"/>
++  <text x="58" y="112" fill="#F4F2EC" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="800" letter-spacing="-7">NB</text>
++  <rect x="126" y="119" width="13" height="13" fill="#C6FF00"/>
++  <text x="184" y="82" fill="#F4F2EC" font-family="Arial, Helvetica, sans-serif" font-size="31" font-weight="750" letter-spacing="4">NORTHBROWN.</text>
++  <text x="185" y="116" fill="#7D8487" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="600" letter-spacing="5">WEB DESIGN STUDIO</text>
++  <line x1="184" y1="146" x2="700" y2="146" stroke="#24292B"/>
++  <text x="42" y="210" fill="#C6FF00" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" letter-spacing="3">NORTHBROWN BRAND SYSTEM</text>
++  <text x="42" y="252" fill="#F4F2EC" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700">Charcoal. Off-white. Signature lime.</text>
++  <text x="42" y="287" fill="#8B9194" font-family="Arial, Helvetica, sans-serif" font-size="15">Premium, restrained and recognisable — the same visual language</text>
++  <text x="42" y="312" fill="#8B9194" font-family="Arial, Helvetica, sans-serif" font-size="15">used across NORTHBROWN software, concepts and client presentations.</text>
++  <g transform="translate(42 350)">
++    <rect width="92" height="54" rx="11" fill="#0B0D0E" stroke="#2B3032"/><text x="13" y="33" fill="#A5ABAE" font-size="11" font-family="Arial">#0B0D0E</text>
++    <rect x="106" width="92" height="54" rx="11" fill="#15191A" stroke="#2B3032"/><text x="119" y="33" fill="#A5ABAE" font-size="11" font-family="Arial">#15191A</text>
++    <rect x="212" width="92" height="54" rx="11" fill="#F4F2EC"/><text x="225" y="33" fill="#303436" font-size="11" font-family="Arial">#F4F2EC</text>
++    <rect x="318" width="92" height="54" rx="11" fill="#C6FF00"/><text x="331" y="33" fill="#101313" font-size="11" font-family="Arial" font-weight="700">#C6FF00</text>
++  </g>
++  <text x="700" y="431" text-anchor="end" fill="#737A7D" font-family="Arial, Helvetica, sans-serif" font-size="11">Designed &amp; built by Ellis Brown · NORTHBROWN</text>
++</svg>
+diff -ruN '--exclude=__pycache__' '--exclude=release.json' '--exclude=NORTHBROWN_ICON.png' '--exclude=favicon-*.png' payload/templates/index.html payload/templates/index.html
+--- payload/templates/index.html	2026-08-19 12:30:59.000000000 +0000
++++ payload/templates/index.html	2026-08-19 13:05:26.625227157 +0000
+@@ -8,8 +8,9 @@
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+-  <link rel="icon" type="image/png" href="/static/NORTHBROWN_ICON.png?v=204">
+-  <link rel="apple-touch-icon" href="/static/NORTHBROWN_ICON.png?v=204">
++  <link rel="icon" type="image/png" href="/northbrown-icon.png?v=205">
++  <link rel="shortcut icon" type="image/png" href="/northbrown-icon.png?v=205">
++  <link rel="apple-touch-icon" href="/northbrown-icon.png?v=205">
+   <link rel="stylesheet" href="/static/app.css">
+ </head>
+ <body>
+@@ -19,7 +20,7 @@
+ <div class="app-shell">
+   <aside class="sidebar">
+     <div class="brand" aria-label="Northbrown">
+-      <img class="brand-app-icon" src="/static/NORTHBROWN_ICON.png" alt="NORTHBROWN logo">
++      <img class="brand-app-icon" src="/northbrown-icon.png?v

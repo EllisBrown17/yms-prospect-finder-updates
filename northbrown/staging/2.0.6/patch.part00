@@ -1,0 +1,142 @@
+diff -ruN base205/payload/START_NORTHBROWN_INTERNAL.sh payload/START_NORTHBROWN_INTERNAL.sh
+--- base205/payload/START_NORTHBROWN_INTERNAL.sh	2026-08-19 13:36:33.861858351 +0000
++++ payload/START_NORTHBROWN_INTERNAL.sh	2026-08-19 13:36:33.863484139 +0000
+@@ -9,7 +9,7 @@
+ refresh_app_icon() {
+   local APP_BUNDLE="$HOME/Applications/NORTHBROWN Lead Engine.app"
+   local ICON_SRC="$ROOT/NORTHBROWN_ICON.png"
+-  local STAMP="$ROOT/.icon_ready_2_0_5"
++  local STAMP="$ROOT/.icon_ready_2_0_6"
+   [ "$(uname -s 2>/dev/null || true)" = "Darwin" ] || return 0
+   [ -d "$APP_BUNDLE" ] || return 0
+   [ -f "$ICON_SRC" ] || return 0
+@@ -41,7 +41,7 @@
+ 
+ refresh_app_icon || true
+ 
+-printf '\033[38;5;190mNORTHBROWN.\033[0m  Lead Engine 2.0.5 — Smarter Website Generation · OTA READY\n\n'
++printf '\033[38;5;190mNORTHBROWN.\033[0m  Lead Engine 2.0.6 — Smarter Website Generation · OTA READY\n\n'
+ echo "Installed at: $ROOT" | tee -a "$LOG"
+ 
+ if ! command -v python3 >/dev/null 2>&1; then
+diff -ruN base205/payload/VERSION.txt payload/VERSION.txt
+--- base205/payload/VERSION.txt	2026-08-19 13:36:33.862007174 +0000
++++ payload/VERSION.txt	2026-08-19 13:36:33.863607121 +0000
+@@ -1 +1 @@
+-2.0.5
++2.0.6
+diff -ruN base205/payload/app.py payload/app.py
+--- base205/payload/app.py	2026-08-19 13:36:33.861960758 +0000
++++ payload/app.py	2026-08-19 13:36:33.863555701 +0000
+@@ -29,7 +29,7 @@
+ DATA_DIR = os.getenv('NORTHBROWN_DATA_DIR') or os.path.join(APP_DIR, 'data')
+ os.makedirs(DATA_DIR, exist_ok=True)
+ DB_PATH = os.path.join(DATA_DIR, 'northbrown_leads.sqlite3')
+-APP_VERSION = '2.0.5'
++APP_VERSION = '2.0.6'
+ UPDATE_CACHE_DIR = os.path.join(DATA_DIR, 'updates')
+ os.makedirs(UPDATE_CACHE_DIR, exist_ok=True)
+ 
+@@ -92,7 +92,7 @@
+ 
+ 
+ @app.get('/northbrown-icon.png')
+-@app.get('/northbrown-icon-2.0.5.png')
++@app.get('/northbrown-icon-2.0.6.png')
+ def northbrown_icon():
+     response = send_from_directory(APP_DIR, 'NORTHBROWN_ICON.png', mimetype='image/png')
+     response.headers['Cache-Control'] = 'public, max-age=86400'
+@@ -102,6 +102,8 @@
+ WORKER_STARTED = False
+ SCAN_JOBS = {}
+ SCAN_JOBS_LOCK = threading.Lock()
++SMART_FINDER_JOBS = {}
++SMART_FINDER_JOBS_LOCK = threading.Lock()
+ 
+ DEFAULT_SETTINGS = {
+     'google_places_api_key': '',
+@@ -1036,41 +1038,40 @@
+     conn.commit(); conn.close(); _start_scan_worker(job_id)
+     return job_id,len(rows)
+ 
+-@app.post('/api/smart-finder')
+-def smart_finder():
+-    data=request.get_json(silent=True) or {}
+-    location=(data.get('location') or '').strip()
+-    if not location:
+-        return jsonify({'error':'Enter an area for Smart Finder.'}),400
+-    target=max(10,min(200,int(data.get('target') or 100)))
+-    radius=max(1,min(75,int(data.get('radius_miles') or 15)))
+-    mode=(data.get('mode') or 'smart').lower()
+-    if mode not in ('fast','smart','full'):
+-        mode='smart'
+-    settings=get_settings(); key=(settings.get('google_places_api_key') or '').strip()
+-    if not key:
+-        return jsonify({'error':'Smart Finder needs your Google Places key in Settings. Website Builder Google maps/review links can still use the free Google mode.'}),400
+-    categories=data.get('categories') if isinstance(data.get('categories'),list) else SMART_FINDER_CATEGORIES
+-    categories=[str(x).strip() for x in categories if str(x).strip()][:30] or SMART_FINDER_CATEGORIES
++def _smart_finder_snapshot(job_id):
++    with SMART_FINDER_JOBS_LOCK:
++        job = SMART_FINDER_JOBS.get(job_id)
++        if not job:
++            return None
++        out = dict(job)
++    total = max(1, int(out.get('total_categories') or 1))
++    done = int(out.get('completed_categories') or 0)
++    out['percent'] = 100 if out.get('status') in ('scanning','complete') else round(min(99, done / total * 100), 1)
++    out['elapsed_seconds'] = max(0, int(time.time() - float(out.get('started_epoch') or time.time())))
++    return out
++
++
++def _run_smart_finder_job(job_id, location, target, radius, mode, categories, key):
+     headers={'Content-Type':'application/json','X-Goog-Api-Key':key,'X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress,places.websiteUri,places.nationalPhoneNumber,places.primaryTypeDisplayName'}
+-    added_ids=[]; found=0; skipped=0; requests_used=0; ts=now_iso(); conn=db_conn()
++    added_ids=[]; found=0; skipped=0; requests_used=0; ts=now_iso(); conn=None
+     try:
+-        for category in categories:
++        conn=db_conn()
++        for idx, category in enumerate(categories, 1):
+             if len(added_ids)>=target:
+                 break
++            with SMART_FINDER_JOBS_LOCK:
++                j=SMART_FINDER_JOBS[job_id]
++                j.update({'current_category':category,'stage':'Searching Google Places','detail':f'Searching {category} near {location}…','completed_categories':idx-1,'found':found,'added':len(added_ids),'skipped':skipped,'requests_used':requests_used})
+             query=f'{category} within {radius} miles of {location}'
+             requests_used+=1; log_usage_event('google_places_text_search',1,0,{'query':query,'limit':20,'smart_finder':True})
+             try:
+                 r=requests.post('https://places.googleapis.com/v1/places:searchText',headers=headers,json={'textQuery':query,'pageSize':20,'regionCode':'GB'},timeout=30)
+-                if r.status_code>=400:
+-                    continue
+-                places=r.json().get('places',[])
++                places=[] if r.status_code>=400 else r.json().get('places',[])
+             except Exception:
+-                continue
++                places=[]
+             found += len(places)
+             for p in places:
+-                if len(added_ids)>=target:
+-                    break
++                if len(added_ids)>=target: break
+                 display=p.get('displayName') or {}; name=(display.get('text') or '').strip(); pid=(p.get('id') or '').strip(); website=(p.get('websiteUri') or '').strip()
+                 if not name or not pid or not website or _smart_finder_unsuitable(name):
+                     skipped+=1; continue
+@@ -1081,11 +1082,50 @@
+                 cur=conn.execute("INSERT INTO leads(business_name,website,email,phone,address,town,category,source,google_place_id,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
+                     (name,website,'',p.get('nationalPhoneNumber') or '',p.get('formattedAddress') or '',location,ptype.get('text') or category,'smart_finder',pid,'new',ts,ts))
+                 added_ids.append(cur.lastrowid)
+-        conn.commit()
++            conn.commit()
++            with SMART_FINDER_JOBS_LOCK:
++                j=SMART_FINDER_JOBS[job_id]
++                j.update({'completed_categories':idx,'found':found,'added':len(added_ids),'skipped':skipped,'requests_used':requests_used,'detail':f'Checked {category}: {len(added_ids)} suitable businesses added so far.'})
++        if conn: conn.commit()
++        scan_job_id,queued=_start_specific_scan(added_ids,mode)
++        with SMART_FINDER_JOBS_LOCK:
++            SMART_FINDER_JOBS[job_id].update({'status':'scanning' if scan_job_id else 'complete','stage':'Website scans queued' if scan_job_id else 'Discovery complete','detail':f'{len(added_ids)} new businesses found · {skipped} skipped · {queued} queued to scan.','completed_categories':len(categories),'found':found,'added':len(added_ids),'skipped':skipped,'requests_used':requests_used,'scan_job_id':scan_job_id,'queued_for_scan':queued,'finished_at':now_iso()})
++    except Exception as e:
++        with SMART_FINDER_JOBS_LOCK:
++            SMART_FINDER_JOBS[job_id].update({'status':'failed','stage':'Smart Finder failed','detail':str(e),'error':str(e),'finished_at':now_iso()})
+     finally:
+-        conn.close()
+-    scan_job_id,queued=_start_specific_scan(added_ids,mode)
+-    return jsonify({'ok':True,'found':found,'added':len(added_ids),'skipped':skipped,'places_requests':requests_used,'places_requests_today':int(usage_today('google_places_text_search')['units']),'scan_job_id':scan_job_id,'queued_for_scan'

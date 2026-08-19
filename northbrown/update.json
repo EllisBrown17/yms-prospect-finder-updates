@@ -1,11 +1,11 @@
 {
   "schema": 2,
-  "version": "2.0.6",
-  "allowed_from": ["2.0.5"],
-  "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/northbrown/releases/NORTHBROWN-update-2.0.6.zip",
-  "size": 10052,
-  "sha256": "c1da606d75d96a094d8e0306fd08327b02af77faf26c099b861b07602583fe0a",
-  "notes": "NORTHBROWN 2.0.6 adds visible Smart Finder discovery progress immediately after you start a local-company search, with stage, percentage and category count, then automatically hands over to the normal website Scan Intelligence progress. Includes the 2.0.5 reliability fixes for prospect opening, Builder saving, AI Rewrite, collapsible Scan Intelligence, NORTHBROWN brand reference and browser icon.",
-  "published_at": "2026-08-19T13:49:38Z",
+  "version": "2.0.7",
+  "allowed_from": ["2.0.6"],
+  "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/northbrown/releases/NORTHBROWN-update-2.0.7.zip",
+  "size": 4950,
+  "sha256": "3e36b05f071597f4fc26ec210ba9cbcc01b3133668c010de25a0551340f60327",
+  "notes": "NORTHBROWN 2.0.7 makes demo sites genuinely business-specific with unique layout recipes and Remix design, guarantees a business logo or NORTHBROWN-generated logo placeholder, and adds Google Local Trust: free interactive Maps Embed plus Maps/directions/review-listing links, with optional enhanced Places rating/review snippets. The OTA bridge uses SHA-256 verified hex+gzip patch transport and automatically rolls back to 2.0.6 on any failure.",
+  "published_at": "2026-08-19T14:46:18Z",
   "mandatory": false
 }

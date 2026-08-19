@@ -1,0 +1,116 @@
+name: Publish NORTHBROWN 2.0.6 OTA
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'northbrown/staging/2.0.6/trigger.txt'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reconstruct and validate exact OTA package
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION='2.0.6'
+          STAGE="northbrown/staging/${VERSION}"
+          ZIP="northbrown/releases/NORTHBROWN-update-${VERSION}.zip"
+          EXPECTED_B64_LEN='189528'
+          EXPECTED_B64_SHA='69c34ed1551aa30439885af83f3fe2be380cddfc07dbb6631c6106f6dc4a1530'
+          EXPECTED_SIZE='142146'
+          EXPECTED_SHA='45f48d6a0d19aa39ff99e8cf4801da7c3cf18f7c02c2e4b715bbd7a96c2d0129'
+
+          mkdir -p northbrown/releases
+          cat "$STAGE"/ota.part* | tr -d '\r\n ' > "$RUNNER_TEMP/northbrown-206.b64"
+          test "$(wc -c < "$RUNNER_TEMP/northbrown-206.b64" | tr -d ' ')" = "$EXPECTED_B64_LEN"
+          echo "$EXPECTED_B64_SHA  $RUNNER_TEMP/northbrown-206.b64" | sha256sum -c -
+          base64 -d "$RUNNER_TEMP/northbrown-206.b64" > "$ZIP"
+          test "$(wc -c < "$ZIP" | tr -d ' ')" = "$EXPECTED_SIZE"
+          echo "$EXPECTED_SHA  $ZIP" | sha256sum -c -
+          unzip -t "$ZIP" >/dev/null
+
+          TMP="$(mktemp -d)"
+          unzip -q "$ZIP" -d "$TMP"
+          P="$TMP/payload"
+          test -f "$P/app.py"
+          test -f "$P/feature_routes.py"
+          test -f "$P/builder_routes.py"
+          test -f "$P/requirements.txt"
+          test -f "$P/VERSION.txt"
+          test -f "$P/release.json"
+          test -f "$P/START_NORTHBROWN_INTERNAL.sh"
+          test -f "$P/static/app.js"
+          test -f "$P/static/app.css"
+          test -f "$P/static/brand-reference.svg"
+          test -f "$P/templates/index.html"
+          test -f "$P/NORTHBROWN_ICON.png"
+          test "$(tr -d '\r\n' < "$P/VERSION.txt")" = "$VERSION"
+
+          python -m py_compile "$P/app.py" "$P/feature_routes.py" "$P/builder_routes.py"
+          node --check "$P/static/app.js"
+
+          python - "$P" <<'PY'
+          from pathlib import Path
+          import hashlib, json, sys
+          p=Path(sys.argv[1])
+          r=json.loads((p/'release.json').read_text())
+          assert r.get('format') == 'northbrown-full-v2'
+          assert r.get('version') == '2.0.6'
+          assert '2.0.5' in r.get('allowed_from', [])
+          for rel, expected in r.get('files', {}).items():
+              f=p/rel
+              assert f.is_file(), rel
+              actual=hashlib.sha256(f.read_bytes()).hexdigest()
+              assert actual == expected, (rel, actual, expected)
+          PY
+
+          grep -q "APP_VERSION = '2.0.6'" "$P/app.py"
+          grep -q 'smartFinderProgress' "$P/templates/index.html"
+          grep -q 'Finding local companies' "$P/static/app.js"
+          grep -q 'brand-reference.svg' "$P/templates/index.html"
+          grep -q 'scanProgress' "$P/templates/index.html"
+
+      - name: Publish package and update feed only after validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION='2.0.6'
+          ZIP="northbrown/releases/NORTHBROWN-update-${VERSION}.zip"
+          SHA="$(sha256sum "$ZIP" | awk '{print $1}')"
+          SIZE="$(wc -c < "$ZIP" | tr -d ' ')"
+          cat > northbrown/update.json <<EOF
+          {
+            "schema": 2,
+            "version": "2.0.6",
+            "allowed_from": ["2.0.5"],
+            "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/${ZIP}",
+            "size": ${SIZE},
+            "sha256": "${SHA}",
+            "notes": "NORTHBROWN 2.0.6 adds visible Smart Finder discovery progress before website scanning begins. It shows the Google Places discovery stage, percentage and search count immediately, then hands over to the normal Scan Intelligence website-scan progress. Includes the 2.0.5 reliability fixes for prospect clicks, Builder saving, AI Rewrite, collapsible Scan Intelligence, brand reference and NORTHBROWN browser branding.",
+            "published_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "mandatory": false
+          }
+          EOF
+
+          git config user.name 'NORTHBROWN OTA Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add "$ZIP" northbrown/update.json
+          git commit -m 'Publish NORTHBROWN OTA 2.0.6'
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo 'Could not publish NORTHBROWN 2.0.6 after three retries.' >&2
+          exit 1

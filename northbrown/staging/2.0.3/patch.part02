@@ -1,0 +1,55 @@
+url':''}
+         content = _fallback_content(business)
+         template = _template_for(category); accent,bg,surface,text = _palette_for(template)
+         pages = [{'slug':'home','title':'Home','kind':'home','headline':content['hero_headline'],'body':''}]
+diff -ruN base202/payload/release.json payload/release.json
+--- base202/payload/release.json	1970-01-01 00:00:00.000000000 +0000
++++ payload/release.json	2026-08-19 10:14:10.712392115 +0000
+@@ -0,0 +1,21 @@
++{
++  "format": "northbrown-full-v2",
++  "version": "2.0.3",
++  "allowed_from": [
++    "2.0.2"
++  ],
++  "database_schema": 5,
++  "files": {
++    "app.py": "de49c6fa7705dbaf77d4c51d1b2885c19d749a6fabd826e55e499cb1c2425bd6",
++    "feature_routes.py": "a2ec9c77595bc97721eb38e4034b5528d5f07bd30505fa68c415fc4d96ee69b1",
++    "builder_routes.py": "de768168703ed5447eb8487c208de0efae787a50c97f9e00578bae5e82d24d96",
++    "requirements.txt": "e683381f96447e929bc2b6a7010027d5395d5df50f5e53633b000286d0e89d70",
++    "VERSION.txt": "be695fc8092ad3706d7d7d3b5104e1eaf8fe69666e5958e375c9952a06fa9514",
++    "START_NORTHBROWN_INTERNAL.sh": "61f2978a5b05338a3ea0ac0a2ff6effea7793e9300867cd094b11cbc895aa45f",
++    "static/app.js": "46b618af7b1570d93ee0c0cb072350d745bbb94061b632d4d6d5ad285cdb86c9",
++    "static/app.css": "e3f5a1e45e984a88084a47b9777641d83d1d847dddac9d01a14251918e992180",
++    "templates/index.html": "65b2cbabc06c99f2bf09545715df42965f010ec9a805b7af0556dcb16eacc3f7",
++    "NORTHBROWN_ICON.png": "12d265d5901634307c8bff5fe93fe980ec76367886db6f252799c49691d62bf4",
++    "static/NORTHBROWN_ICON.png": "12d265d5901634307c8bff5fe93fe980ec76367886db6f252799c49691d62bf4"
++  }
++}
+diff -ruN base202/payload/static/app.css payload/static/app.css
+--- base202/payload/static/app.css	2026-08-19 10:15:25.144443921 +0000
++++ payload/static/app.css	2026-08-19 10:13:29.903282108 +0000
+@@ -47,3 +47,6 @@
+ .builder-preview-stage{min-width:0;display:flex;flex-direction:column;background:#080909;overflow:hidden}.builder-preview-head{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 13px;border-bottom:1px solid rgba(255,255,255,.07);background:#0e1011}.builder-preview-head>div:first-child{display:flex;align-items:center;gap:7px}.builder-preview-head strong{font-size:8px;letter-spacing:.14em}.builder-preview-head small{color:#626764;font-size:8px}.builder-device-switch{display:flex;padding:3px;border:1px solid rgba(255,255,255,.07);border-radius:8px;background:#111315}.builder-device-switch button{border:0;background:transparent;color:#676c69;padding:5px 8px;border-radius:6px;font-size:8px;cursor:pointer}.builder-device-switch button.active{background:#222628;color:#e7e8e2}.builder-frame-shell{flex:1;min-height:0;display:flex;align-items:flex-start;justify-content:center;padding:18px;overflow:auto;background:repeating-conic-gradient(#101214 0 25%,#0d0f10 0 50%) 50%/18px 18px}.builder-frame-shell iframe{height:100%;min-height:620px;border:0;background:white;box-shadow:0 24px 80px rgba(0,0,0,.45);transition:.25s ease}.builder-frame-shell.desktop iframe{width:100%;max-width:1440px}.builder-frame-shell.tablet iframe{width:768px;max-width:100%}.builder-frame-shell.mobile iframe{width:390px;max-width:100%;border-radius:22px}.builder-saving{color:#f0c66c!important}.builder-save-error{color:#ff8b8b!important}
+ @media(max-width:1250px){.builder-project-grid{grid-template-columns:1fr 1fr}.builder-workspace{grid-template-columns:330px minmax(0,1fr)}}
+ @media(max-width:900px){.builder-stat-strip{grid-template-columns:1fr 1fr}.builder-project-grid{grid-template-columns:1fr}.builder-hero{align-items:flex-start;flex-direction:column}.builder-workspace{display:block;height:auto;min-height:0}.builder-controls{max-height:none;border-right:0}.builder-preview-stage{height:650px}.builder-editor-toolbar{position:relative;align-items:flex-start;flex-direction:column}.builder-editor-actions{justify-content:flex-start}.mobile-nav{grid-template-columns:repeat(6,1fr)!important}.mobile-nav small{font-size:6.5px}}
++
++/* NORTHBROWN 2.0.3 QoL */
++.scan-head-actions{display:flex;align-items:flex-start;gap:10px}.scan-dismiss{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.14);background:#17191b;color:#f0efea;font-size:22px;line-height:1;cursor:pointer}.scan-dismiss:hover{border-color:#c6ff00;color:#c6ff00}.smart-finder-box{margin-top:18px;padding:18px;border:1px solid rgba(198,255,0,.25);border-radius:18px;background:rgba(198,255,0,.035)}.smart-finder-box h3{margin:6px 0 6px}.smart-finder-box p,.finder-note{color:var(--muted);font-size:12px;line-height:1.5}.smart-finder-box .finder-note{display:block;margin-top:10px}.free-google-box{margin-top:14px;padding:16px;border:1px solid rgba(198,255,0,.22);border-radius:16px;background:rgba(198,255,0,.03)}.free-google-box>div{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}.free-google-box small{color:var(--muted);line-height:1.45}@media(max-width:700px){.scan-head-actions{flex-direction:column;align-items:flex-end}.smart-finder-box .two-col{grid-template-columns:1fr}}
+diff -ruN base202/payload/static/app.js payload/static/app.js
+--- base202/payload/static/app.js	2026-08-19 10:15:25.144554386 +0000
++++ payload/static/app.js	2026-08-19 10:13:29.903103327 +0000
+@@ -84,7 +84,7 @@
+   $('#scanProgressFill').style.width=`${Math.max(0,Math.min(100,pct))}%`;$('#scanProgressCount').textContent=`${processed} / ${total}`;$('#scanProgressPercent').textContent=`${Math.round(pct)}%`;$('#scanElapsed').textContent=fmtElapsed(r.elapsed_seconds);$('#scanEta').textContent=r.eta_seconds!=null?fmtElapsed(r.eta_seconds):'—';$('#scanModeBadge').textContent=String(r.mode||'smart').toUpperCase();
+   const statusTitle=r.status==='complete'?'Scan complete':r.status==='paused'?'Scan paused':r.status==='stopping'?'Finishing current prospect…':r.status==='stopped'?'Scan stopped safely':'Scanning websites…';$('#scanProgressTitle').textContent=statusTitle;$('#scanCurrentBusiness').textContent=r.current_business||((r.status==='complete'||r.status==='stopped')?'No active prospect':'Preparing next website…');$('#scanCurrentPhase').textContent=phaseLabel(r.phase);$('#scanPhaseDetail').textContent=r.phase_detail||'Working through the audit…';$('#scanFinding').textContent=r.finding||'No new finding yet.';
+   $('#scanCompleted').textContent=r.completed||0;$('#scanHot').textContent=r.high_priority||0;$('#scanEmails').textContent=r.emails_found||0;$('#scanSkipped').textContent=r.skipped||0;$('#scanFailed').textContent=r.failed||0;$('#scanAiCalls').textContent=r.ai_calls||0;$('#scanPlaces').textContent=r.places_requests_today||0;$('#scanCost').textContent=`~£${Number(r.estimated_cost||0).toFixed(2)}`;
+-  const pause=$('#scanPauseBtn'),stop=$('#scanStopBtn'),retry=$('#scanRetryBtn');pause.hidden=['complete','stopped','failed'].includes(r.status);stop.hidden=['complete','stopped','failed'].includes(r.status);pause.textContent=r.status==='paused'?'Resume':'Pause';pause.dataset.action=r.status==='paused'?'resume':'pause';retry.hidden=!(Number(r.failed||0)>0&&['complete','stopped','failed'].includes(r.status));
++  const pause=$('#scanPauseBtn'),stop=$('#scanStopBtn'),retry=$('#scanRetryBtn'),dismiss=$('#scanDismissBtn');pause.hidden=['complete','stopped','failed'].includes(r.status);stop.hidden=['complete','stopped','failed'].includes(r.status);pause.textContent=r.status==='paused'?'Resume':'Pause';pause.dataset.action=r.status==='paused'?'resume':'pause';retry.hidden=!(Number(r.failed||0)>0&&['complete','stopped','failed'].includes(r.status));if(dismiss)dismiss.hidden=!['complete','stopped','failed'].includes(r.status);
+   if(r.summary){$('#scanSummary').hidden=false;$('#scanSummary').textContent=r.summary}renderScanActivity(r.activity||[]);
+   if(['complete','stopped'].includes(r.status)){clearInterval(scanClockHandle);clearInterval(scanPollHandle);loadScanHistory();Promise.all([loadLeads(),loadOverview()]);if(!notifiedJobs.has(r.job_id)){notifiedJobs.add(r.job_id);notifyScanComplete(r)}}
+ }
+@@ -95,7 +95,7 @@
+ $('#scanPauseBtn').onclick=async()=>{if(!currentScanJob)return;const action=$('#scanPauseBtn').dataset.action||'pause';try{await api(`/api/scan-job/${currentScanJob}/control`,{method:'POST',body:{action}});toast(action==='pause'?'Scan will pause safely.':'Scan resumed.');watchScanJob(currentScanJob)}catch(e){toast(e.message,true)}};
+ $('#scanStopBtn').onclick=async()=>{if(!currentScanJob)return;if(!confirm('Stop after the current prospect finishes? Completed scans will be kept.'))return;try{await api(`/api/scan-job/${currentScanJob}/control`,{method:'POST',body:{action:'stop'}});toast('Stopping safely after the current prospect.')}catch(e){toast(e.message,true)}};
+ $('#scanRetryBtn').onclick=async()=>{if(!currentScanJob)return;try{const r=await api(`/api/scan-job/${currentScanJob}/retry-failed`,{method:'POST'});openScanProgress({title:'Retrying failed prospects…',total:r.queued_for_scan,current:'Preparing retry…',mode:'full'});watchScanJob(r.job_i

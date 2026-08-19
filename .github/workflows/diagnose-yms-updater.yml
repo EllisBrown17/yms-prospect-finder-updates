@@ -31,9 +31,12 @@ jobs:
               if file "$f" | grep -qi text; then
                 echo "--- $f ---"
                 grep -nEi 'manifest|release channel|release_channel|check for updates|github|raw.githubusercontent|updater|update_available|latest|channel|sha256' "$f" || true
-                if [ "$VER" = '4.1.1' ] || [ "$VER" = '4.1.2' ]; then
-                  cat "$f"
-                fi
               fi
             done
+          done
+          echo
+          echo '================ 4.2.0 archive inventory ================'
+          for z in releases/4.2.0/*.zip; do
+            echo "--- $z ---"
+            unzip -l "$z" | sed -n '1,12p'
           done

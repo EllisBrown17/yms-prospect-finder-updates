@@ -2,7 +2,7 @@ name: Publish NORTHBROWN 2.0.4 corrected
 
 on:
   pull_request:
-    types: [opened]
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
@@ -40,9 +40,12 @@ jobs:
           unzip -t "$WORK/base.zip" >/dev/null
           unzip -q "$WORK/base.zip" -d "$WORK/base"
 
-          APP_PATH="$(find "$WORK/base" -type f -name app.py -print -quit)"
+          echo 'Extracted NORTHBROWN source candidates:'
+          find "$WORK/base" -maxdepth 7 -type f \( -name app.py -o -name requirements.txt -o -name VERSION.txt -o -name START_NORTHBROWN_INTERNAL.sh \) -print | sort
+          APP_PATH="$(find "$WORK/base" -type f -name app.py -print | while IFS= read -r f; do d="$(dirname "$f")"; if [ -f "$d/requirements.txt" ] && [ -f "$d/VERSION.txt" ]; then printf '%s\n' "$f"; break; fi; done)"
           test -n "$APP_PATH"
           P202="$(dirname "$APP_PATH")"
+          echo "Using NORTHBROWN source: $P202"
           test -f "$P202/requirements.txt"
           test -f "$P202/VERSION.txt"
 

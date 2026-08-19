@@ -1,0 +1,110 @@
+get('services'),list) else []
++        cleaned=[]
++        for item in proposed:
++            if not isinstance(item,dict):
++                continue
++            name=_service_name_clean(item.get('name'))
++            desc=' '.join(str(item.get('description') or '').split())[:240]
++            if _service_is_relevant(name, playbook):
++                cleaned.append({'name':name,'description':desc or f'{name} information, clearly presented for customers.'})
++            if len(cleaned)>=6: break
++        if playbook and len(cleaned)<3:
++            cleaned=fallback_services
++        elif not cleaned:
++            cleaned=fallback_services
++        content['services']=cleaned[:6]
++        about=' '.join(str(content.get('about_body') or '').split()).strip()
++        if not _clean_source_description(about,business):
++            about=_safe_about_copy(business)
++        content['about_body']=about[:900]
++        if playbook:
++            if not content.get('services_title') or str(content.get('services_title')).strip().lower() in ('what we can help with','our services','services'):
++                content['services_title']=playbook['services_title']
++            hero=' '.join(str(content.get('hero_headline') or '').split())
++            if not hero or 'clearer online' in hero.lower() or 'easier to choose' in hero.lower():
++                content['hero_headline']=f"{business.get('name') or playbook['label']}. {playbook['hero']}"
++        return content
++
+     def _template_for(category):
+         c = (category or '').lower()
+         if any(x in c for x in ('funeral','care','therapy','counsell','health')): return 'care'
+         if any(x in c for x in ('restaurant','cafe','coffee','bar','hotel','catering')): return 'hospitality'
+-        if any(x in c for x in ('salon','beauty','hair','nail','spa')): return 'studio'
++        if any(x in c for x in ('barber','salon','beauty','hair','nail','spa')): return 'studio'
+         if any(x in c for x in ('account','solicitor','law','financial','consult','estate agent')): return 'professional'
+         if any(x in c for x in ('shop','retail','store','fashion','jewell')): return 'retail'
+         if any(x in c for x in ('roof','plumb','electric','builder','construction','landscap','joiner','garage','heating','kitchen','bathroom')): return 'trade'
+@@ -267,28 +447,30 @@
+         name = business.get('name') or 'Your business'
+         category = (business.get('category') or 'local business').strip()
+         town = (business.get('town') or '').strip()
+-        services = business.get('source_services') or []
+-        if not services:
+-            label = category[:-1] if category.lower().endswith('s') else category
+-            services = [label, 'Advice & support', 'Get in touch']
+-        service_objs = [{'name': s, 'description': f'Clear, straightforward information about {s.lower()} and how to get started.'} for s in services[:6]]
++        playbook = _detect_business_type(business)
++        services = _category_service_objects(business)
+         location = f' in {town}' if town else ''
+-        desc = business.get('source_description') or ''
+-        if not desc:
+-            desc = f'A modern, easy-to-use website concept for {name}, designed to make the business clearer, more credible and easier to contact.'
++        if playbook:
++            hero_headline = f"{name}. {playbook['hero']}"
++            services_title = playbook['services_title']
++            hero_subheading = f"{playbook['label']}{location}. Services, location and the next step are kept clear from the first screen."
++        else:
++            hero_headline = f'{name}. Clear, credible, easy to use.'
++            services_title = 'Services'
++            hero_subheading = f'{category.title()}{location}. A cleaner digital experience built around the information customers need most.'
+         return {
+-            'hero_headline': f'{name}. Clearer online. Easier to choose.',
+-            'hero_subheading': f'{category.title()}{location}. A cleaner digital experience built around the information customers need most.',
++            'hero_headline': hero_headline,
++            'hero_subheading': hero_subheading,
+             'hero_cta': 'Get in touch',
+             'hero_secondary': 'Explore services',
+-            'services_title': 'What we can help with',
+-            'services': service_objs,
++            'services_title': services_title,
++            'services': services,
+             'about_title': f'About {name}',
+-            'about_body': desc[:900],
+-            'proof_title': 'Built around trust and clarity',
+-            'proof_body': 'A stronger website can make important information easier to find, improve the mobile experience and give visitors a clearer next step.',
+-            'contact_title': 'Ready to talk?',
+-            'contact_body': 'Get in touch using the details below and the team can help with your enquiry.',
++            'about_body': _safe_about_copy(business),
++            'proof_title': 'Clear information. Easy next steps.',
++            'proof_body': 'The strongest version of the site puts the useful details first, keeps the mobile journey simple and gives visitors an obvious next step.',
++            'contact_title': 'Ready to get in touch?',
++            'contact_body': 'Use the details below to make an enquiry, find the business or take the next step.',
+             'section_order': ['hero','services','about','proof','gallery','contact'],
+             'visible': {'hero':True,'services':True,'about':True,'proof':True,'gallery':True,'contact':True},
+             'studio_credit': True,
+@@ -298,24 +480,38 @@
+         settings = get_settings()
+         if not openai_text or not settings.get('openai_api_key') or not settings.get('openai_model'):
+             return None
++        playbook = _detect_business_type(business)
++        safe_business = dict(business)
++        safe_business['source_description'] = _clean_source_description(business.get('source_description') or '', business)
++        safe_business['source_services'] = [x['name'] for x in _category_service_objects(business)]
+         facts = {
+-            'business': business,
++            'business': safe_business,
++            'detected_business_type': playbook.get('label') if playbook else (business.get('category') or 'Local business'),
++            'approved_service_direction': [x['name'] for x in _category_service_objects(business)],
+             'website_need_score': (lead or {}).get('score'),
+             'scan_issues': (lead or {}).get('ai_issues') or [],
+             'scan_strengths': (lead or {}).get('ai_strengths') or [],
+         }
+-        prompt = f'''You are writing content for a real visual website concept inside NORTHBROWN's website builder.
+-Use ONLY the verified/source facts below. Do not invent reviews, awards, accreditations, years in business, team size, guarantees, service areas, prices or claims. If a fact is unknown, write neutral conversion-focused copy instead of guessing.
+-Facts: {json.dumps(facts)[:12000]}
++        prompt = f'''You are writing the customer-facing copy for a real visual website concept inside NORTHBROWN's website builder.
++The most important rule is CATEGORY ACCURACY. The website must read like the actual business type in the supplied facts, not like a generic agency template.
++
++Use only verified/source facts for factual claims. Do not invent reviews, awards, accreditations, years in business, team size, guarantees, service areas, prices or specialist capabilities.
++The approved_service_direction contains safe category-relevant service concepts. When the source site does not provide enough verified service names, you MAY use those approved service concepts so the demo still looks like the right kind of business. Do not introduce services outside that direction.
++Never turn navigation items, addresses, URLs, 'Advice & support', 'Get in touch', marketing services, web design, SEO, strategy, opening hours or generic page h

@@ -1,0 +1,36 @@
+diff -ruN '--exclude=release.json' payload/app.py payload/app.py
+--- payload/app.py	2026-08-19 13:17:52.851419465 +0000
++++ payload/app.py	2026-08-19 13:17:31.365170351 +0000
+@@ -92,6 +92,7 @@
+ 
+ 
+ @app.get('/northbrown-icon.png')
++@app.get('/northbrown-icon-2.0.5.png')
+ def northbrown_icon():
+     response = send_from_directory(APP_DIR, 'NORTHBROWN_ICON.png', mimetype='image/png')
+     response.headers['Cache-Control'] = 'public, max-age=86400'
+diff -ruN '--exclude=release.json' payload/templates/index.html payload/templates/index.html
+--- payload/templates/index.html	2026-08-19 13:17:52.851642237 +0000
++++ payload/templates/index.html	2026-08-19 13:17:31.365557284 +0000
+@@ -8,9 +8,9 @@
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+-  <link rel="icon" type="image/png" href="/northbrown-icon.png?v=205">
+-  <link rel="shortcut icon" type="image/png" href="/northbrown-icon.png?v=205">
+-  <link rel="apple-touch-icon" href="/northbrown-icon.png?v=205">
++  <link rel="icon" type="image/png" href="/northbrown-icon-2.0.5.png">
++  <link rel="shortcut icon" type="image/png" href="/northbrown-icon-2.0.5.png">
++  <link rel="apple-touch-icon" href="/northbrown-icon-2.0.5.png">
+   <link rel="stylesheet" href="/static/app.css">
+ </head>
+ <body>
+@@ -20,7 +20,7 @@
+ <div class="app-shell">
+   <aside class="sidebar">
+     <div class="brand" aria-label="Northbrown">
+-      <img class="brand-app-icon" src="/northbrown-icon.png?v=205" alt="NORTHBROWN logo">
++      <img class="brand-app-icon" src="/northbrown-icon-2.0.5.png" alt="NORTHBROWN logo">
+       <div>
+         <div class="brand-word">NORTHBROWN<span>.</span></div>
+         <div class="brand-sub">LEAD ENGINE</div>

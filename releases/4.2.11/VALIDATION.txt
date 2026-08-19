@@ -1,0 +1,15 @@
+YMS Prospect Finder 4.2.11
+- Installer Python compile: PASS
+- ZIP integrity: PASS
+- Reuses the official YMSProspectFinder.icns already shipped in the full app and stores a stable Application Support copy: PASS
+- Synthetic runtime patch/compile against V4.1 OTA base: PASS
+- Persistent runtime_path.txt pointer: PASS
+- Persistent runtime_python.txt exact interpreter pointer: PASS
+- Desktop launcher self-heals on every server start: PASS
+- OTA helper override refreshes Desktop app + icon on every future update: PASS
+- CFBundleIconFile points to YMSProspectFinder.icns: PASS
+- Launcher waits for localhost:8765 before opening Safari: PASS
+- Dead localhost page is not opened after failed startup: PASS
+- Launcher uses recorded working Python interpreter with safe fallbacks: PASS
+- Existing lead/prospect data is not modified: PASS
+SHA256: 0579802690fab1f1844f2d8a26c888160b7f886d002958e67a04295af334b32a

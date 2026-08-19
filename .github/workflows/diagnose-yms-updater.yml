@@ -1,0 +1,40 @@
+name: Diagnose YMS updater channel
+on:
+  push:
+    branches: [yms-5.0.2-updater-channel-fix]
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect 4.2.11 updater implementation
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/yms4211 && mkdir -p /tmp/yms4211
+          unzip -o releases/4.2.11/YMS_Prospect_Finder_V4_2_11_PERSISTENT_DESKTOP_FIX.zip -d /tmp/yms4211 >/dev/null
+          echo '--- files ---'
+          find /tmp/yms4211 -maxdepth 2 -type f -print
+          echo '--- updater refs ---'
+          grep -nEi 'manifest|release channel|release_channel|check for updates|github|raw.githubusercontent|updater|update_available|latest' /tmp/yms4211/server.py || true
+          echo '--- relevant functions ---'
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('/tmp/yms4211/server.py').read_text('utf-8')
+          needles=['manifest','release channel','update_available','check_update','UPDATE_','raw.githubusercontent','github.com']
+          lines=s.splitlines()
+          hits=[]
+          for i,line in enumerate(lines):
+              if any(n.lower() in line.lower() for n in needles):
+                  hits.append(i)
+          shown=set()
+          for i in hits:
+              a=max(0,i-8); b=min(len(lines),i+18)
+              key=(a,b)
+              if any(a>=x and b<=y for x,y in shown):
+                  continue
+              shown.add(key)
+              print(f'\n### lines {a+1}-{b}')
+              for j in range(a,b): print(f'{j+1}: {lines[j]}')
+          PY

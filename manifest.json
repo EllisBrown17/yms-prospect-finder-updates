@@ -1,18 +1,18 @@
 {
-  "version": "4.2.10",
-  "published_at": "2026-08-19T12:16:00+01:00",
-  "notes": "Smart Pipeline control wiring fix. Pause, Resume and Stop now drive the actual 4.2.6 checkpoint engine instead of a separate ignored control flag. Pause safely lets active workers finish/save and leaves the job resumable; Resume continues from saved processed IDs; Stop prevents new companies starting, lets active workers checkpoint, and leaves unscanned queued companies untouched. Keeps the 4.2.9 single-company AI fix and non-overlapping control layout intact.",
+  "version": "4.2.11",
+  "published_at": "2026-08-19T12:25:00+01:00",
+  "notes": "Persistent macOS Desktop launcher repair. Every OTA update and every working server start now refreshes the Desktop YMS Prospect Finder.app, re-applies the official YMS icon, rewrites both the runtime path and the exact working Python interpreter pointer, clears local quarantine, ad-hoc signs the regenerated bundle, and waits for a real response from 127.0.0.1:8765 before opening Safari. If the server fails, it shows a clear alert instead of opening a dead localhost page. Keeps the 4.2.10 Smart Pipeline control fix, 4.2.9 single-company AI fix, 4.2.7 launcher work and all saved prospect data intact.",
   "mandatory": false,
   "mac": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.10/YMS_Prospect_Finder_V4_2_10_PIPELINE_CONTROLS_FIX.zip",
-    "sha256": "78a3bd8b25ccd3242b70db1adc7402387a3f3af4a0a7d8744d943f55fecfe416",
-    "git_blob_sha": "2fe6c440e35e21cb74283f38fb394ec14cb2b450",
-    "blob_sha": "2fe6c440e35e21cb74283f38fb394ec14cb2b450"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.11/YMS_Prospect_Finder_V4_2_11_PERSISTENT_DESKTOP_FIX.zip",
+    "sha256": "0579802690fab1f1844f2d8a26c888160b7f886d002958e67a04295af334b32a",
+    "git_blob_sha": "259d5c708787d940465e2efcaa73fcee58f6a570",
+    "blob_sha": "259d5c708787d940465e2efcaa73fcee58f6a570"
   },
   "windows": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.10/YMS_Prospect_Finder_V4_2_10_PIPELINE_CONTROLS_FIX.zip",
-    "sha256": "78a3bd8b25ccd3242b70db1adc7402387a3f3af4a0a7d8744d943f55fecfe416",
-    "git_blob_sha": "2fe6c440e35e21cb74283f38fb394ec14cb2b450",
-    "blob_sha": "2fe6c440e35e21cb74283f38fb394ec14cb2b450"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.11/YMS_Prospect_Finder_V4_2_11_PERSISTENT_DESKTOP_FIX.zip",
+    "sha256": "0579802690fab1f1844f2d8a26c888160b7f886d002958e67a04295af334b32a",
+    "git_blob_sha": "259d5c708787d940465e2efcaa73fcee58f6a570",
+    "blob_sha": "259d5c708787d940465e2efcaa73fcee58f6a570"
   }
 }

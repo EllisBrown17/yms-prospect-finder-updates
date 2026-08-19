@@ -1,18 +1,18 @@
 {
-  "version": "4.2.6",
-  "published_at": "2026-08-19T11:20:00+01:00",
-  "notes": "Smart Pipeline skip-fix. Old 4.2.5 skip markers are no longer treated as completed work, pipeline records are rechecked, hard consumer noise remains filtered, unreadable websites can fall back to clearly-labelled limited Companies House/Google business metadata, metadata-only AI results are confidence/score capped, the deterministic relevance gate is advisory rather than an automatic rejection, and the progress panel now separates AI qualified, AI not relevant, needs evidence, filtered noise and errors instead of hiding them all under skipped.",
+  "version": "4.2.7",
+  "published_at": "2026-08-19T11:46:00+01:00",
+  "notes": "Desktop launcher repair. Keeps the 4.2.6 Smart Pipeline fix intact, writes a stable runtime pointer, rebuilds the macOS Desktop YMS Prospect Finder.app so it starts the current local server instead of an old versioned Downloads path, avoids starting duplicate servers, waits for 127.0.0.1:8765 before opening the browser, and preserves the previous Desktop launcher as a timestamped OLD copy. Windows receives only the safe runtime version bump; no launcher changes are made there.",
   "mandatory": false,
   "mac": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.6/YMS_Prospect_Finder_V4_2_6_PIPELINE_SKIP_FIX.zip",
-    "sha256": "0061248b5af0b3fea5fa09a9f6e1a27c23df7bd146a91634196f073a210f3d78",
-    "git_blob_sha": "f65f73a6d1b219191691742de6dc48fad37a13a2",
-    "blob_sha": "f65f73a6d1b219191691742de6dc48fad37a13a2"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.7/YMS_Prospect_Finder_V4_2_7_DESKTOP_LAUNCHER_FIX.zip",
+    "sha256": "88a80b41b00c0ffce2c0e9a1a5d8e30f7a4d5e90d3a6b83ad5bf0d39226b71d8",
+    "git_blob_sha": "dc1636a1eff002d68e9ab0fbf1df0b18964b2f49",
+    "blob_sha": "dc1636a1eff002d68e9ab0fbf1df0b18964b2f49"
   },
   "windows": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.6/YMS_Prospect_Finder_V4_2_6_PIPELINE_SKIP_FIX.zip",
-    "sha256": "0061248b5af0b3fea5fa09a9f6e1a27c23df7bd146a91634196f073a210f3d78",
-    "git_blob_sha": "f65f73a6d1b219191691742de6dc48fad37a13a2",
-    "blob_sha": "f65f73a6d1b219191691742de6dc48fad37a13a2"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.7/YMS_Prospect_Finder_V4_2_7_DESKTOP_LAUNCHER_FIX.zip",
+    "sha256": "88a80b41b00c0ffce2c0e9a1a5d8e30f7a4d5e90d3a6b83ad5bf0d39226b71d8",
+    "git_blob_sha": "dc1636a1eff002d68e9ab0fbf1df0b18964b2f49",
+    "blob_sha": "dc1636a1eff002d68e9ab0fbf1df0b18964b2f49"
   }
 }

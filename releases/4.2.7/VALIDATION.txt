@@ -1,0 +1,11 @@
+YMS Prospect Finder 4.2.7
+- Installer Python compile: PASS
+- ZIP integrity: PASS
+- Uses updater-created safe pre-update backup: YES
+- Preserves 4.2.6 Smart Pipeline logic: YES
+- macOS Desktop launcher rebuilt locally: YES
+- Launcher reads runtime_path.txt instead of trusting old versioned path: YES
+- Existing Desktop launcher preserved as timestamped OLD copy: YES
+- Runtime server starts only if port 8765 is not already serving: YES
+- Windows path: safe no-op launcher repair + version bump
+SHA256: 88a80b41b00c0ffce2c0e9a1a5d8e30f7a4d5e90d3a6b83ad5bf0d39226b71d8

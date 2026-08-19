@@ -1,18 +1,18 @@
 {
-  "version": "4.2.11",
-  "published_at": "2026-08-19T12:25:00+01:00",
-  "notes": "Persistent macOS Desktop launcher repair. Every OTA update and every working server start now refreshes the Desktop YMS Prospect Finder.app, re-applies the official YMS icon, rewrites both the runtime path and the exact working Python interpreter pointer, clears local quarantine, ad-hoc signs the regenerated bundle, and waits for a real response from 127.0.0.1:8765 before opening Safari. If the server fails, it shows a clear alert instead of opening a dead localhost page. Keeps the 4.2.10 Smart Pipeline control fix, 4.2.9 single-company AI fix, 4.2.7 launcher work and all saved prospect data intact.",
+  "version": "5.0.0",
+  "published_at": "2026-08-19T15:12:00+01:00",
+  "notes": "Major Product Intelligence + Outreach Intelligence update. Adds a locked verified ALFRA Product Truth library, product-to-company and company-to-product opportunity scoring, explicit verified/observed/inferred/unknown explanations, probable workflow/use, validation questions, do-not-claim safeguards and bounded sales-outcome learning that can adjust sales priority but never product facts. Rebuilds emailing around an Outreach workspace with grounded product-specific drafts, approval states, manual sent-history logging, contact/email/product/date/body timeline, duplicate first-contact protection, follow-up dates, reply/outcome logging and Do Not Contact suppression. Includes S 125, BS 120, VKS 125, AMTE 250, AP 250, TML magnets and Rotabest seed intelligence. Keeps V4 Smart Pipeline reliability/controls and persistent desktop launcher refresh intact.",
   "mandatory": false,
   "mac": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.11/YMS_Prospect_Finder_V4_2_11_PERSISTENT_DESKTOP_FIX.zip",
-    "sha256": "0579802690fab1f1844f2d8a26c888160b7f886d002958e67a04295af334b32a",
-    "git_blob_sha": "259d5c708787d940465e2efcaa73fcee58f6a570",
-    "blob_sha": "259d5c708787d940465e2efcaa73fcee58f6a570"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/5.0.0/YMS_Prospect_Finder_V5_0_0_PRODUCT_OUTREACH_INTELLIGENCE.zip",
+    "sha256": "5a875f3a5b52c8158c1a3ca6c12c7c5f3e472898bd0d306d4dcdbd7a0ea2d127",
+    "git_blob_sha": "a819f9a8ae219c6ba11ee0467f4e58888b694a8a",
+    "blob_sha": "a819f9a8ae219c6ba11ee0467f4e58888b694a8a"
   },
   "windows": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/4.2.11/YMS_Prospect_Finder_V4_2_11_PERSISTENT_DESKTOP_FIX.zip",
-    "sha256": "0579802690fab1f1844f2d8a26c888160b7f886d002958e67a04295af334b32a",
-    "git_blob_sha": "259d5c708787d940465e2efcaa73fcee58f6a570",
-    "blob_sha": "259d5c708787d940465e2efcaa73fcee58f6a570"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/5.0.0/YMS_Prospect_Finder_V5_0_0_PRODUCT_OUTREACH_INTELLIGENCE.zip",
+    "sha256": "5a875f3a5b52c8158c1a3ca6c12c7c5f3e472898bd0d306d4dcdbd7a0ea2d127",
+    "git_blob_sha": "a819f9a8ae219c6ba11ee0467f4e58888b694a8a",
+    "blob_sha": "a819f9a8ae219c6ba11ee0467f4e58888b694a8a"
   }
 }

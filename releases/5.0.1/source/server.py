@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""YMS Prospect Finder 5.0.1 — Product/Outreach UI syntax hotfix."""
+"""YMS Prospect Finder 5.0.1 — Product/Outreach navigation syntax hotfix."""
 from pathlib import Path
 import os,re,sys,time,subprocess,py_compile
 
@@ -38,34 +38,38 @@ def safe_backup():
 def patch_server(src):
     s=re.sub(r'APP_VERSION\s*=\s*"[^"]+"','APP_VERSION = "5.0.1"',src,count=1)
     if s==src and 'APP_VERSION = "5.0.1"' not in s:
-        # Older layered builds can use compact formatting.
-        s=re.sub(r'APP_VERSION\s*=\s*\'[^\']+\'','APP_VERSION = "5.0.1"',src,count=1)
+        s=re.sub(r"APP_VERSION\s*=\s*'[^']+'",'APP_VERSION = "5.0.1"',src,count=1)
     return s
 
 
 def patch_html(src):
     s=src
-    # 5.0.0 accidentally persisted Python escape characters into the browser JS,
-    # producing Safari's: SyntaxError: Invalid escape in identifier: '\\'.
-    # Repair ONLY the V5 Product/Outreach script block so existing V4 JS is untouched.
-    starts=[s.find("<script>\nlet v5Catalog="),s.find("<script>let v5Catalog=")]
-    start=max(starts)
-    if start<0:
-        fail("5.0.1 could not locate the V5 Product/Outreach script safely.")
-    end=s.find("</script>",start)
-    if end<0:
-        fail("5.0.1 could not locate the end of the V5 Product/Outreach script safely.")
-    block=s[start:end]
-    bad_before=block.count("\\'")
-    if bad_before<1:
-        fail("5.0.1 did not find the 5.0.0 Safari escape defect; refusing to rewrite unrelated JavaScript.")
-    repaired=block.replace("\\'","'")
-    if "\\'" in repaired:
-        fail("5.0.1 could not fully remove the invalid V5 JavaScript escapes.")
-    s=s[:start]+repaired+s[end:]
+    # Exact 5.0.0 defect: the two NEW inline navigation handlers were created
+    # by a raw regex replacement containing escaped single quotes. Those
+    # backslashes survive into HTML and Safari compiles the handler as e.g.
+    # show(\'products\',this), which raises "Invalid escape in identifier".
+    # The V5 <script> block itself parses successfully; do not rewrite it.
+    bad_products = r'''onclick="show(\'products\',this)"'''
+    bad_outreach = r'''onclick="show(\'outreach\',this)"'''
+    good_products = '''onclick="show('products',this)"'''
+    good_outreach = '''onclick="show('outreach',this)"'''
+
+    found_products=s.count(bad_products)
+    found_outreach=s.count(bad_outreach)
+    if found_products!=1 or found_outreach!=1:
+        fail(
+            "5.0.1 could not uniquely identify both broken 5.0.0 navigation handlers "
+            f"(Products={found_products}, Outreach={found_outreach}). No files were replaced."
+        )
+
+    s=s.replace(bad_products,good_products,1)
+    s=s.replace(bad_outreach,good_outreach,1)
+    if bad_products in s or bad_outreach in s:
+        fail("5.0.1 could not fully repair the Product/Outreach navigation handlers.")
+
     s=re.sub(r'<title>YMS Prospect Finder V[^<]+ — YMS-Tools</title>','<title>YMS Prospect Finder V5.0.1 — YMS-Tools</title>',s,count=1)
     s=re.sub(r'<b id="versionLabel">Prospect Finder V[^<]+</b>','<b id="versionLabel">Prospect Finder V5.0.1</b>',s,count=1)
-    return s,bad_before
+    return s,found_products+found_outreach
 
 
 def main():
@@ -87,7 +91,7 @@ def main():
         DATA_DIR.mkdir(parents=True,exist_ok=True)
         (DATA_DIR/"last_ota_update.txt").write_text(
             "5.0.1\n"+time.strftime("%Y-%m-%d %H:%M:%S")+
-            f"\nProduct/Outreach Safari syntax hotfix — repaired {repaired_count} escaped quote tokens\n",
+            f"\nProduct/Outreach Safari navigation hotfix — repaired {repaired_count} inline handlers\n",
             encoding="utf-8"
         )
 

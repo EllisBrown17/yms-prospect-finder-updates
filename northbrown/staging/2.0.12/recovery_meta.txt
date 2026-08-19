@@ -1,0 +1,1 @@
+NORTHBROWN 2.0.12 recovery launcher size=3488 sha256=7e9e9fcda964833e5f8ae55e303cd152866c3c0fa0ee73de719865266b2744d2

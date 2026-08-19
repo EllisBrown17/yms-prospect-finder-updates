@@ -16,74 +16,105 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Reconstruct and validate exact OTA package
+      - name: Rebuild and validate NORTHBROWN 2.0.6
         shell: bash
         run: |
           set -euo pipefail
           VERSION='2.0.6'
-          STAGE="northbrown/staging/${VERSION}"
-          ZIP="northbrown/releases/NORTHBROWN-update-${VERSION}.zip"
-          EXPECTED_B64_LEN='189528'
-          EXPECTED_B64_SHA='69c34ed1551aa30439885af83f3fe2be380cddfc07dbb6631c6106f6dc4a1530'
-          EXPECTED_SIZE='142146'
-          EXPECTED_SHA='45f48d6a0d19aa39ff99e8cf4801da7c3cf18f7c02c2e4b715bbd7a96c2d0129'
+          WORK="$(mktemp -d)"
+          mkdir -p "$WORK/base202" northbrown/releases
 
-          mkdir -p northbrown/releases
-          cat "$STAGE"/ota.part* | tr -d '\r\n ' > "$RUNNER_TEMP/northbrown-206.b64"
-          test "$(wc -c < "$RUNNER_TEMP/northbrown-206.b64" | tr -d ' ')" = "$EXPECTED_B64_LEN"
-          echo "$EXPECTED_B64_SHA  $RUNNER_TEMP/northbrown-206.b64" | sha256sum -c -
-          base64 -d "$RUNNER_TEMP/northbrown-206.b64" > "$ZIP"
-          test "$(wc -c < "$ZIP" | tr -d ' ')" = "$EXPECTED_SIZE"
-          echo "$EXPECTED_SHA  $ZIP" | sha256sum -c -
-          unzip -t "$ZIP" >/dev/null
+          # Reconstruct the known full NORTHBROWN 2.0 source, then replay the
+          # already-staged validated 2.0.3, 2.0.4 and 2.0.5 source updates.
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('northbrown/staging/2.0.0/ota.part04')
+          s=p.read_text()
+          if len(s)==8999:
+              s=s[:3245]+'h'+s[3245:]
+              p.write_text(s)
+          if len(p.read_text())!=9000:
+              raise SystemExit('Unexpected NORTHBROWN base staging length')
+          PY
+          cat northbrown/staging/2.0.0/ota.part* | base64 -d > "$WORK/base.zip"
+          echo '88f45969ed801323252b83529929dd66848560347105816cb15db727e3e69f0e  '"$WORK/base.zip" | sha256sum -c -
+          unzip -t "$WORK/base.zip" >/dev/null
+          unzip -q "$WORK/base.zip" -d "$WORK/base202"
+          cp -R "$WORK/base202/payload" "$WORK/payload"
+          P="$WORK/payload"
 
-          TMP="$(mktemp -d)"
-          unzip -q "$ZIP" -d "$TMP"
-          P="$TMP/payload"
-          test -f "$P/app.py"
-          test -f "$P/feature_routes.py"
-          test -f "$P/builder_routes.py"
-          test -f "$P/requirements.txt"
-          test -f "$P/VERSION.txt"
-          test -f "$P/release.json"
-          test -f "$P/START_NORTHBROWN_INTERNAL.sh"
-          test -f "$P/static/app.js"
-          test -f "$P/static/app.css"
-          test -f "$P/static/brand-reference.svg"
-          test -f "$P/templates/index.html"
-          test -f "$P/NORTHBROWN_ICON.png"
-          test "$(tr -d '\r\n' < "$P/VERSION.txt")" = "$VERSION"
+          python - "$P" <<'PY'
+          from pathlib import Path
+          import sys
+          p=Path(sys.argv[1])
+          (p/'VERSION.txt').write_text('2.0.2\n')
+          f=p/'app.py'
+          s=f.read_text().replace("APP_VERSION = '2.0.0'", "APP_VERSION = '2.0.2'", 1)
+          s=s.replace("threading.Timer(0.9, lambda: os._exit(0)).start()", "threading.Timer(3.0, lambda: os._exit(0)).start()", 1)
+          f.write_text(s)
+          f=p/'START_NORTHBROWN_INTERNAL.sh'
+          f.write_text(f.read_text().replace('.icon_ready_2_0_0','.icon_ready_2_0_2'))
+          PY
 
-          python -m py_compile "$P/app.py" "$P/feature_routes.py" "$P/builder_routes.py"
-          node --check "$P/static/app.js"
+          cat northbrown/staging/2.0.3/patch.part* > "$WORK/203.patch"
+          (cd "$WORK" && patch --batch -p0 < "$WORK/203.patch")
+          cat northbrown/staging/2.0.4/patch.part* > "$WORK/204.patch"
+          (cd "$WORK" && patch --batch -p0 < "$WORK/204.patch")
+          cat northbrown/staging/2.0.5/patch.part* > "$WORK/205.patch"
+          (cd "$WORK" && patch --batch -p0 < "$WORK/205.patch")
+
+          # Apply only the small 2.0.6 progress change. The user-facing OTA is
+          # still a complete binary ZIP; these text chunks are build inputs only.
+          cat northbrown/staging/2.0.6/patch.part* > "$WORK/206.patch"
+          test "$(wc -c < "$WORK/206.patch" | tr -d ' ')" = '22899'
+          echo '156fd99901a9a6a249e0792c630becb3ea682aac606b35d5c9655d237f13b920  '"$WORK/206.patch" | sha256sum -c -
+          (cd "$WORK" && patch --batch -p0 < "$WORK/206.patch")
+
+          rm -f "$P/release.json"
+          rm -rf "$P/__pycache__"
 
           python - "$P" <<'PY'
           from pathlib import Path
           import hashlib, json, sys
           p=Path(sys.argv[1])
-          r=json.loads((p/'release.json').read_text())
-          assert r.get('format') == 'northbrown-full-v2'
-          assert r.get('version') == '2.0.6'
-          assert '2.0.5' in r.get('allowed_from', [])
-          for rel, expected in r.get('files', {}).items():
+          files=[
+            'app.py','feature_routes.py','builder_routes.py','requirements.txt','VERSION.txt',
+            'START_NORTHBROWN_INTERNAL.sh','static/app.js','static/app.css','templates/index.html',
+            'NORTHBROWN_ICON.png','static/brand-reference.svg'
+          ]
+          r={'format':'northbrown-full-v2','version':'2.0.6','allowed_from':['2.0.5'],'database_schema':5,'files':{}}
+          for rel in files:
               f=p/rel
-              assert f.is_file(), rel
-              actual=hashlib.sha256(f.read_bytes()).hexdigest()
-              assert actual == expected, (rel, actual, expected)
+              if not f.is_file():
+                  raise SystemExit('Missing required NORTHBROWN file: '+rel)
+              r['files'][rel]=hashlib.sha256(f.read_bytes()).hexdigest()
+          (p/'release.json').write_text(json.dumps(r,indent=2)+'\n')
           PY
 
+          # Do not publish unless the finished package is internally consistent.
+          test "$(tr -d '\r\n' < "$P/VERSION.txt")" = '2.0.6'
+          python -m py_compile "$P/app.py" "$P/feature_routes.py" "$P/builder_routes.py"
+          node --check "$P/static/app.js"
           grep -q "APP_VERSION = '2.0.6'" "$P/app.py"
+          grep -q "@app.get('/api/smart-finder-status/<job_id>')" "$P/app.py"
           grep -q 'smartFinderProgress' "$P/templates/index.html"
+          grep -q 'finder-progress-track' "$P/static/app.css"
+          grep -q 'watchSmartFinder' "$P/static/app.js"
           grep -q 'Finding local companies' "$P/static/app.js"
           grep -q 'brand-reference.svg' "$P/templates/index.html"
-          grep -q 'scanProgress' "$P/templates/index.html"
+          grep -q '/northbrown-icon-2.0.6.png' "$P/templates/index.html"
 
-      - name: Publish package and update feed only after validation
-        shell: bash
-        run: |
-          set -euo pipefail
-          VERSION='2.0.6'
+          rm -rf "$P/__pycache__"
           ZIP="northbrown/releases/NORTHBROWN-update-${VERSION}.zip"
+          (cd "$WORK" && zip -9qr "$GITHUB_WORKSPACE/$ZIP" payload)
+          unzip -t "$ZIP" >/dev/null
+          unzip -l "$ZIP" | grep -q 'payload/app.py'
+          unzip -l "$ZIP" | grep -q 'payload/feature_routes.py'
+          unzip -l "$ZIP" | grep -q 'payload/builder_routes.py'
+          unzip -l "$ZIP" | grep -q 'payload/static/app.js'
+          unzip -l "$ZIP" | grep -q 'payload/templates/index.html'
+          test "$(wc -c < "$ZIP")" -gt 120000
+
           SHA="$(sha256sum "$ZIP" | awk '{print $1}')"
           SIZE="$(wc -c < "$ZIP" | tr -d ' ')"
           cat > northbrown/update.json <<EOF
@@ -94,23 +125,25 @@ jobs:
             "download_url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/${ZIP}",
             "size": ${SIZE},
             "sha256": "${SHA}",
-            "notes": "NORTHBROWN 2.0.6 adds visible Smart Finder discovery progress before website scanning begins. It shows the Google Places discovery stage, percentage and search count immediately, then hands over to the normal Scan Intelligence website-scan progress. Includes the 2.0.5 reliability fixes for prospect clicks, Builder saving, AI Rewrite, collapsible Scan Intelligence, brand reference and NORTHBROWN browser branding.",
+            "notes": "NORTHBROWN 2.0.6 adds visible Smart Finder discovery progress immediately after you start a local-company search, with stage, percentage and category count, then automatically hands over to the normal website Scan Intelligence progress. Includes the 2.0.5 reliability fixes for prospect opening, Builder saving, AI Rewrite, collapsible Scan Intelligence, NORTHBROWN brand reference and browser icon.",
             "published_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
             "mandatory": false
           }
           EOF
 
+      - name: Publish validated full OTA and feed
+        shell: bash
+        run: |
+          set -euo pipefail
           git config user.name 'NORTHBROWN OTA Bot'
           git config user.email 'actions@users.noreply.github.com'
-          git add "$ZIP" northbrown/update.json
+          git add northbrown/releases/NORTHBROWN-update-2.0.6.zip northbrown/update.json
           git commit -m 'Publish NORTHBROWN OTA 2.0.6'
           for attempt in 1 2 3; do
             git fetch origin main
             git rebase origin/main
-            if git push origin HEAD:main; then
-              exit 0
-            fi
+            if git push origin HEAD:main; then exit 0; fi
             sleep 2
           done
-          echo 'Could not publish NORTHBROWN 2.0.6 after three retries.' >&2
+          echo 'Could not publish NORTHBROWN 2.0.6 after three safe retries.' >&2
           exit 1

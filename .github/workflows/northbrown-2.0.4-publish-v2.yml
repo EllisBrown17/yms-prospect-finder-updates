@@ -17,65 +17,45 @@ jobs:
         with:
           ref: main
 
-      - name: Build and validate 2.0.4
+      - name: Build and validate 2.0.4 from verified 2.0.3
         shell: bash
         run: |
           set -euo pipefail
           VERSION='2.0.4'
           WORK="$(mktemp -d)"
-          mkdir -p "$WORK/base" northbrown/releases
+          mkdir -p "$WORK/base203" northbrown/releases
 
-          python - <<'PY'
-          from pathlib import Path
-          p=Path('northbrown/staging/2.0.0/ota.part04')
-          s=p.read_text()
-          if len(s)==8999:
-              s=s[:3245]+'h'+s[3245:]
-              p.write_text(s)
-          if len(p.read_text())!=9000:
-              raise SystemExit('Unexpected NORTHBROWN base staging length')
-          PY
-          cat northbrown/staging/2.0.0/ota.part* | base64 -d > "$WORK/base.zip"
-          echo '88f45969ed801323252b83529929dd66848560347105816cb15db727e3e69f0e  '"$WORK/base.zip" | sha256sum -c -
-          unzip -t "$WORK/base.zip" >/dev/null
-          unzip -q "$WORK/base.zip" -d "$WORK/base"
+          # Reconstruct the exact previously validated full 2.0.3 package.
+          # This transport exists only inside GitHub CI; the Mac receives one normal binary ZIP.
+          cat northbrown/staging/2.0.3/direct.part* | base64 -d > "$WORK/base203.zip"
+          test "$(wc -c < "$WORK/base203.zip")" -eq 164006
+          echo '2aea7e70f0cde99c55587bd84ad6c8601e17c35798eb1e4ef2c82a414c95c4a7  '"$WORK/base203.zip" | sha256sum -c -
+          unzip -t "$WORK/base203.zip" >/dev/null
+          unzip -q "$WORK/base203.zip" -d "$WORK/base203"
+          cp -R "$WORK/base203/payload" "$WORK/payload"
+          P="$WORK/payload"
 
-          echo 'Extracted NORTHBROWN source candidates:'
-          find "$WORK/base" -maxdepth 7 -type f \( -name app.py -o -name requirements.txt -o -name VERSION.txt -o -name START_NORTHBROWN_INTERNAL.sh \) -print | sort
-          APP_PATH="$(find "$WORK/base" -type f -name app.py -print | while IFS= read -r f; do d="$(dirname "$f")"; if [ -f "$d/requirements.txt" ] && [ -f "$d/VERSION.txt" ]; then printf '%s\n' "$f"; break; fi; done)"
-          test -n "$APP_PATH"
-          P202="$(dirname "$APP_PATH")"
-          echo "Using NORTHBROWN source: $P202"
-          test -f "$P202/requirements.txt"
-          test -f "$P202/VERSION.txt"
+          # Validate the full base before modifying it.
+          for f in app.py feature_routes.py builder_routes.py requirements.txt VERSION.txt release.json START_NORTHBROWN_INTERNAL.sh static/app.js static/app.css templates/index.html NORTHBROWN_ICON.png static/NORTHBROWN_ICON.png; do
+            test -f "$P/$f"
+          done
+          test "$(tr -d '\r\n' < "$P/VERSION.txt")" = '2.0.3'
+          grep -q "APP_VERSION = '2.0.3'" "$P/app.py"
+          python -m py_compile "$P/app.py" "$P/feature_routes.py" "$P/builder_routes.py"
+          node --check "$P/static/app.js"
 
-          python - "$P202" <<'PY'
-          from pathlib import Path
-          import sys
-          p=Path(sys.argv[1])
-          (p/'VERSION.txt').write_text('2.0.2\n')
-          f=p/'app.py'
-          s=f.read_text().replace("APP_VERSION = '2.0.0'", "APP_VERSION = '2.0.2'", 1)
-          s=s.replace("threading.Timer(0.9, lambda: os._exit(0)).start()", "threading.Timer(3.0, lambda: os._exit(0)).start()", 1)
-          f.write_text(s)
-          f=p/'START_NORTHBROWN_INTERNAL.sh'
-          if f.exists(): f.write_text(f.read_text().replace('.icon_ready_2_0_0','.icon_ready_2_0_2'))
-          PY
-
-          cp -R "$P202" "$WORK/payload"
-          cat northbrown/staging/2.0.3/patch.part* > "$WORK/203.patch"
-          (cd "$WORK" && patch --batch -p0 < "$WORK/203.patch")
-          rm -f "$WORK/payload/release.json"
-
+          # Apply the category-aware generation upgrade.
           cat northbrown/staging/2.0.4/patch.part* > "$WORK/204.patch"
           test "$(wc -c < "$WORK/204.patch")" -eq 35765
           (cd "$WORK" && patch --batch -p0 < "$WORK/204.patch")
 
+          # Restore the NORTHBROWN brand-theme UI and add live Scan Intelligence collapse.
           cat northbrown/staging/2.0.4/final-ui.part* > "$WORK/final-ui.patch"
           test "$(wc -c < "$WORK/final-ui.patch")" -eq 22275
           (cd "$WORK" && patch --batch -p0 < "$WORK/final-ui.patch")
-          P="$WORK/payload"
+          rm -f "$P/release.json"
 
+          # Build an internal manifest from the exact final files.
           python - "$P" <<'PY'
           from pathlib import Path
           import hashlib,json,sys
@@ -89,12 +69,14 @@ jobs:
           (p/'release.json').write_text(json.dumps(r,indent=2)+'\n')
           PY
 
+          # Hard release gates: do not publish a partial or broken build.
           test "$(tr -d '\r\n' < "$P/VERSION.txt")" = '2.0.4'
           python -m py_compile "$P/app.py" "$P/feature_routes.py" "$P/builder_routes.py"
           node --check "$P/static/app.js"
           grep -q "APP_VERSION = '2.0.4'" "$P/app.py"
           grep -q "@app.post('/api/smart-finder')" "$P/app.py"
           grep -q "Fades & short styles" "$P/builder_routes.py"
+          grep -q "Beard grooming" "$P/builder_routes.py"
           grep -q "scanCollapseBtn" "$P/templates/index.html"
           grep -q "BRAND THEME" "$P/templates/index.html"
           grep -q "NORTHBROWN_ICON.png?v=204-final" "$P/templates/index.html"
@@ -108,6 +90,7 @@ jobs:
           test "$(wc -c < "$ZIP")" -gt 120000
           SHA="$(sha256sum "$ZIP" | awk '{print $1}')"
           SIZE="$(wc -c < "$ZIP" | tr -d ' ')"
+
           cat > northbrown/update.json <<EOF
           {
             "schema": 2,
@@ -130,6 +113,10 @@ jobs:
           git config user.email 'actions@users.noreply.github.com'
           git add northbrown/releases/NORTHBROWN-update-2.0.4.zip northbrown/update.json
           git commit -m 'Publish NORTHBROWN OTA 2.0.4 final build'
-          git fetch origin main
-          git rebase origin/main
-          git push origin HEAD:main
+          for attempt in 1 2 3; do
+            git fetch origin main
+            if git rebase origin/main && git push origin HEAD:main; then exit 0; fi
+            git rebase --abort >/dev/null 2>&1 || true
+            sleep 2
+          done
+          exit 1

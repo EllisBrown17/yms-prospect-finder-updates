@@ -1,7 +1,7 @@
 {
   "version": "5.0.6",
-  "published_at": "2026-08-20T14:58:00+01:00",
-  "notes": "Adds a separate top-level YMS CRM workspace and bulk email logging from Prospects. Prospects now supports multi-select checkboxes plus Select visible, Clear and Emailed ✓ controls. Clicking Emailed ✓ processes the selected companies through the existing manual sent-email workflow, automatically adds successful items to CRM, and schedules the next follow-up at 3 / 5 / 10 working days based on previous logged attempts. CRM is no longer embedded inside Outreach and has Due now, Overdue, Waiting, Replies and In CRM views, search, follow-up status, logged attempt counts and a due badge. Existing prospect data, Product Intelligence, Outreach history, branding and Smart Pipeline are retained. This package can upgrade directly from 5.0.3 or 5.0.5.",
+  "published_at": "2026-08-20T15:09:00+01:00",
+  "notes": "Channel refresh for YMS 5.0.6. Adds a separate top-level YMS CRM workspace and bulk email logging from Prospects. Prospects supports multi-select checkboxes plus Select visible, Clear and Emailed ✓ controls. Clicking Emailed ✓ processes the selected companies through the existing manual sent-email workflow, automatically adds successful items to CRM, and schedules the next follow-up at 3 / 5 / 10 working days based on previous logged attempts. CRM has Due now, Overdue, Waiting, Replies and In CRM views, search, follow-up status, logged attempt counts and a due badge. Existing prospect data, Product Intelligence, Outreach history, branding and Smart Pipeline are retained. This package can upgrade directly from 5.0.3 or 5.0.5.",
   "mandatory": false,
   "mac": {
     "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/5.0.6/YMS_Prospect_Finder_V5_0_6_SEPARATE_CRM_BULK_EMAILED.zip",

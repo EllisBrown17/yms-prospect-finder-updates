@@ -1,18 +1,18 @@
 {
-  "version": "5.0.4",
-  "published_at": "2026-08-20T14:42:00+01:00",
-  "notes": "Adds YMS CRM and smart follow-up control. When an outreach email is logged with the new Email sent action, the prospect is automatically included in CRM using the existing persistent Outreach ledger. CRM shows Due now, Overdue, Waiting, Replies and In CRM views, prioritises overdue work, adds an Outreach due badge, auto-suggests follow-up dates at 3 / 5 / 10 working days based on send count, and offers opt-in desktop reminders while YMS is running. Existing YMS branding, Product Intelligence, prospect data and Smart Pipeline behaviour are retained.",
+  "version": "5.0.5",
+  "published_at": "2026-08-20T14:47:00+01:00",
+  "notes": "CRM + smart follow-up packaging fix. The 5.0.4 OTA was rejected safely because its ZIP did not include the index.html installer placeholder required by the Prospect Finder updater. 5.0.5 republishes the same CRM functionality in the complete OTA package layout: Email sent automatically logs the prospect into CRM, smart follow-up dates are suggested at 3 / 5 / 10 working days, CRM shows Due now, Overdue, Waiting, Replies and In CRM, overdue work is prioritised, and opt-in desktop reminders are available while YMS is running. Existing 5.0.3 data, branding, Product Intelligence and Smart Pipeline are retained.",
   "mandatory": false,
   "mac": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/5.0.4/YMS_Prospect_Finder_V5_0_4_CRM_FOLLOWUP.zip",
-    "sha256": "2c1a77a26ca036e2d2921a1ae5a89af1001f4e9df9c2c9bcda9fbeb3e7ced7a9",
-    "git_blob_sha": "23bae98c70fbe2245a05d8d17ef39a95d35f9bab",
-    "blob_sha": "23bae98c70fbe2245a05d8d17ef39a95d35f9bab"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/5.0.5/YMS_Prospect_Finder_V5_0_5_CRM_FOLLOWUP_FIX.zip",
+    "sha256": "4e76923e5e7793b7b01e1db39e2c633411f1d281c2117fc5480903a3a3d03640",
+    "git_blob_sha": "f8b3ae380783b331b152aaa9913e0137766dd8b3",
+    "blob_sha": "f8b3ae380783b331b152aaa9913e0137766dd8b3"
   },
   "windows": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/5.0.4/YMS_Prospect_Finder_V5_0_4_CRM_FOLLOWUP.zip",
-    "sha256": "2c1a77a26ca036e2d2921a1ae5a89af1001f4e9df9c2c9bcda9fbeb3e7ced7a9",
-    "git_blob_sha": "23bae98c70fbe2245a05d8d17ef39a95d35f9bab",
-    "blob_sha": "23bae98c70fbe2245a05d8d17ef39a95d35f9bab"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/5.0.5/YMS_Prospect_Finder_V5_0_5_CRM_FOLLOWUP_FIX.zip",
+    "sha256": "4e76923e5e7793b7b01e1db39e2c633411f1d281c2117fc5480903a3a3d03640",
+    "git_blob_sha": "f8b3ae380783b331b152aaa9913e0137766dd8b3",
+    "blob_sha": "f8b3ae380783b331b152aaa9913e0137766dd8b3"
   }
 }

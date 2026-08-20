@@ -1,18 +1,18 @@
 {
-  "version": "5.0.3",
-  "published_at": "2026-08-19T22:03:00+01:00",
-  "notes": "YMS-Tools branding and top-bar UI polish. Replaces the Prospect Finder header logo with the supplied YMS artwork, optimises title, subtitle and version typography, prevents top controls from colliding, and adds responsive behaviour for narrower windows. Existing Product Intelligence, Outreach, prospect data, Smart Pipeline behaviour and Desktop launcher refresh are retained.",
+  "version": "5.0.4",
+  "published_at": "2026-08-20T14:42:00+01:00",
+  "notes": "Adds YMS CRM and smart follow-up control. When an outreach email is logged with the new Email sent action, the prospect is automatically included in CRM using the existing persistent Outreach ledger. CRM shows Due now, Overdue, Waiting, Replies and In CRM views, prioritises overdue work, adds an Outreach due badge, auto-suggests follow-up dates at 3 / 5 / 10 working days based on send count, and offers opt-in desktop reminders while YMS is running. Existing YMS branding, Product Intelligence, prospect data and Smart Pipeline behaviour are retained.",
   "mandatory": false,
   "mac": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/5.0.3/YMS_Prospect_Finder_V5_0_3_BRANDING_UI.zip",
-    "sha256": "eeee776cb2f04f0dd7abff7e24719281bf0c13e146d857c849a86e88c530ac44",
-    "git_blob_sha": "0df28406f0f9383b2acd13130ffb0b92274465f2",
-    "blob_sha": "0df28406f0f9383b2acd13130ffb0b92274465f2"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/5.0.4/YMS_Prospect_Finder_V5_0_4_CRM_FOLLOWUP.zip",
+    "sha256": "2c1a77a26ca036e2d2921a1ae5a89af1001f4e9df9c2c9bcda9fbeb3e7ced7a9",
+    "git_blob_sha": "23bae98c70fbe2245a05d8d17ef39a95d35f9bab",
+    "blob_sha": "23bae98c70fbe2245a05d8d17ef39a95d35f9bab"
   },
   "windows": {
-    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/5.0.3/YMS_Prospect_Finder_V5_0_3_BRANDING_UI.zip",
-    "sha256": "eeee776cb2f04f0dd7abff7e24719281bf0c13e146d857c849a86e88c530ac44",
-    "git_blob_sha": "0df28406f0f9383b2acd13130ffb0b92274465f2",
-    "blob_sha": "0df28406f0f9383b2acd13130ffb0b92274465f2"
+    "url": "https://raw.githubusercontent.com/EllisBrown17/yms-prospect-finder-updates/main/releases/5.0.4/YMS_Prospect_Finder_V5_0_4_CRM_FOLLOWUP.zip",
+    "sha256": "2c1a77a26ca036e2d2921a1ae5a89af1001f4e9df9c2c9bcda9fbeb3e7ced7a9",
+    "git_blob_sha": "23bae98c70fbe2245a05d8d17ef39a95d35f9bab",
+    "blob_sha": "23bae98c70fbe2245a05d8d17ef39a95d35f9bab"
   }
 }

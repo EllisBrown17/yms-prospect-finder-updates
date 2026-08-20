@@ -1,0 +1,11 @@
+YMS Prospect Finder 5.0.5 — CRM + Smart Follow-up Packaging Fix
+- Root OTA package now contains server.py: PASS
+- Root OTA package now contains index.html installer placeholder: PASS
+- Root OTA package contains v504_crm.js and v504_crm.css: PASS
+- Installer Python compile: PASS
+- CRM JavaScript syntax check: PASS
+- Package SHA-256 calculated from final ZIP: PASS
+- Existing 5.0.3 app remains untouched if validation fails: PASS
+- CRM behaviour retained from 5.0.4: Email sent -> CRM -> 3/5/10 working-day follow-up timing -> due/overdue/reminder views: PASS
+SHA256: 4e76923e5e7793b7b01e1db39e2c633411f1d281c2117fc5480903a3a3d03640
+Git blob: f8b3ae380783b331b152aaa9913e0137766dd8b3

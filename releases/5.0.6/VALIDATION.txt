@@ -1,0 +1,17 @@
+YMS Prospect Finder 5.0.6 — Separate CRM + Bulk Emailed
+- OTA installer Python compile: PASS
+- CRM JavaScript syntax check: PASS
+- Complete updater ZIP includes server.py + index.html: PASS
+- Direct upgrade path from 5.0.3 or 5.0.5: PASS
+- CRM moved out of Outreach into its own top navigation section: PASS
+- Existing Outreach ledger remains the single CRM data source: PASS
+- Prospects page gains per-company selection checkboxes: PASS
+- Select visible / Clear / Emailed ✓ bulk controls: PASS
+- Bulk Emailed reuses the existing manual Mark Sent workflow rather than fabricating sends: PASS
+- Successful bulk items are automatically added to CRM: PASS
+- Smart next-follow-up timing uses 3 / 5 / 10 working days based on logged attempts: PASS
+- CRM views: Due now / Overdue / Waiting / Replies / In CRM: PASS
+- CRM search and due badge: PASS
+- Existing prospect data, Product Intelligence, Outreach history, branding and Smart Pipeline retained: PASS
+SHA256: b89ac69c6ee264ab97366bf1c5b0ebd8d59568bc8922e53046d768fd6b5230de
+Git blob: 836bd04a9283eb89dd315b93e8854757aeb0876e

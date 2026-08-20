@@ -1,0 +1,18 @@
+YMS Prospect Finder 5.0.4 — CRM + Smart Follow-up
+- OTA installer Python compile: PASS
+- CRM JavaScript syntax check: PASS
+- Existing YMS v5 Outreach ledger reused as the CRM data source: PASS
+- No duplicate prospect/contact database introduced: PASS
+- Clicking the existing send-log action is relabelled to "Email sent": PASS
+- Blank follow-up dates are auto-suggested using 3 / 5 / 10 working-day timing based on send count: PASS
+- User can override the suggested follow-up date before saving: PASS
+- Sent prospects automatically appear in CRM after the send is logged: PASS
+- CRM views: Due now / Overdue / Waiting / Replies / In CRM: PASS
+- Overdue and due-today contacts are prioritised: PASS
+- Outreach navigation due badge: PASS
+- Optional desktop browser reminders with explicit permission: PASS
+- CRM refreshes on app start, focus, visibility return and every 5 minutes while YMS is running: PASS
+- Existing YMS prospect data, Product Intelligence, Smart Pipeline and branding retained: PASS
+- Safe pre-update backup/rollback guard retained: PASS
+SHA256: 2c1a77a26ca036e2d2921a1ae5a89af1001f4e9df9c2c9bcda9fbeb3e7ced7a9
+Git blob: 23bae98c70fbe2245a05d8d17ef39a95d35f9bab
